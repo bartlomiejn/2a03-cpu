@@ -7,6 +7,12 @@
 
 namespace NES
 {
+	enum AddrMode
+	{
+		case mode_imm,
+		case mode_
+	};
+	
 	/// NTSC NES Ricoh 2a03 CPU emulator
 	///
 	/// http://wiki.nesdev.com/w/index.php/CPU_registers
@@ -22,18 +28,13 @@ namespace NES
 		uint8_t S;		/// Stack pointer
 		uint8_t P;		/// Status register
 		
-		uint8_t mem[65535]; 	/// Memory
+		uint8_t ram[0x800]; 	/// RAM
 		
-		/// Executes an instruction.
-		///
-		/// \param opcode Opcode of the instruction.
-		void execute(uint8_t opcode);
-		
-		/// Executes an instruction.
-		///
-		/// \param opcode Opcode of the instruction.
-		/// \param param Parameter of the instruction.
-		void execute(uint8_t opcode, uint16_t param);
+		/// Executes the next instruction.
+		void execute();
+	private:
+		uint8_t read(uint16_t addr);
+		void write(uint16_t addr, uint8_t val);
 	};
 }
 
