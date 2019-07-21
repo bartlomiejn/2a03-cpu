@@ -13,14 +13,14 @@ namespace NES
 	{
 		struct
 		{
-			uint8_t C : 1;
-			uint8_t Z : 1;
-			uint8_t I : 1;
-			uint8_t D : 1;
-			uint8_t B : 2; 	// Has no effect on CPU, but certain
-					// instructions set it
-			uint8_t V : 1;
-			uint8_t N : 1;
+			uint8_t C : 1; 	/// Carry
+			uint8_t Z : 1; 	/// Zero
+			uint8_t I : 1; 	/// Interrupt disable
+			uint8_t D : 1; 	/// Decimal
+			uint8_t B : 2; 	/// Has no effect on CPU, but certain
+					/// instructions set it
+			uint8_t V : 1;	/// Overflow
+			uint8_t N : 1; 	/// Negative
 		};
 		uint8_t reg;
 	};
@@ -42,7 +42,10 @@ namespace NES
 		uint8_t ram[0x800]; 	/// RAM
 		
 		/// Starts the CPU.
-		void start();
+		void power_up();
+		
+		/// Resets the CPU.
+		void reset();
 		
 		/// Executes the next instruction.
 		void execute();
@@ -63,12 +66,12 @@ namespace NES
 		
 		/// Load register with memory.
 		/// \param reg Register address to load memory to.
-		/// \param mode_fn Addressing mode function to use.
-		void LD(uint8_t *reg, std::function<uint16_t(void)> mode_fn);
+		/// \param addr_fn Addressing mode function to use.
+		void LD(uint8_t *reg, std::function<uint16_t(void)> addr_fn);
 		
 		// Addressing mode functions
 		
-		/// Absolute:  A full 16-bit address is specified.
+		/// Absolute: A full 16-bit address is specified.
 		/// \return Address to be accessed.
 		uint16_t abs();
 	};
