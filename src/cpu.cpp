@@ -1,5 +1,6 @@
 #include <2a03/cpu.h>
 #include <cstring>
+#include <iostream>
 
 #define exec_lambda(x) [&]() { return x(); }
 
@@ -18,7 +19,7 @@ void NES::CPU::power_up()
 	// All 15 bits of noise channel LFSR = $0000[4]. The first time the LFSR is clocked from the all-0s state, it will shift in a 1.
 	
 	// RAM state is not consistent on power up on a real machine, but we'll
-	// clear it anyway
+	// clear it anyway.
 	memset(ram, 0xFF, sizeof(ram));
 }
 
@@ -37,7 +38,19 @@ void NES::CPU::execute()
 	switch (PC++)
 	{
 		// LDA
-		case 0xAD: LD(&A, exec_lambda(abs)); break;
+		case 0xAD:
+			LD(&A, exec_lambda(abs)); break;
+		case 0xBD:
+			LD(&A, exec_lambda(abs_x)); break;
+		case 0xB9:
+			LD(&A, exec_lambda(abs_y)); break;
+		case 0xA9:
+			LD(&A, exec_lambda(immediate)); break;
+		case 0xA5:
+			LD(&A, exec_lambda(zp)); break;
+		default:
+			std::cout << "Unhandled opcode: " << std::hex << PC - 1
+				<< std::endl;
 	}
 }
 
@@ -68,4 +81,25 @@ uint16_t NES::CPU::abs()
 {
 	PC += 2;
 	return (uint16_t)(PC - 2);
+}
+
+uint16_t NES::CPU::abs_x()
+{
+	return abs() + X;
+}
+
+uint16_t NES::CPU::abs_y()
+{
+	return abs() + Y;
+}
+
+uint16_t NES::CPU::immediate()
+{
+	return PC++;
+}
+
+uint16_t NES::CPU::zp()
+{
+	// TODO: Implement zp
+	return -1;
 }
