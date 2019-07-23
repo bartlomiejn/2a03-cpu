@@ -51,6 +51,32 @@ void NES::CPU::execute()
 			LD(&A, mode_abs_x); break;
 		case 0xB9:
 			LD(&A, mode_abs_y); break;
+		case 0xA1:
+			LD(&A, mode_idx_ind_x); break;
+		case 0xB1:
+			LD(&A, mode_ind_idx_y); break;
+		// LDX
+		case 0xA2:
+			LD(&X, mode_imm); break;
+		case 0xA6:
+			LD(&X, mode_zp); break;
+		case 0xB6:
+			LD(&X, mode_zp_y); break;
+		case 0xAE:
+			LD(&X, mode_abs); break;
+		case 0xBE:
+			LD(&X, mode_abs_y); break;
+		// LDY
+		case 0xA0:
+			LD(&Y, mode_imm); break;
+		case 0xA4:
+			LD(&Y, mode_zp); break;
+		case 0xB4:
+			LD(&Y, mode_zp_x); break;
+		case 0xAC:
+			LD(&Y, mode_abs); break;
+		case 0xBC:
+			LD(&Y, mode_abs_x); break;
 		default:
 			std::cerr << "Unhandled opcode: " << std::hex << PC - 1
 				<< std::endl;
