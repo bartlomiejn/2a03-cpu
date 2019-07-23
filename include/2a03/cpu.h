@@ -16,7 +16,10 @@ namespace NES
 		mode_imm,	/// Immediate
 		mode_zp,	/// Zero Page
 		mode_zp_x,	/// Zero Page indexed with X
-		mode_zp_y	/// Zero Page indexed with Y
+		mode_zp_y,	/// Zero Page indexed with Y
+		mode_ind,	/// Indirect
+		mode_ind_x,	/// Indexed indirect with X
+		mode_ind_y	/// Indirect indexed with Y
 	};
 	
 	/// Status Register P union representation
@@ -63,7 +66,7 @@ namespace NES
 		
 		/// Reads 8 bits of memory at the provided address.
 		/// \param addr Address to read from
-		/// \return Read data
+		/// \return Byte that was read
 		uint8_t read(uint16_t addr);
 		
 		/// Writes a value to the provided address.
@@ -81,7 +84,8 @@ namespace NES
 		// Addressing mode functions
 		
 		/// Retrieves the current instruction parameter based on
-		/// the addressing mode.
+		/// the addressing mode and increments PC based on instruction
+		/// length.
 		/// \param mode Addressing mode to use.
 		/// \return Parameter for current instruction.
 		uint8_t get_param(AddressingMode mode);
