@@ -14,7 +14,9 @@ namespace NES
 		mode_abs_x,	/// Absolute indexed with X
 		mode_abs_y,	/// Absolute indexed with Y
 		mode_imm,	/// Immediate
-		mode_zp		/// Zero Page
+		mode_zp,	/// Zero Page
+		mode_zp_x,	/// Zero Page indexed with X
+		mode_zp_y	/// Zero Page indexed with Y
 	};
 	
 	/// Status Register P union representation

@@ -50,7 +50,7 @@ void NES::CPU::execute()
 		case 0xA5:
 			LD(&A, mode_zp); break;
 		default:
-			std::cout << "Unhandled opcode: " << std::hex << PC - 1
+			std::cerr << "Unhandled opcode: " << std::hex << PC - 1
 				<< std::endl;
 	}
 	PC++;
@@ -98,8 +98,7 @@ uint8_t NES::CPU::get_param(NES::AddressingMode mode)
 			PC += 2;
 			return read(param_addr);
 			
-		// Absolute Index
-		// ed with Y: The value in Y is added to the
+		// Absolute Indexed with Y: The value in Y is added to the
 		// specified address for a sum address. The value at the sum
 		// address is used to perform the computation.
 		case mode_abs_y:
@@ -121,5 +120,21 @@ uint8_t NES::CPU::get_param(NES::AddressingMode mode)
 			param_addr = read(PC) % 0x100;
 			PC++;
 			return read(param_addr);
+			
+		// Zero Page indexed with X
+		case mode_zp_x:
+			param_addr = (read(PC) + X) % 0x100;
+			PC++;
+			return read(param_addr);
+			
+		// Zero Page indexed with Y
+		case mode_zp_y:
+			param_addr = (read(PC) + Y) % 0x100;
+			PC++;
+			return read(param_addr);
+			
+		default:
+			std::cerr << "Invalid addressing mode: " << mode
+				<< std::endl;
 	}
 }
