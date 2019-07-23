@@ -17,7 +17,6 @@ namespace NES
 		mode_zp,	/// Zero Page
 		mode_zp_x,	/// Zero Page indexed with X
 		mode_zp_y,	/// Zero Page indexed with Y
-		mode_ind,	/// Indirect
 		mode_ind_x,	/// Indexed indirect with X
 		mode_ind_y	/// Indirect indexed with Y
 	};
@@ -68,6 +67,11 @@ namespace NES
 		/// \param addr Address to read from
 		/// \return Byte that was read
 		uint8_t read(uint16_t addr);
+		
+		/// Reads 16 bits of memory at the provided address.
+		/// \param addr Address to read from
+		/// \return 2 bytes that were read
+		uint16_t read16(uint16_t addr);
 		
 		/// Writes a value to the provided address.
 		/// \param addr Address to write the value to.

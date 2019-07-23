@@ -70,6 +70,11 @@ uint8_t NES::CPU::read(uint16_t addr)
 	}
 }
 
+uint16_t NES::CPU::read16(uint16_t addr)
+{
+	return (read(addr + 1) << 8) | read(addr);
+}
+
 void NES::CPU::write(uint16_t addr, uint8_t val)
 {
 	switch (addr)
@@ -91,7 +96,7 @@ uint8_t NES::CPU::get_param(NES::AddressingMode mode)
 	{
 		// Absolute: A full 16-bit address is specified.
 		case mode_abs:
-			param_addr = (read(PC + 1) << 8) | read(PC);
+			param_addr = read16(PC);
 			PC += 2;
 			return read(param_addr);
 			
@@ -99,7 +104,7 @@ uint8_t NES::CPU::get_param(NES::AddressingMode mode)
 		// specified address for a sum address. The value at the sum
 		// address is used to perform the computation.
 		case mode_abs_x:
-			param_addr = ((read(PC + 1) << 8) | read(PC)) + X;
+			param_addr = read16(PC) + X;
 			PC += 2;
 			return read(param_addr);
 			
@@ -107,7 +112,7 @@ uint8_t NES::CPU::get_param(NES::AddressingMode mode)
 		// specified address for a sum address. The value at the sum
 		// address is used to perform the computation.
 		case mode_abs_y:
-			param_addr = ((read(PC + 1) << 8) | read(PC)) + Y;
+			param_addr = read16(PC) + Y;
 			PC += 2;
 			return read(param_addr);
 			
@@ -135,6 +140,12 @@ uint8_t NES::CPU::get_param(NES::AddressingMode mode)
 		// Zero Page indexed with Y
 		case mode_zp_y:
 			param_addr = (read(PC) + Y) % 0x100;
+			PC++;
+			return read(param_addr);
+			
+		// Indexed indirect with X
+		case mode_ind_x:
+			param_addr = read16((read(PC) + X) % 0x100);
 			PC++;
 			return read(param_addr);
 			
