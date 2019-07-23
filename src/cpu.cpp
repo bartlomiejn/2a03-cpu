@@ -120,48 +120,30 @@ void NES::CPU::LD(uint8_t *reg, NES::AddressingMode mode)
 
 uint8_t NES::CPU::get_param(NES::AddressingMode mode)
 {
-	uint16_t param_addr = 0x0;
+	uint16_t addr = 0x0;
 	switch (mode)
 	{
 		case mode_abs:
-			param_addr = read16(PC);
-			PC += 2;
-			break;
+			addr = read16(PC); PC += 2; break;
 		case mode_abs_x:
-			param_addr = read16(PC) + X;
-			PC += 2;
-			break;
+			addr = read16(PC) + X; PC += 2; break;
 		case mode_abs_y:
-			param_addr = read16(PC) + Y;
-			PC += 2;
-			break;
+			addr = read16(PC) + Y; PC += 2; break;
 		case mode_imm:
-			param_addr = PC;
-			PC++;
-			break;
+			addr = PC; PC++; break;
 		case mode_zp:
-			param_addr = read(PC);
-			PC++;
-			break;
+			addr = read(PC); PC++; break;
 		case mode_zp_x:
-			param_addr = (read(PC) + X) % 0x100;
-			PC++;
-			break;
+			addr = (read(PC) + X) % 0x100; PC++; break;
 		case mode_zp_y:
-			param_addr = (read(PC) + Y) % 0x100;
-			PC++;
-			break;
+			addr = (read(PC) + Y) % 0x100; PC++; break;
 		case mode_idx_ind_x:
-			param_addr = read16((read(PC) + X) % 0x100, true);
-			PC++;
-			break;
+			addr = read16((read(PC) + X) % 0x100, true); PC++; break;
 		case mode_ind_idx_y:
-			param_addr = read16(read(PC), true) + Y;
-			PC++;
-			break;
+			addr = read16(read(PC), true) + Y; PC++; break;
 		default:
 			std::cerr << "Invalid addressing mode: " << mode
 				<< std::endl;
 	}
-	return read(param_addr);
+	return read(addr);
 }
