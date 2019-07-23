@@ -8,6 +8,15 @@
 
 namespace NES
 {
+	enum AddressingMode
+	{
+		mode_abs,	/// Absolute
+		mode_abs_x,	/// Absolute indexed with X
+		mode_abs_y,	/// Absolute indexed with Y
+		mode_imm,	/// Immediate
+		mode_zp		/// Zero Page
+	};
+	
 	/// Status Register P union representation
 	union StatusRegister
 	{
@@ -65,38 +74,16 @@ namespace NES
 		/// Load register `reg` with memory.
 		/// \param reg Register address to load memory to.
 		/// \param addr_fn Addressing mode function to use.
-		void LD(uint8_t *reg, std::function<uint16_t(void)> addr_fn);
+		void LD(uint8_t *reg, AddressingMode mode);
 		
 		// Addressing mode functions
 		
-		/// Absolute: A full 16-bit address is specified.
-		/// \return Address to be accessed.
-		uint16_t abs();
-		
-		/// Absolute Indexed with X: The value in X is added to the
-		/// specified address for a sum address. The value at the sum
-		/// address is used to perform the computation.
-		/// \return Address to be accessed.
-		uint16_t abs_x();
-		
-		/// Absolute Indexed with Y: The value in Y is added to the
-		/// specified address for a sum address. The value at the sum
-		/// address is used to perform the computation.
-		/// \return Address to be accessed.
-		uint16_t abs_y();
-		
-		/// Immediate: The operand is used directly to perform the
-		/// computation.
-		/// \return Address to be accessed.
-		uint16_t immediate();
-		
-		/// Zero Page: A single byte specifies an address in the first
-		/// page of memory ($00xx, the zero page) and the byte at that
-		/// address is used to perform the computation.
-		/// \return Address to be accessed.
-		uint16_t zp();
+		/// Retrieves the current instruction parameter based on
+		/// the addressing mode.
+		/// \param mode Addressing mode to use.
+		/// \return Parameter for current instruction.
+		uint8_t get_param(AddressingMode mode);
 	};
 }
-
 
 #endif //INC_2A03_CPU_H

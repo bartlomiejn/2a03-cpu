@@ -16,7 +16,8 @@ void NES::CPU::power_up()
 	// $4017 = $00 (frame irq enabled)
 	// $4015 = $00 (all channels disabled)
 	// $4000-$400F = $00 (not sure about $4010-$4013)
-	// All 15 bits of noise channel LFSR = $0000[4]. The first time the LFSR is clocked from the all-0s state, it will shift in a 1.
+	// All 15 bits of noise channel LFSR = $0000[4]. The first time the LFSR
+	// is clocked from the all-0s state, it will shift in a 1.
 	
 	// RAM state is not consistent on power up on a real machine, but we'll
 	// clear it anyway.
@@ -35,23 +36,24 @@ void NES::CPU::reset()
 
 void NES::CPU::execute()
 {
-	switch (PC++)
+	switch (PC)
 	{
 		// LDA
 		case 0xAD:
-			LD(&A, exec_lambda(abs)); break;
+			LD(&A, mode_abs); break;
 		case 0xBD:
-			LD(&A, exec_lambda(abs_x)); break;
+			LD(&A, mode_abs_x); break;
 		case 0xB9:
-			LD(&A, exec_lambda(abs_y)); break;
+			LD(&A, mode_abs_y); break;
 		case 0xA9:
-			LD(&A, exec_lambda(immediate)); break;
+			LD(&A, mode_imm); break;
 		case 0xA5:
-			LD(&A, exec_lambda(zp)); break;
+			LD(&A, mode_zp); break;
 		default:
 			std::cout << "Unhandled opcode: " << std::hex << PC - 1
 				<< std::endl;
 	}
+	PC++;
 }
 
 uint8_t NES::CPU::read(uint16_t addr)
@@ -72,34 +74,52 @@ void NES::CPU::write(uint16_t addr, uint8_t val)
 	}
 }
 
-void NES::CPU::LD(uint8_t *reg, std::function<uint16_t(void)> addr_fn)
+void NES::CPU::LD(uint8_t *reg, AddressingMode mode)
 {
-	*reg = read(addr_fn());
+	*reg = get_param(mode);
 }
 
-uint16_t NES::CPU::abs()
+uint8_t NES::CPU::get_param(NES::AddressingMode mode)
 {
-	PC += 2;
-	return (uint16_t)(PC - 2);
-}
-
-uint16_t NES::CPU::abs_x()
-{
-	return abs() + X;
-}
-
-uint16_t NES::CPU::abs_y()
-{
-	return abs() + Y;
-}
-
-uint16_t NES::CPU::immediate()
-{
-	return PC++;
-}
-
-uint16_t NES::CPU::zp()
-{
-	// TODO: Implement zp
-	return -1;
+	uint16_t param_addr;
+	switch (mode)
+	{
+		// Absolute: A full 16-bit address is specified.
+		case mode_abs:
+			param_addr = read(PC);
+			PC += 2;
+			return read(param_addr);
+			
+		// Absolute Indexed with X: The value in X is added to the
+		// specified address for a sum address. The value at the sum
+		// address is used to perform the computation.
+		case mode_abs_x:
+			param_addr = read(PC) + X;
+			PC += 2;
+			return read(param_addr);
+			
+		// Absolute Index
+		// ed with Y: The value in Y is added to the
+		// specified address for a sum address. The value at the sum
+		// address is used to perform the computation.
+		case mode_abs_y:
+			param_addr = read(PC) + Y;
+			PC += 2;
+			return read(param_addr);
+			
+		// Immediate: The operand is a constant used directly to
+		// perform the computation.
+		case mode_imm:
+			param_addr = PC;
+			PC++;
+			return read(param_addr);
+			
+		// Zero Page: A single byte specifies an address in the first
+		// page of memory ($00xx, the zero page) and the byte at that
+		// address is used to perform the computation.
+		case mode_zp:
+			param_addr = read(PC) % 0x100;
+			PC++;
+			return read(param_addr);
+	}
 }
