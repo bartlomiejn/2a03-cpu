@@ -77,6 +77,11 @@ void NES::CPU::execute()
 			LD(&Y, mode_abs); break;
 		case 0xBC:
 			LD(&Y, mode_abs_x); break;
+		// JMP
+		case 0x4C:
+			JMP(mode_abs); break;
+		case 0x6C:
+			JMP(mode_ind); break;
 		default:
 			std::cerr << "Unhandled opcode: " << std::hex << PC - 1
 				<< std::endl;
@@ -89,6 +94,7 @@ uint8_t NES::CPU::read(uint16_t addr)
 	switch (addr)
 	{
 		case 0x0000 ... 0x1FFF:
+			// Ram has only 2KB, but it wraps around up to 0x1FFF
 			return ram[addr % 0x800];
 		default:
 			std::cerr << "Unhandled memory access: " << std::hex
@@ -111,11 +117,6 @@ void NES::CPU::write(uint16_t addr, uint8_t val)
 		case 0x0000 ... 0x1FFF:
 			ram[addr % 0x800] = val;
 	}
-}
-
-void NES::CPU::LD(uint8_t *reg, NES::AddressingMode mode)
-{
-	*reg = get_param(mode);
 }
 
 uint8_t NES::CPU::get_param(NES::AddressingMode mode)
@@ -141,9 +142,39 @@ uint8_t NES::CPU::get_param(NES::AddressingMode mode)
 			addr = read16((read(PC) + X) % 0x100, true); PC++; break;
 		case mode_ind_idx_y:
 			addr = read16(read(PC), true) + Y; PC++; break;
+		case mode_ind:
 		default:
 			std::cerr << "Invalid addressing mode: " << mode
 				<< std::endl;
 	}
 	return read(addr);
+}
+
+void NES::CPU::LD(uint8_t *reg, NES::AddressingMode mode)
+{
+	*reg = get_param(mode);
+}
+
+void NES::CPU::JMP(NES::AddressingMode mode)
+{
+	switch (mode)
+	{
+		case mode_ind:
+			// TODO: Implement indirect jump quirk
+			// AN INDIRECT JUMP MUST NEVER USE A
+			// VECTOR BEGINNING ON THE LAST BYTE
+			// OF A PAGE
+			// For example if address $3000 contains $40, $30FF
+			// contains $80, and $3100 contains $50, the result of
+			// JMP ($30FF) will be a transfer of control to $4080
+			// rather than $5080 as you intended i.e. the 6502 took
+			// the low byte of the address from $30FF and the high
+			// byte from $3000.
+			PC = read16(read16(PC)); break;
+		case mode_abs:
+			PC = read16(PC);
+		default:
+			std::cerr << "Invalid addressing mode for JMP: " << mode
+				<< std::endl;
+	}
 }

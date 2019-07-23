@@ -19,6 +19,7 @@ namespace NES
 		mode_zp_y,	/// Zero Page indexed with Y
 		mode_idx_ind_x,	/// Indexed indirect with X
 		mode_ind_idx_y,	/// Indirect indexed with Y
+		mode_ind	/// Indirect (used only with JMP)
 	};
 	
 	/// Status Register P union representation
@@ -93,8 +94,12 @@ namespace NES
 		
 		/// Load register `reg` with memory.
 		/// \param reg Register address to load memory to.
-		/// \param addr_fn Addressing mode function to use.
+		/// \param addr_fn Addressing mode to use.
 		void LD(uint8_t *reg, AddressingMode mode);
+		
+		/// Transfer program execution.
+		/// \param mode Addressing mode to use.
+		void JMP(AddressingMode mode);
 	};
 }
 
