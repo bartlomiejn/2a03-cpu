@@ -17,8 +17,8 @@ namespace NES
 		mode_zp,	/// Zero Page
 		mode_zp_x,	/// Zero Page indexed with X
 		mode_zp_y,	/// Zero Page indexed with Y
-		mode_ind_x,	/// Indexed indirect with X
-		mode_ind_y	/// Indirect indexed with Y
+		mode_idx_ind_x,	/// Indexed indirect with X
+		mode_ind_idx_y,	/// Indirect indexed with Y
 	};
 	
 	/// Status Register P union representation
@@ -38,7 +38,7 @@ namespace NES
 		uint8_t reg;
 	};
 	
-	/// NTSC NES Ricoh 2a03 CPU emulator
+	/// Ricoh 2a03 CPU emulator
 	/// http://wiki.nesdev.com/w/index.php/CPU_registers
 	class CPU
 	{
@@ -70,20 +70,15 @@ namespace NES
 		
 		/// Reads 16 bits of memory at the provided address.
 		/// \param addr Address to read from
+		/// \param is_zp_addr If its a zero-page address, wrap the most
+		/// -significant byte around zero-page
 		/// \return 2 bytes that were read
-		uint16_t read16(uint16_t addr);
+		uint16_t read16(uint16_t addr, bool is_zp_addr = false);
 		
 		/// Writes a value to the provided address.
 		/// \param addr Address to write the value to.
 		/// \param val Value to write.
 		void write(uint16_t addr, uint8_t val);
-		
-		// Instructions
-		
-		/// Load register `reg` with memory.
-		/// \param reg Register address to load memory to.
-		/// \param addr_fn Addressing mode function to use.
-		void LD(uint8_t *reg, AddressingMode mode);
 		
 		// Addressing mode functions
 		
@@ -93,6 +88,13 @@ namespace NES
 		/// \param mode Addressing mode to use.
 		/// \return Parameter for current instruction.
 		uint8_t get_param(AddressingMode mode);
+		
+		// Instructions
+		
+		/// Load register `reg` with memory.
+		/// \param reg Register address to load memory to.
+		/// \param addr_fn Addressing mode function to use.
+		void LD(uint8_t *reg, AddressingMode mode);
 	};
 }
 

@@ -70,9 +70,12 @@ uint8_t NES::CPU::read(uint16_t addr)
 	}
 }
 
-uint16_t NES::CPU::read16(uint16_t addr)
+uint16_t NES::CPU::read16(uint16_t addr, bool is_zp_addr)
 {
-	return (read(addr + 1) << 8) | read(addr);
+	// If we know this is a zero-page addr, wrap the most-significant bit
+	// around zero-page bounds
+	uint16_t h_addr = is_zp_addr ? ((addr + 1) % 0x100) : (addr + 1);
+	return (read(h_addr) << 8) | read(addr);
 }
 
 void NES::CPU::write(uint16_t addr, uint8_t val)
@@ -94,61 +97,42 @@ uint8_t NES::CPU::get_param(NES::AddressingMode mode)
 	uint16_t param_addr = 0x0;
 	switch (mode)
 	{
-		// Absolute: A full 16-bit address is specified.
 		case mode_abs:
 			param_addr = read16(PC);
 			PC += 2;
-			return read(param_addr);
-			
-		// Absolute Indexed with X: The value in X is added to the
-		// specified address for a sum address. The value at the sum
-		// address is used to perform the computation.
+			break;
 		case mode_abs_x:
 			param_addr = read16(PC) + X;
 			PC += 2;
-			return read(param_addr);
-			
-		// Absolute Indexed with Y: The value in Y is added to the
-		// specified address for a sum address. The value at the sum
-		// address is used to perform the computation.
+			break;
 		case mode_abs_y:
 			param_addr = read16(PC) + Y;
 			PC += 2;
-			return read(param_addr);
-			
-		// Immediate: The operand is a constant used directly to
-		// perform the computation.
+			break;
 		case mode_imm:
 			param_addr = PC;
 			PC++;
-			return read(param_addr);
-			
-		// Zero Page: A single byte specifies an address in the first
-		// page of memory ($00xx, the zero page) and the byte at that
-		// address is used to perform the computation.
+			break;
 		case mode_zp:
 			param_addr = read(PC);
 			PC++;
-			return read(param_addr);
-			
-		// Zero Page indexed with X
+			break;
 		case mode_zp_x:
 			param_addr = (read(PC) + X) % 0x100;
 			PC++;
-			return read(param_addr);
-			
-		// Zero Page indexed with Y
+			break;
 		case mode_zp_y:
 			param_addr = (read(PC) + Y) % 0x100;
 			PC++;
-			return read(param_addr);
-			
-		// Indexed indirect with X
-		case mode_ind_x:
-			param_addr = read16((read(PC) + X) % 0x100);
+			break;
+		case mode_idx_ind_x:
+			param_addr = read16((read(PC) + X) % 0x100, true);
 			PC++;
-			return read(param_addr);
-			
+			break;
+		case mode_ind_idx_y:
+			param_addr = read16(read(PC), true) + Y;
+			PC++;
+			break;
 		default:
 			std::cerr << "Invalid addressing mode: " << mode
 				<< std::endl;
