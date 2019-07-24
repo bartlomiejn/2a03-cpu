@@ -10,16 +10,16 @@ namespace NES
 {
 	enum AddressingMode
 	{
-		mode_abs,	/// Absolute
-		mode_abs_x,	/// Absolute indexed with X
-		mode_abs_y,	/// Absolute indexed with Y
-		mode_imm,	/// Immediate
-		mode_zp,	/// Zero Page
-		mode_zp_x,	/// Zero Page indexed with X
-		mode_zp_y,	/// Zero Page indexed with Y
-		mode_idx_ind_x,	/// Indexed indirect with X
-		mode_ind_idx_y,	/// Indirect indexed with Y
-		mode_ind	/// Indirect (used only with JMP)
+		mode_abs,	///< Absolute
+		mode_abs_x,	///< Absolute indexed with X
+		mode_abs_y,	///< Absolute indexed with Y
+		mode_imm,	///< Immediate
+		mode_zp,	///< Zero Page
+		mode_zp_x,	///< Zero Page indexed with X
+		mode_zp_y,	///< Zero Page indexed with Y
+		mode_idx_ind_x,	///< Indexed indirect with X
+		mode_ind_idx_y,	///< Indirect indexed with Y
+		mode_ind	///< Indirect (used only with JMP)
 	};
 	
 	/// Status Register P union representation
@@ -27,14 +27,14 @@ namespace NES
 	{
 		struct
 		{
-			uint8_t C : 1; 	/// Carry
-			uint8_t Z : 1; 	/// Zero
-			uint8_t I : 1; 	/// Interrupt disable
-			uint8_t D : 1; 	/// Decimal
-			uint8_t B : 2; 	/// Has no effect on CPU, but certain
-					/// instructions set it
-			uint8_t V : 1;	/// Overflow
-			uint8_t N : 1; 	/// Negative
+			uint8_t C : 1; 	///< Carry
+			uint8_t Z : 1; 	///< Zero
+			uint8_t I : 1; 	///< Interrupt disable
+			uint8_t D : 1; 	///< Decimal
+			uint8_t B : 2; 	///< Has no effect on CPU, but certain
+					///< instructions set it
+			uint8_t V : 1;	///< Overflow
+			uint8_t N : 1; 	///< Negative
 		};
 		uint8_t reg;
 	};
@@ -44,14 +44,14 @@ namespace NES
 	class CPU
 	{
 	public:
-		PPU ppu;		/// Picture Processing Unit
-		APU apu;		/// Audio Processing Unit
-		uint8_t A; 		/// Accumulator
-		uint8_t X, Y; 		/// Index registers
-		uint16_t PC;		/// Program counter
-		uint8_t S;		/// Stack pointer
-		StatusRegister P;	/// Status register
-		uint8_t ram[0x800]; 	/// RAM
+		PPU ppu;		///< Picture Processing Unit
+		APU apu;		///< Audio Processing Unit
+		uint8_t A; 		///< Accumulator
+		uint8_t X, Y; 		///< Index registers
+		uint16_t PC;		///< Program counter
+		uint8_t S;		///< Stack pointer
+		StatusRegister P;	///< Status register
+		uint8_t ram[0x800]; 	///< RAM
 		
 		/// Starts the CPU.
 		void power_up();
@@ -71,7 +71,7 @@ namespace NES
 		
 		/// Reads 16 bits of memory at the provided address.
 		/// \param addr Address to read from
-		/// \param is_zp_addr If its a zero-page address, wrap the most
+		/// \param is_zp_addr If it's a zero-page address, wrap the most
 		/// -significant byte around zero-page
 		/// \return 2 bytes that were read
 		uint16_t read16(uint16_t addr, bool is_zp_addr = false);
@@ -84,7 +84,7 @@ namespace NES
 		// Addressing mode functions
 		
 		/// Retrieves the current instruction parameter based on
-		/// the addressing mode and increments PC based on instruction
+		/// the addressing mode and increments PC based on parameter
 		/// length.
 		/// \param mode Addressing mode to use.
 		/// \return Parameter for current instruction.
@@ -92,14 +92,17 @@ namespace NES
 		
 		// Instructions
 		
+		/// Transfer program execution.
+		/// \param mode Addressing mode to use.
+		void JMP(AddressingMode mode);
+		
 		/// Load register `reg` with memory.
 		/// \param reg Register address to load memory to.
 		/// \param addr_fn Addressing mode to use.
 		void LD(uint8_t *reg, AddressingMode mode);
 		
-		/// Transfer program execution.
-		/// \param mode Addressing mode to use.
-		void JMP(AddressingMode mode);
+		/// Transfer X to Stack
+		void TXS();
 	};
 }
 

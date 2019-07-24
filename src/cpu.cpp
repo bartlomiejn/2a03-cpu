@@ -38,6 +38,11 @@ void NES::CPU::execute()
 {
 	switch (PC)
 	{
+		// JMP
+		case 0x4C:
+			JMP(mode_abs); break;
+		case 0x6C:
+			JMP(mode_ind); break;
 		// LDA
 		case 0xA9:
 			LD(&A, mode_imm); break;
@@ -77,11 +82,9 @@ void NES::CPU::execute()
 			LD(&Y, mode_abs); break;
 		case 0xBC:
 			LD(&Y, mode_abs_x); break;
-		// JMP
-		case 0x4C:
-			JMP(mode_abs); break;
-		case 0x6C:
-			JMP(mode_ind); break;
+		// TXS
+		case 0x9A:
+			TXS(); break;
 		default:
 			std::cerr << "Unhandled opcode: " << std::hex << PC - 1
 				<< std::endl;
@@ -150,11 +153,6 @@ uint8_t NES::CPU::get_param(NES::AddressingMode mode)
 	return read(addr);
 }
 
-void NES::CPU::LD(uint8_t *reg, NES::AddressingMode mode)
-{
-	*reg = get_param(mode);
-}
-
 void NES::CPU::JMP(NES::AddressingMode mode)
 {
 	switch (mode)
@@ -175,6 +173,16 @@ void NES::CPU::JMP(NES::AddressingMode mode)
 			PC = read16(PC);
 		default:
 			std::cerr << "Invalid addressing mode for JMP: " << mode
-				<< std::endl;
+				  << std::endl;
 	}
+}
+
+void NES::CPU::LD(uint8_t *reg, NES::AddressingMode mode)
+{
+	*reg = get_param(mode);
+}
+
+void NES::CPU::TXS()
+{
+
 }
