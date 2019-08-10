@@ -2,8 +2,6 @@
 #include <cstring>
 #include <iostream>
 
-#define exec_lambda(x) [&]() { return x(); }
-
 void NES::CPU::power_up()
 {
 	A = 0x0;
@@ -43,6 +41,7 @@ void NES::CPU::execute()
 			JMP(mode_abs); break;
 		case 0x6C:
 			JMP(mode_ind); break;
+			
 		// LDA
 		case 0xA9:
 			LD(&A, mode_imm); break;
@@ -60,6 +59,7 @@ void NES::CPU::execute()
 			LD(&A, mode_idx_ind_x); break;
 		case 0xB1:
 			LD(&A, mode_ind_idx_y); break;
+			
 		// LDX
 		case 0xA2:
 			LD(&X, mode_imm); break;
@@ -71,6 +71,7 @@ void NES::CPU::execute()
 			LD(&X, mode_abs); break;
 		case 0xBE:
 			LD(&X, mode_abs_y); break;
+			
 		// LDY
 		case 0xA0:
 			LD(&Y, mode_imm); break;
@@ -82,9 +83,13 @@ void NES::CPU::execute()
 			LD(&Y, mode_abs); break;
 		case 0xBC:
 			LD(&Y, mode_abs_x); break;
-		// TXS
+			
+		// TXS / TSX
 		case 0x9A:
-			TXS(); break;
+			T(&X, &S); break;
+		case 0xBA:
+			T(&S, &X); break;
+			
 		default:
 			std::cerr << "Unhandled opcode: " << std::hex << PC - 1
 				<< std::endl;
@@ -182,7 +187,7 @@ void NES::CPU::LD(uint8_t *reg, NES::AddressingMode mode)
 	*reg = get_param(mode);
 }
 
-void NES::CPU::TXS()
+void NES::CPU::T(uint8_t *reg_from, uint8_t *reg_to)
 {
-
+	*reg_to = *reg_from;
 }

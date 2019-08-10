@@ -101,8 +101,10 @@ namespace NES
 		/// \param addr_fn Addressing mode to use.
 		void LD(uint8_t *reg, AddressingMode mode);
 		
-		/// Transfer X to Stack
-		void TXS();
+		/// Transfer from `reg` to `reg_2`.
+		/// \param reg_from Register to transfer from.
+		/// \param reg_to Register to transfer to.
+		void T(uint8_t *reg_from, uint8_t *reg_to);
 	};
 }
 
