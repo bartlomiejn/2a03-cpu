@@ -79,9 +79,10 @@ namespace NES
 		/// Writes a value to the provided address.
 		/// \param addr Address to write the value to.
 		/// \param val Value to write.
-		void write(uint16_t addr, uint8_t val);
+		void write_to(uint16_t addr, uint8_t val);
 		
 		// Addressing mode functions
+		// http://www.obelisk.me.uk/6502/addressing.html
 		
 		/// Retrieves the current instruction parameter based on
 		/// the addressing mode and increments PC based on parameter
@@ -91,6 +92,8 @@ namespace NES
 		uint8_t get_param(AddressingMode mode);
 		
 		// Instructions
+		// http://www.6502.org/tutorials/6502opcodes.html#TXS - Docs
+		// http://www.qmtpro.com/~nes/misc/nestest.log - Behaviour
 		
 		/// Transfer program execution.
 		/// \param mode Addressing mode to use.
@@ -105,6 +108,9 @@ namespace NES
 		/// \param reg_from Register to transfer from.
 		/// \param reg_to Register to transfer to.
 		void T(uint8_t *reg_from, uint8_t *reg_to);
+		
+		/// Push value to stack
+		void PH(uint8_t value);
 	};
 }
 

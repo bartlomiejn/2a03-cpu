@@ -42,7 +42,7 @@ void NES::CPU::execute()
 		case 0x6C:
 			JMP(mode_ind); break;
 			
-		// LDA
+		// LDA / LDX / LDY
 		case 0xA9:
 			LD(&A, mode_imm); break;
 		case 0xA5:
@@ -59,8 +59,6 @@ void NES::CPU::execute()
 			LD(&A, mode_idx_ind_x); break;
 		case 0xB1:
 			LD(&A, mode_ind_idx_y); break;
-			
-		// LDX
 		case 0xA2:
 			LD(&X, mode_imm); break;
 		case 0xA6:
@@ -71,8 +69,6 @@ void NES::CPU::execute()
 			LD(&X, mode_abs); break;
 		case 0xBE:
 			LD(&X, mode_abs_y); break;
-			
-		// LDY
 		case 0xA0:
 			LD(&Y, mode_imm); break;
 		case 0xA4:
@@ -89,6 +85,12 @@ void NES::CPU::execute()
 			T(&X, &S); break;
 		case 0xBA:
 			T(&S, &X); break;
+			
+		// PHA / PHP
+		case 0x48:
+			PH(A); break;
+		case 0x08:
+			PH(P.reg); break;
 			
 		default:
 			std::cerr << "Unhandled opcode: " << std::hex << PC - 1
@@ -118,12 +120,15 @@ uint16_t NES::CPU::read16(uint16_t addr, bool is_zp_addr)
 	return (read(h_addr) << 8) | read(addr);
 }
 
-void NES::CPU::write(uint16_t addr, uint8_t val)
+void NES::CPU::write_to(uint16_t addr, uint8_t val)
 {
 	switch (addr)
 	{
 		case 0x0000 ... 0x1FFF:
 			ram[addr % 0x800] = val;
+		default:
+			std::cerr << "Unhandled write to " << std::hex << addr
+				<< " with value: " << val << std::endl;
 	}
 }
 
@@ -190,4 +195,10 @@ void NES::CPU::LD(uint8_t *reg, NES::AddressingMode mode)
 void NES::CPU::T(uint8_t *reg_from, uint8_t *reg_to)
 {
 	*reg_to = *reg_from;
+}
+
+void NES::CPU::PH(uint8_t value)
+{
+	write_to(S, value);
+	S++;
 }
