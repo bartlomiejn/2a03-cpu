@@ -200,5 +200,5 @@ void NES::CPU::T(uint8_t *reg_from, uint8_t *reg_to)
 void NES::CPU::PH(uint8_t value)
 {
 	write_to(S, value);
-	S++;
+	S--;
 }
