@@ -27,14 +27,14 @@ namespace NES
 	{
 		struct
 		{
-			uint8_t C : 1; 	///< Carry
-			uint8_t Z : 1; 	///< Zero
-			uint8_t I : 1; 	///< Interrupt disable
-			uint8_t D : 1; 	///< Decimal
-			uint8_t B : 2; 	///< Has no effect on CPU, but certain
+			bool C : 1; 	///< Carry
+			bool Z : 1; 	///< Zero
+			bool I : 1; 	///< Interrupt disable
+			bool D : 1; 	///< Decimal
+			bool B : 2; 	///< Has no effect on CPU, but certain
 					///< instructions set it
-			uint8_t V : 1;	///< Overflow
-			uint8_t N : 1; 	///< Negative
+			bool V : 1;	///< Overflow
+			bool N : 1; 	///< Negative
 		};
 		uint8_t reg;
 	};

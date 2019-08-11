@@ -4,8 +4,6 @@
 int main()
 {
 	NES::CPU cpu;
-	
 	cpu.power_up();
-	
 	return 0;
 }

@@ -61,6 +61,7 @@ void NES::CPU::execute()
 			LD(&A, mode_idx_ind_x); break;
 		case 0xB1:
 			LD(&A, mode_ind_idx_y); break;
+			
 		// LDX
 		case 0xA2:
 			LD(&X, mode_imm); break;
@@ -72,6 +73,7 @@ void NES::CPU::execute()
 			LD(&X, mode_abs); break;
 		case 0xBE:
 			LD(&X, mode_abs_y); break;
+			
 		// LDY
 		case 0xA0:
 			LD(&Y, mode_imm); break;
@@ -239,7 +241,9 @@ void NES::CPU::JMP(NES::AddressingMode mode)
 
 void NES::CPU::LD(uint8_t *reg, NES::AddressingMode mode)
 {
-	*reg = get_param(mode);
+	uint8_t param = get_param(mode);
+	*reg = param;
+	P.Z = param == 0;
 }
 
 void NES::CPU::T(uint8_t *reg_from, uint8_t *reg_to)
