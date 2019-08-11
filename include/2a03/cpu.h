@@ -39,7 +39,7 @@ namespace NES
 		uint8_t reg;
 	};
 	
-	/// Ricoh 2a03 CPU emulator
+	/// Ricoh 2A03 CPU emulator
 	class CPU
 	{
 	public:
@@ -72,10 +72,10 @@ namespace NES
 		
 		/// Reads 16 bits of memory at the provided address.
 		/// \param addr Address to read from
-		/// \param is_zp_addr If it's a zero-page address, wrap the most
+		/// \param is_zp If it's a zero-page address, wrap the most
 		/// -significant byte around zero-page.
 		/// \return 2 bytes that have been read.
-		uint16_t read16(uint16_t addr, bool is_zp_addr = false);
+		uint16_t read16(uint16_t addr, bool is_zp = false);
 		
 		/// Writes a value to the provided address.
 		/// \param addr Address to write the value to.
@@ -99,7 +99,7 @@ namespace NES
 		uint8_t get_param(AddressingMode mode);
 		
 		// Instructions
-		// http://www.6502.org/tutorials/6502opcodes.html#TXS - Docs
+		// http://www.6502.org/tutorials/6502opcodes.html - Docs
 		// http://www.qmtpro.com/~nes/misc/nestest.log - Behaviour
 		
 		/// Transfer program execution.
@@ -109,6 +109,10 @@ namespace NES
 		/// Jump to subroutine. Pushes the address - 1 of next op on the
 		/// stack before transfering control.
 		void JSR();
+		
+		/// Return from subroutine. Pulls two bytes off the stack (low
+		/// byte first) and transfers control to that address.
+		void RTS();
 		
 		/// Load register `reg` with memory.
 		/// \param reg Register address to load memory to.
@@ -131,11 +135,6 @@ namespace NES
 		/// \param reg Value to store.
 		/// \param mode Addressing mode to use.
 		void ST(uint8_t reg, AddressingMode mode);
-		
-		// Auxiliary
-		
-		/// Pushes `value` to stack.
-		void push(uint8_t value);
 	};
 }
 

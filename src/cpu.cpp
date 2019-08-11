@@ -34,8 +34,7 @@ void NES::CPU::reset()
 
 void NES::CPU::execute()
 {
-	PC++;
-	switch (read(PC - 1))
+	switch (read(PC++))
 	{
 		// Control transfer
 		
@@ -44,10 +43,12 @@ void NES::CPU::execute()
 			JMP(mode_abs); break;
 		case 0x6C:
 			JMP(mode_ind); break;
-			
 		// JSR
 		case 0x20:
 			JSR(); break;
+		// RTS
+		case 0x60:
+			RTS(); break;
 			
 		// Load instructions
 		
@@ -68,7 +69,6 @@ void NES::CPU::execute()
 			LD(&A, mode_idx_ind_x); break;
 		case 0xB1:
 			LD(&A, mode_ind_idx_y); break;
-			
 		// LDX
 		case 0xA2:
 			LD(&X, mode_imm); break;
@@ -80,7 +80,6 @@ void NES::CPU::execute()
 			LD(&X, mode_abs); break;
 		case 0xBE:
 			LD(&X, mode_abs_y); break;
-			
 		// LDY
 		case 0xA0:
 			LD(&Y, mode_imm); break;
@@ -110,7 +109,6 @@ void NES::CPU::execute()
 			ST(A, mode_idx_ind_x); break;
 		case 0x91:
 			ST(A, mode_ind_idx_y); break;
-			
 		// STX
 		case 0x86:
 			ST(X, mode_zp); break;
@@ -118,7 +116,6 @@ void NES::CPU::execute()
 			ST(X, mode_zp_y); break;
 		case 0x8E:
 			ST(X, mode_abs); break;
-			
 		// STY
 		case 0x84:
 			ST(Y, mode_zp); break;
@@ -134,23 +131,27 @@ void NES::CPU::execute()
 			T(&X, &S); break;
 		case 0xBA:
 			T(&S, &X); break;
-			
 		// PHA / PHP
 		case 0x48:
 			PH(A); break;
 		case 0x08:
 			// PHP sets P.B to 0x3
 			PH(P.reg, true); break;
-			
 		// PLA / PLP
 		case 0x68:
 			PL(&A); break;
 		case 0x28:
 			PL(&P.reg); break;
 			
+		// Others
+		
+		// NOP
+		case 0xEA:
+			break;
+		
 		default:
-			std::cerr << "Unhandled opcode: " << std::hex << PC - 1
-				<< std::endl;
+			std::cerr << "Unhandled opcode: " << std::hex
+				<< read(PC - 1) << std::endl;
 	}
 }
 
@@ -167,11 +168,11 @@ uint8_t NES::CPU::read(uint16_t addr)
 	}
 }
 
-uint16_t NES::CPU::read16(uint16_t addr, bool is_zp_addr)
+uint16_t NES::CPU::read16(uint16_t addr, bool is_zp)
 {
 	// If we know this is a zero-page addr, wrap the most-significant bit
 	// around zero-page bounds
-	uint16_t h_addr = is_zp_addr ? ((addr + 1) % 0x100) : (addr + 1);
+	uint16_t h_addr = is_zp ? ((addr + 1) % 0x100) : (addr + 1);
 	return (read(h_addr) << 8) | read(addr);
 }
 
@@ -252,6 +253,14 @@ void NES::CPU::JSR()
 	PH((uint8_t)return_addr >> 8);
 	PH((uint8_t)return_addr);
 	JMP(mode_abs);
+}
+
+void NES::CPU::RTS()
+{
+	uint8_t l_addr, h_addr;
+	PL(&l_addr);
+	PL(&h_addr);
+	PC = h_addr << 8 | l_addr;
 }
 
 void NES::CPU::LD(uint8_t *reg, NES::AddressingMode mode)
