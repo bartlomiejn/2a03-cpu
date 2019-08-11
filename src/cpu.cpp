@@ -2,7 +2,9 @@
 #include <cstring>
 #include <iostream>
 
-void NES::CPU::power_up()
+using namespace NES;
+
+void CPU::power_up()
 {
 	A = 0x0;
 	X = 0x0;
@@ -22,7 +24,7 @@ void NES::CPU::power_up()
 	memset(ram, 0xFF, sizeof(ram));
 }
 
-void NES::CPU::reset()
+void CPU::reset()
 {
 	S -= 3;
 	P.reg |= 0x04;
@@ -32,7 +34,7 @@ void NES::CPU::reset()
 	// APU triangle phase is reset to 0
 }
 
-void NES::CPU::execute()
+void CPU::execute()
 {
 	switch (read(PC++))
 	{
@@ -69,6 +71,27 @@ void NES::CPU::execute()
 			ORA(mode_idx_ind_x); break;
 		case 0x11:
 			ORA(mode_ind_idx_y); break;
+		// ROL / ROR
+		case 0x2A:
+			ROLA(); break;
+		case 0x26:
+			ROL(mode_zp); break;
+		case 0x36:
+			ROL(mode_zp_x); break;
+		case 0x2E:
+			ROL(mode_abs); break;
+		case 0x3E:
+			ROL(mode_abs_x); break;
+		case 0x6A:
+			RORA(); break;
+		case 0x66:
+			ROR(mode_zp); break;
+		case 0x76:
+			ROR(mode_zp_x); break;
+		case 0x6E:
+			ROR(mode_abs); break;
+		case 0x7E:
+			ROR(mode_abs_x); break;
 		
 		// Load / store
 		
@@ -173,7 +196,7 @@ void NES::CPU::execute()
 	}
 }
 
-uint8_t NES::CPU::read(uint16_t addr)
+uint8_t CPU::read(uint16_t addr)
 {
 	switch (addr)
 	{
@@ -186,7 +209,7 @@ uint8_t NES::CPU::read(uint16_t addr)
 	}
 }
 
-uint16_t NES::CPU::read16(uint16_t addr, bool is_zp)
+uint16_t CPU::read16(uint16_t addr, bool is_zp)
 {
 	// If we know this is a zero-page addr, wrap the most-significant bit
 	// around zero-page bounds
@@ -194,7 +217,7 @@ uint16_t NES::CPU::read16(uint16_t addr, bool is_zp)
 	return (read(h_addr) << 8) | read(addr);
 }
 
-void NES::CPU::write_to(uint16_t addr, uint8_t val)
+void CPU::write_to(uint16_t addr, uint8_t val)
 {
 	switch (addr)
 	{
@@ -206,12 +229,12 @@ void NES::CPU::write_to(uint16_t addr, uint8_t val)
 	}
 }
 
-uint8_t NES::CPU::get_param(NES::AddressingMode mode)
+uint8_t CPU::get_param(AddressingMode mode)
 {
 	return read(param_addr(mode));
 }
 
-uint16_t NES::CPU::param_addr(NES::AddressingMode mode)
+uint16_t CPU::param_addr(AddressingMode mode)
 {
 	uint16_t addr = 0x0;
 	switch (mode)
@@ -242,9 +265,21 @@ uint16_t NES::CPU::param_addr(NES::AddressingMode mode)
 	return addr;
 }
 
+// Auxiliary
+
+uint8_t CPU::rot_l(uint8_t value)
+{
+	return (value << 1) | (value >> (sizeof(value) * 8 - 1));
+}
+
+uint8_t CPU::rot_r(uint8_t value)
+{
+	return (value >> 1) | (value << (sizeof(value) * 8 - 1));
+}
+
 // Control transfer
 
-void NES::CPU::JMP(NES::AddressingMode mode)
+void CPU::JMP(AddressingMode mode)
 {
 	switch (mode)
 	{
@@ -267,7 +302,7 @@ void NES::CPU::JMP(NES::AddressingMode mode)
 	}
 }
 
-void NES::CPU::JSR()
+void CPU::JSR()
 {
 	uint16_t return_addr = (uint16_t)(PC + 1);
 	PH((uint8_t)return_addr >> 8);
@@ -275,7 +310,7 @@ void NES::CPU::JSR()
 	JMP(mode_abs);
 }
 
-void NES::CPU::RTS()
+void CPU::RTS()
 {
 	uint8_t l_addr, h_addr;
 	PL(&l_addr);
@@ -285,37 +320,60 @@ void NES::CPU::RTS()
 
 // Arithmetic / logical
 
-void NES::CPU::ORA(NES::AddressingMode mode)
+void CPU::ORA(AddressingMode mode)
 {
 	uint8_t param = get_param(mode);
 	A |= param;
-	P.Z = A == 0; // Is the value zero?
-	P.N = A >> 7; // Set N to 7-th bit of value
+	P.Z = A == 0;
+	P.N = A >> 7;
+}
+
+// TODO: Add N, Z, C to ROL / ROR ops
+void CPU::ROLA()
+{
+	A = rot_l(A);
+}
+
+void CPU::ROL(NES::AddressingMode mode)
+{
+	uint16_t addr = param_addr(mode);
+	write_to(addr, rot_l(read(addr)));
+}
+
+void CPU::RORA()
+{
+	A = rot_r(A);
+}
+
+void CPU::ROR(NES::AddressingMode mode)
+{
+	uint16_t addr = param_addr(mode);
+	write_to(addr, rot_r(read(addr)));
 }
 
 // Load / store
 
-void NES::CPU::LD(uint8_t *reg, NES::AddressingMode mode)
+void CPU::LD(uint8_t *reg, AddressingMode mode)
 {
 	uint8_t param = get_param(mode);
 	*reg = param;
-	P.Z = param == 0; // Is the value zero?
-	P.N = param >> 7; // Set N to 7-th bit of value
+	P.Z = param == 0;
+	P.N = param >> 7;
 }
 
-void NES::CPU::ST(uint8_t reg, NES::AddressingMode mode)
+void CPU::ST(uint8_t reg, AddressingMode mode)
 {
 	write_to(param_addr(mode), reg);
 }
 
 // Stack
 
-void NES::CPU::T(uint8_t *reg_from, uint8_t *reg_to)
+void CPU::T(uint8_t *reg_from, uint8_t *reg_to)
 {
 	*reg_to = *reg_from;
 }
 
-void NES::CPU::PH(uint8_t value, bool set_b)
+void CPU::PH(uint8_t value, bool set_b)
 {
 	if (set_b)
 		P.B = 0x3;
@@ -323,7 +381,7 @@ void NES::CPU::PH(uint8_t value, bool set_b)
 	S--;
 }
 
-void NES::CPU::PL(uint8_t *reg_to)
+void CPU::PL(uint8_t *reg_to)
 {
 	uint8_t param = read(S);
 	*reg_to = read(S);

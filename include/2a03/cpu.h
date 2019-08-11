@@ -34,7 +34,8 @@ namespace NES
 			uint8_t B : 2; 	///< Has no effect on CPU, but certain
 					///< instructions set it
 			bool V : 1;	///< Overflow
-			bool N : 1; 	///< Negative
+			bool N : 1; 	///< Negative (Set using the 7-th bit of
+					///< a result value)
 		};
 		uint8_t reg;
 	};
@@ -98,6 +99,14 @@ namespace NES
 		/// \return Parameter for current instruction.
 		uint8_t get_param(AddressingMode mode);
 		
+		// Auxiliary functions
+		
+		/// Rotates left the value once.
+		uint8_t rot_l(uint8_t value);
+		
+		/// Rotates right the value once.
+		uint8_t rot_r(uint8_t value);
+		
 		// Instructions
 		// http://www.6502.org/tutorials/6502opcodes.html - Docs
 		// http://www.qmtpro.com/~nes/misc/nestest.log - Behaviour
@@ -121,6 +130,20 @@ namespace NES
 		/// Performs bitwise OR with the accumulator.
 		/// \param mode Addressing mode of the parameter.
 		void ORA(AddressingMode mode);
+		
+		/// Rotate left the accumulator.
+		void ROLA();
+		
+		/// Rotate left a value at the specified address.
+		/// \param mode Addressing mode to use.
+		void ROL(AddressingMode mode);
+		
+		/// Rotate right the accumulator.
+		void RORA();
+		
+		/// Rotate right a value at the specified address.
+		/// \param mode Addressing mode to use.
+		void ROR(AddressingMode mode);
 		
 		// Load / store
 		
