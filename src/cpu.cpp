@@ -243,8 +243,8 @@ void NES::CPU::LD(uint8_t *reg, NES::AddressingMode mode)
 {
 	uint8_t param = get_param(mode);
 	*reg = param;
-	P.Z = param == 0;
-	P.N = param >> 7;
+	P.Z = param == 0; // Is the value zero?
+	P.N = param >> 7; // Set N to 7-th bit of value
 }
 
 void NES::CPU::T(uint8_t *reg_from, uint8_t *reg_to)
@@ -260,8 +260,11 @@ void NES::CPU::PH(uint8_t value)
 
 void NES::CPU::PL(uint8_t *reg_to)
 {
+	uint8_t param = read(S);
 	*reg_to = read(S);
 	S++;
+	P.Z = param == 0;
+	P.N = param >> 7;
 }
 
 void NES::CPU::ST(uint8_t reg, NES::AddressingMode mode)
