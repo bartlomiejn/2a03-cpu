@@ -10,7 +10,7 @@ void CPU::power_up()
 	X = 0x0;
 	Y = 0x0;
 	S = 0xFD;
-	P.reg = 0x24;
+	P.status = 0x24;
 	
 	// TODO: Rest of power up logic
 	// $4017 = $00 (frame irq enabled)
@@ -27,7 +27,7 @@ void CPU::power_up()
 void CPU::reset()
 {
 	S -= 3;
-	P.reg |= 0x04;
+	P.status |= 0x04;
 	
 	// TODO: Rest of reset logic
 	// APU was silenced ($4015 = 0)
@@ -39,157 +39,71 @@ void CPU::execute()
 	switch (read(PC++))
 	{
 		// Control transfer
-		
-		// JMP
-		case 0x4C:
-			JMP(mode_abs); break;
-		case 0x6C:
-			JMP(mode_ind); break;
-		// JSR
-		case 0x20:
-			JSR(); break;
-		// RTS
-		case 0x60:
-			RTS(); break;
-			
+		case 0x4C: JMP(abs); break;
+		case 0x6C: JMP(ind); break;
+		case 0x20: JSR(); break;
+		case 0x60: RTS(); break;
 		// Arithmetic / logical
-		
-		// ORA
-		case 0x09:
-			ORA(mode_imm); break;
-		case 0x05:
-			ORA(mode_zp); break;
-		case 0x15:
-			ORA(mode_zp_x); break;
-		case 0x0D:
-			ORA(mode_abs); break;
-		case 0x1D:
-			ORA(mode_abs_x); break;
-		case 0x19:
-			ORA(mode_abs_y); break;
-		case 0x01:
-			ORA(mode_idx_ind_x); break;
-		case 0x11:
-			ORA(mode_ind_idx_y); break;
-		// ROL / ROR
-		case 0x2A:
-			ROLA(); break;
-		case 0x26:
-			ROL(mode_zp); break;
-		case 0x36:
-			ROL(mode_zp_x); break;
-		case 0x2E:
-			ROL(mode_abs); break;
-		case 0x3E:
-			ROL(mode_abs_x); break;
-		case 0x6A:
-			RORA(); break;
-		case 0x66:
-			ROR(mode_zp); break;
-		case 0x76:
-			ROR(mode_zp_x); break;
-		case 0x6E:
-			ROR(mode_abs); break;
-		case 0x7E:
-			ROR(mode_abs_x); break;
-		
+		case 0x09: ORA(imm); break;
+		case 0x05: ORA(zp); break;
+		case 0x15: ORA(zp_x); break;
+		case 0x0D: ORA(abs); break;
+		case 0x1D: ORA(abs_x); break;
+		case 0x19: ORA(abs_y); break;
+		case 0x01: ORA(idx_ind_x); break;
+		case 0x11: ORA(ind_idx_y); break;
+		// TODO: Add N, Z, C to ROL / ROR
+		case 0x2A: ROLA(); break;
+		case 0x26: ROL(zp); break;
+		case 0x36: ROL(zp_x); break;
+		case 0x2E: ROL(abs); break;
+		case 0x3E: ROL(abs_x); break;
+		case 0x6A: RORA(); break;
+		case 0x66: ROR(zp); break;
+		case 0x76: ROR(zp_x); break;
+		case 0x6E: ROR(abs); break;
+		case 0x7E: ROR(abs_x); break;
 		// Load / store
-		
-		// LDA
-		case 0xA9:
-			LD(&A, mode_imm); break;
-		case 0xA5:
-			LD(&A, mode_zp); break;
-		case 0xB5:
-			LD(&A, mode_zp_x); break;
-		case 0xAD:
-			LD(&A, mode_abs); break;
-		case 0xBD:
-			LD(&A, mode_abs_x); break;
-		case 0xB9:
-			LD(&A, mode_abs_y); break;
-		case 0xA1:
-			LD(&A, mode_idx_ind_x); break;
-		case 0xB1:
-			LD(&A, mode_ind_idx_y); break;
-		// LDX
-		case 0xA2:
-			LD(&X, mode_imm); break;
-		case 0xA6:
-			LD(&X, mode_zp); break;
-		case 0xB6:
-			LD(&X, mode_zp_y); break;
-		case 0xAE:
-			LD(&X, mode_abs); break;
-		case 0xBE:
-			LD(&X, mode_abs_y); break;
-		// LDY
-		case 0xA0:
-			LD(&Y, mode_imm); break;
-		case 0xA4:
-			LD(&Y, mode_zp); break;
-		case 0xB4:
-			LD(&Y, mode_zp_x); break;
-		case 0xAC:
-			LD(&Y, mode_abs); break;
-		case 0xBC:
-			LD(&Y, mode_abs_x); break;
-		
-		// STA
-		case 0x85:
-			ST(A, mode_zp); break;
-		case 0x95:
-			ST(A, mode_zp_x); break;
-		case 0x8D:
-			ST(A, mode_abs); break;
-		case 0x9D:
-			ST(A, mode_abs_x); break;
-		case 0x99:
-			ST(A, mode_abs_y); break;
-		case 0x81:
-			ST(A, mode_idx_ind_x); break;
-		case 0x91:
-			ST(A, mode_ind_idx_y); break;
-		// STX
-		case 0x86:
-			ST(X, mode_zp); break;
-		case 0x96:
-			ST(X, mode_zp_y); break;
-		case 0x8E:
-			ST(X, mode_abs); break;
-		// STY
-		case 0x84:
-			ST(Y, mode_zp); break;
-		case 0x94:
-			ST(Y, mode_zp_x); break;
-		case 0x8C:
-			ST(Y, mode_abs); break;
-		
+		case 0xA9: LD(A, imm); break;
+		case 0xA5: LD(A, zp); break;
+		case 0xB5: LD(A, zp_x); break;
+		case 0xAD: LD(A, abs); break;
+		case 0xBD: LD(A, abs_x); break;
+		case 0xB9: LD(A, abs_y); break;
+		case 0xA1: LD(A, idx_ind_x); break;
+		case 0xB1: LD(A, ind_idx_y); break;
+		case 0xA2: LD(X, imm); break;
+		case 0xA6: LD(X, zp); break;
+		case 0xB6: LD(X, mode_zp_y); break;
+		case 0xAE: LD(X, abs); break;
+		case 0xBE: LD(X, abs_y); break;
+		case 0xA0: LD(Y, imm); break;
+		case 0xA4: LD(Y, zp); break;
+		case 0xB4: LD(Y, zp_x); break;
+		case 0xAC: LD(Y, abs); break;
+		case 0xBC: LD(Y, abs_x); break;
+		case 0x85: ST(A, zp); break;
+		case 0x95: ST(A, zp_x); break;
+		case 0x8D: ST(A, abs); break;
+		case 0x9D: ST(A, abs_x); break;
+		case 0x99: ST(A, abs_y); break;
+		case 0x81: ST(A, idx_ind_x); break;
+		case 0x91: ST(A, ind_idx_y); break;
+		case 0x86: ST(X, zp); break;
+		case 0x96: ST(X, mode_zp_y); break;
+		case 0x8E: ST(X, abs); break;
+		case 0x84: ST(Y, zp); break;
+		case 0x94: ST(Y, zp_x); break;
+		case 0x8C: ST(Y, abs); break;
 		// Stack
-		
-		// TXS / TSX
-		case 0x9A:
-			T(&X, &S); break;
-		case 0xBA:
-			T(&S, &X); break;
-		// PHA / PHP
-		case 0x48:
-			PH(A); break;
-		case 0x08:
-			// PHP sets P.B to 0x3
-			PH(P.reg, true); break;
-		// PLA / PLP
-		case 0x68:
-			PL(&A); break;
-		case 0x28:
-			PL(&P.reg); break;
-			
+		case 0x9A: T(X, S); break;
+		case 0xBA: T(S, X); break;
+		case 0x48: PH(A); break;
+		case 0x08: PH(P); break;
+		case 0x68: PL(A); break;
+		case 0x28: PL(P); break;
 		// Others
-		
-		// NOP
-		case 0xEA:
-			break;
-		
+		case 0xEA: /* NOP */ break;
 		default:
 			std::cerr << "Unhandled opcode: " << std::hex
 				<< read(PC - 1) << std::endl;
@@ -239,25 +153,25 @@ uint16_t CPU::param_addr(AddressingMode mode)
 	uint16_t addr = 0x0;
 	switch (mode)
 	{
-		case mode_abs:
+		case abs:
 			addr = read16(PC); PC += 2; break;
-		case mode_abs_x:
+		case abs_x:
 			addr = read16(PC) + X; PC += 2; break;
-		case mode_abs_y:
+		case abs_y:
 			addr = read16(PC) + Y; PC += 2; break;
-		case mode_imm:
+		case imm:
 			addr = PC; PC++; break;
-		case mode_zp:
+		case zp:
 			addr = read(PC); PC++; break;
-		case mode_zp_x:
+		case zp_x:
 			addr = (read(PC) + X) % 0x100; PC++; break;
 		case mode_zp_y:
 			addr = (read(PC) + Y) % 0x100; PC++; break;
-		case mode_idx_ind_x:
+		case idx_ind_x:
 			addr = read16((read(PC) + X) % 0x100, true); PC++; break;
-		case mode_ind_idx_y:
+		case ind_idx_y:
 			addr = read16(read(PC), true) + Y; PC++; break;
-		case mode_ind:
+		case ind:
 		default:
 			std::cerr << "Invalid addressing mode: " << mode
 				  << std::endl;
@@ -283,7 +197,7 @@ void CPU::JMP(AddressingMode mode)
 {
 	switch (mode)
 	{
-		case mode_ind:
+		case ind:
 			// TODO: Implement indirect jump quirk
 			// AN INDIRECT JUMP MUST NEVER USE A VECTOR BEGINNING ON
 			// THE LAST BYTE OF A PAGE
@@ -294,7 +208,7 @@ void CPU::JMP(AddressingMode mode)
 			// the low byte of the address from $30FF and the high
 			// byte from $3000.
 			PC = read16(read16(PC)); break;
-		case mode_abs:
+		case abs:
 			PC = read16(PC);
 		default:
 			std::cerr << "Invalid addressing mode for JMP: " << mode
@@ -307,7 +221,7 @@ void CPU::JSR()
 	uint16_t return_addr = (uint16_t)(PC + 1);
 	PH((uint8_t)return_addr >> 8);
 	PH((uint8_t)return_addr);
-	JMP(mode_abs);
+	JMP(abs);
 }
 
 void CPU::RTS()
@@ -353,10 +267,10 @@ void CPU::ROR(NES::AddressingMode mode)
 
 // Load / store
 
-void CPU::LD(uint8_t *reg, AddressingMode mode)
+void CPU::LD(uint8_t &reg, AddressingMode mode)
 {
 	uint8_t param = get_param(mode);
-	*reg = param;
+	reg = param;
 	P.Z = param == 0;
 	P.N = param >> 7;
 }
@@ -368,24 +282,33 @@ void CPU::ST(uint8_t reg, AddressingMode mode)
 
 // Stack
 
-void CPU::T(uint8_t *reg_from, uint8_t *reg_to)
+void CPU::T(uint8_t &reg_from, uint8_t &reg_to)
 {
-	*reg_to = *reg_from;
+	reg_to = reg_from;
 }
 
-void CPU::PH(uint8_t value, bool set_b)
+void CPU::PH(uint8_t value)
 {
-	if (set_b)
-		P.B = 0x3;
 	write_to(S, value);
 	S--;
 }
 
-void CPU::PL(uint8_t *reg_to)
+void CPU::PH(StatusRegister &p)
+{
+	PH(p.status);
+	p.B = 0x3;
+}
+
+void CPU::PL(uint8_t &reg_to)
 {
 	uint8_t param = read(S);
-	*reg_to = read(S);
 	P.Z = param == 0;
 	P.N = param >> 7;
+	reg_to = param;
 	S++;
+}
+
+void CPU::PL(StatusRegister &p)
+{
+	PL(P.status);
 }

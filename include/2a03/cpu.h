@@ -10,16 +10,16 @@ namespace NES
 {
 	enum AddressingMode
 	{
-		mode_abs,	///< Absolute
-		mode_abs_x,	///< Absolute indexed with X
-		mode_abs_y,	///< Absolute indexed with Y
-		mode_imm,	///< Immediate
-		mode_zp,	///< Zero Page
-		mode_zp_x,	///< Zero Page indexed with X
+		abs,		///< Absolute
+		abs_x,		///< Absolute indexed with X
+		abs_y,		///< Absolute indexed with Y
+		imm,		///< Immediate
+		zp,		///< Zero Page
+		zp_x,		///< Zero Page indexed with X
 		mode_zp_y,	///< Zero Page indexed with Y
-		mode_idx_ind_x,	///< Indexed indirect with X
-		mode_ind_idx_y,	///< Indirect indexed with Y
-		mode_ind	///< Indirect (used only with JMP)
+		idx_ind_x,	///< Indexed indirect with X
+		ind_idx_y,	///< Indirect indexed with Y
+		ind		///< Indirect (used only with JMP)
 	};
 	
 	/// Status Register P union representation
@@ -37,7 +37,7 @@ namespace NES
 			bool N : 1; 	///< Negative (Set using the 7-th bit of
 					///< a result value)
 		};
-		uint8_t reg;
+		uint8_t status;
 	};
 	
 	/// Ricoh 2A03 CPU emulator
@@ -150,7 +150,7 @@ namespace NES
 		/// Load register `reg` with memory.
 		/// \param reg Register address to load memory to.
 		/// \param addr_fn Addressing mode to use.
-		void LD(uint8_t *reg, AddressingMode mode);
+		void LD(uint8_t &reg, AddressingMode mode);
 		
 		/// Store register.
 		/// \param reg Value to store.
@@ -162,14 +162,21 @@ namespace NES
 		/// Transfer from `reg` to `reg_2`.
 		/// \param reg_from Register to transfer from.
 		/// \param reg_to Register to transfer to.
-		void T(uint8_t *reg_from, uint8_t *reg_to);
+		void T(uint8_t &reg_from, uint8_t &reg_to);
 		
 		/// Push value to stack.
-		void PH(uint8_t value, bool set_b = false);
+		void PH(uint8_t value);
+		
+		/// Push P to stack.
+		void PH(StatusRegister &p);
 		
 		/// Pull value from stack.
 		/// \param reg_to Register to pull the value to.
-		void PL(uint8_t *reg_to);
+		void PL(uint8_t &reg_to);
+		
+		/// Pull value to status register.
+		/// \param p P register to pull the value to.
+		void PL(StatusRegister &p);
 	};
 }
 
