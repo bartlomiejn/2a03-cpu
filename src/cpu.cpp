@@ -244,6 +244,7 @@ void NES::CPU::LD(uint8_t *reg, NES::AddressingMode mode)
 	uint8_t param = get_param(mode);
 	*reg = param;
 	P.Z = param == 0;
+	P.N = param >> 7;
 }
 
 void NES::CPU::T(uint8_t *reg_from, uint8_t *reg_to)
