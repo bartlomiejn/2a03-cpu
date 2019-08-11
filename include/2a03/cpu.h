@@ -65,15 +65,15 @@ namespace NES
 		// Memory access
 		
 		/// Reads 8 bits of memory at the provided address.
-		/// \param addr Address to read from
-		/// \return Byte that was read
+		/// \param addr Address to read from.
+		/// \return Byte that was read.
 		uint8_t read(uint16_t addr);
 		
 		/// Reads 16 bits of memory at the provided address.
 		/// \param addr Address to read from
 		/// \param is_zp_addr If it's a zero-page address, wrap the most
-		/// -significant byte around zero-page
-		/// \return 2 bytes that were read
+		/// -significant byte around zero-page.
+		/// \return 2 bytes that were read.
 		uint16_t read16(uint16_t addr, bool is_zp_addr = false);
 		
 		/// Writes a value to the provided address.
@@ -83,6 +83,12 @@ namespace NES
 		
 		// Addressing mode functions
 		// http://www.obelisk.me.uk/6502/addressing.html
+		
+		/// Returns the address of the parameter based on the addressing
+		/// mode and increments PC based on param length.
+		/// \param mode Addressing mode.
+		/// \return Parameter address.
+		uint16_t param_addr(NES::AddressingMode mode);
 		
 		/// Retrieves the current instruction parameter based on
 		/// the addressing mode and increments PC based on parameter
@@ -109,8 +115,17 @@ namespace NES
 		/// \param reg_to Register to transfer to.
 		void T(uint8_t *reg_from, uint8_t *reg_to);
 		
-		/// Push value to stack
+		/// Push value to stack.
 		void PH(uint8_t value);
+		
+		/// Pull value from stack.
+		/// \param reg_to Register to pull the value to.
+		void PL(uint8_t *reg_to);
+		
+		/// Store register.
+		/// \param reg Value to store.
+		/// \param mode Addressing mode to use.
+		void ST(uint8_t reg, AddressingMode mode);
 	};
 }
 

@@ -42,7 +42,9 @@ void NES::CPU::execute()
 		case 0x6C:
 			JMP(mode_ind); break;
 			
-		// LDA / LDX / LDY
+		// Load instructions
+		
+		// LDA
 		case 0xA9:
 			LD(&A, mode_imm); break;
 		case 0xA5:
@@ -59,6 +61,7 @@ void NES::CPU::execute()
 			LD(&A, mode_idx_ind_x); break;
 		case 0xB1:
 			LD(&A, mode_ind_idx_y); break;
+		// LDX
 		case 0xA2:
 			LD(&X, mode_imm); break;
 		case 0xA6:
@@ -69,6 +72,7 @@ void NES::CPU::execute()
 			LD(&X, mode_abs); break;
 		case 0xBE:
 			LD(&X, mode_abs_y); break;
+		// LDY
 		case 0xA0:
 			LD(&Y, mode_imm); break;
 		case 0xA4:
@@ -80,6 +84,42 @@ void NES::CPU::execute()
 		case 0xBC:
 			LD(&Y, mode_abs_x); break;
 			
+		// Store instructions
+		
+		// STA
+		case 0x85:
+			ST(A, mode_zp); break;
+		case 0x95:
+			ST(A, mode_zp_x); break;
+		case 0x8D:
+			ST(A, mode_abs); break;
+		case 0x9D:
+			ST(A, mode_abs_x); break;
+		case 0x99:
+			ST(A, mode_abs_y); break;
+		case 0x81:
+			ST(A, mode_idx_ind_x); break;
+		case 0x91:
+			ST(A, mode_ind_idx_y); break;
+			
+		// STX
+		case 0x86:
+			ST(X, mode_zp); break;
+		case 0x96:
+			ST(X, mode_zp_y); break;
+		case 0x8E:
+			ST(X, mode_abs); break;
+			
+		// STY
+		case 0x84:
+			ST(Y, mode_zp); break;
+		case 0x94:
+			ST(Y, mode_zp_x); break;
+		case 0x8C:
+			ST(Y, mode_abs); break;
+		
+		// Stack instructions
+		
 		// TXS / TSX
 		case 0x9A:
 			T(&X, &S); break;
@@ -91,6 +131,12 @@ void NES::CPU::execute()
 			PH(A); break;
 		case 0x08:
 			PH(P.reg); break;
+			
+		// PLA / PLP
+		case 0x68:
+			PL(&A); break;
+		case 0x28:
+			PL(&P.reg); break;
 			
 		default:
 			std::cerr << "Unhandled opcode: " << std::hex << PC - 1
@@ -134,6 +180,11 @@ void NES::CPU::write_to(uint16_t addr, uint8_t val)
 
 uint8_t NES::CPU::get_param(NES::AddressingMode mode)
 {
+	return read(param_addr(mode));
+}
+
+uint16_t NES::CPU::param_addr(NES::AddressingMode mode)
+{
 	uint16_t addr = 0x0;
 	switch (mode)
 	{
@@ -158,9 +209,9 @@ uint8_t NES::CPU::get_param(NES::AddressingMode mode)
 		case mode_ind:
 		default:
 			std::cerr << "Invalid addressing mode: " << mode
-				<< std::endl;
+				  << std::endl;
 	}
-	return read(addr);
+	return addr;
 }
 
 void NES::CPU::JMP(NES::AddressingMode mode)
@@ -169,9 +220,8 @@ void NES::CPU::JMP(NES::AddressingMode mode)
 	{
 		case mode_ind:
 			// TODO: Implement indirect jump quirk
-			// AN INDIRECT JUMP MUST NEVER USE A
-			// VECTOR BEGINNING ON THE LAST BYTE
-			// OF A PAGE
+			// AN INDIRECT JUMP MUST NEVER USE A VECTOR BEGINNING ON
+			// THE LAST BYTE OF A PAGE
 			// For example if address $3000 contains $40, $30FF
 			// contains $80, and $3100 contains $50, the result of
 			// JMP ($30FF) will be a transfer of control to $4080
@@ -201,4 +251,15 @@ void NES::CPU::PH(uint8_t value)
 {
 	write_to(S, value);
 	S--;
+}
+
+void NES::CPU::PL(uint8_t *reg_to)
+{
+	*reg_to = read(S);
+	S++;
+}
+
+void NES::CPU::ST(uint8_t reg, NES::AddressingMode mode)
+{
+	write_to(param_addr(mode), reg);
 }
