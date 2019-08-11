@@ -40,17 +40,18 @@ namespace NES
 	};
 	
 	/// Ricoh 2a03 CPU emulator
-	/// http://wiki.nesdev.com/w/index.php/CPU_registers
 	class CPU
 	{
 	public:
-		PPU ppu;		///< Picture Processing Unit
-		APU apu;		///< Audio Processing Unit
+		// Registers
+		// http://wiki.nesdev.com/w/index.php/CPU_registers
+		
 		uint8_t A; 		///< Accumulator
 		uint8_t X, Y; 		///< Index registers
 		uint16_t PC;		///< Program counter
 		uint8_t S;		///< Stack pointer
 		StatusRegister P;	///< Status register
+		
 		uint8_t ram[0x800]; 	///< RAM
 		
 		/// Starts the CPU.
@@ -66,14 +67,14 @@ namespace NES
 		
 		/// Reads 8 bits of memory at the provided address.
 		/// \param addr Address to read from.
-		/// \return Byte that was read.
+		/// \return Byte that has been read.
 		uint8_t read(uint16_t addr);
 		
 		/// Reads 16 bits of memory at the provided address.
 		/// \param addr Address to read from
 		/// \param is_zp_addr If it's a zero-page address, wrap the most
 		/// -significant byte around zero-page.
-		/// \return 2 bytes that were read.
+		/// \return 2 bytes that have been read.
 		uint16_t read16(uint16_t addr, bool is_zp_addr = false);
 		
 		/// Writes a value to the provided address.
@@ -130,6 +131,11 @@ namespace NES
 		/// \param reg Value to store.
 		/// \param mode Addressing mode to use.
 		void ST(uint8_t reg, AddressingMode mode);
+		
+		// Auxiliary
+		
+		/// Pushes `value` to stack.
+		void push(uint8_t value);
 	};
 }
 

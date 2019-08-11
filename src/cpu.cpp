@@ -34,7 +34,8 @@ void NES::CPU::reset()
 
 void NES::CPU::execute()
 {
-	switch (read(PC++))
+	PC++;
+	switch (read(PC - 1))
 	{
 		// Control transfer
 		
@@ -247,7 +248,9 @@ void NES::CPU::JMP(NES::AddressingMode mode)
 
 void NES::CPU::JSR()
 {
-	
+	uint16_t return_addr = (uint16_t)(PC + 1);
+	PH((uint8_t)return_addr >> 8);
+	PH((uint8_t)return_addr);
 	JMP(mode_abs);
 }
 

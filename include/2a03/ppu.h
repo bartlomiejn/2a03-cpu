@@ -5,11 +5,13 @@
 
 namespace NES
 {
-	/// NES PPU 2C02 emulator.
-	/// http://wiki.nesdev.com/w/index.php/PPU_registers
+	/// Ricoh 2C02 PPU emulator.
 	class PPU
 	{
 	public:
+		// Registers
+		// http://wiki.nesdev.com/w/index.php/PPU_registers
+		
 		uint8_t PPUCTRL;	/// PPU Controller (W)
 		uint8_t PPUMASK; 	/// PPU Mask (W)
 		uint8_t PPUSTATUS; 	/// PPU Status (R)
