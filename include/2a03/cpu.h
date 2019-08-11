@@ -31,7 +31,7 @@ namespace NES
 			bool Z : 1; 	///< Zero
 			bool I : 1; 	///< Interrupt disable
 			bool D : 1; 	///< Decimal
-			bool B : 2; 	///< Has no effect on CPU, but certain
+			uint8_t B : 2; 	///< Has no effect on CPU, but certain
 					///< instructions set it
 			bool V : 1;	///< Overflow
 			bool N : 1; 	///< Negative
@@ -105,6 +105,10 @@ namespace NES
 		/// \param mode Addressing mode to use.
 		void JMP(AddressingMode mode);
 		
+		/// Jump to subroutine. Pushes the address - 1 of next op on the
+		/// stack before transfering control.
+		void JSR();
+		
 		/// Load register `reg` with memory.
 		/// \param reg Register address to load memory to.
 		/// \param addr_fn Addressing mode to use.
@@ -116,7 +120,7 @@ namespace NES
 		void T(uint8_t *reg_from, uint8_t *reg_to);
 		
 		/// Push value to stack.
-		void PH(uint8_t value);
+		void PH(uint8_t value, bool set_b = false);
 		
 		/// Pull value from stack.
 		/// \param reg_to Register to pull the value to.

@@ -34,13 +34,19 @@ void NES::CPU::reset()
 
 void NES::CPU::execute()
 {
-	switch (PC)
+	switch (read(PC++))
 	{
+		// Control transfer
+		
 		// JMP
 		case 0x4C:
 			JMP(mode_abs); break;
 		case 0x6C:
 			JMP(mode_ind); break;
+			
+		// JSR
+		case 0x20:
+			JSR(); break;
 			
 		// Load instructions
 		
@@ -132,7 +138,8 @@ void NES::CPU::execute()
 		case 0x48:
 			PH(A); break;
 		case 0x08:
-			PH(P.reg); break;
+			// PHP sets P.B to 0x3
+			PH(P.reg, true); break;
 			
 		// PLA / PLP
 		case 0x68:
@@ -144,7 +151,6 @@ void NES::CPU::execute()
 			std::cerr << "Unhandled opcode: " << std::hex << PC - 1
 				<< std::endl;
 	}
-	PC++;
 }
 
 uint8_t NES::CPU::read(uint16_t addr)
@@ -239,6 +245,12 @@ void NES::CPU::JMP(NES::AddressingMode mode)
 	}
 }
 
+void NES::CPU::JSR()
+{
+	
+	JMP(mode_abs);
+}
+
 void NES::CPU::LD(uint8_t *reg, NES::AddressingMode mode)
 {
 	uint8_t param = get_param(mode);
@@ -252,8 +264,10 @@ void NES::CPU::T(uint8_t *reg_from, uint8_t *reg_to)
 	*reg_to = *reg_from;
 }
 
-void NES::CPU::PH(uint8_t value)
+void NES::CPU::PH(uint8_t value, bool set_b)
 {
+	if (set_b)
+		P.B = 0x3;
 	write_to(S, value);
 	S--;
 }
@@ -262,9 +276,9 @@ void NES::CPU::PL(uint8_t *reg_to)
 {
 	uint8_t param = read(S);
 	*reg_to = read(S);
-	S++;
 	P.Z = param == 0;
 	P.N = param >> 7;
+	S++;
 }
 
 void NES::CPU::ST(uint8_t reg, NES::AddressingMode mode)
