@@ -50,7 +50,13 @@ void NES::CPU::execute()
 		case 0x60:
 			RTS(); break;
 			
-		// Load instructions
+		// Arithmetic / logical
+		
+		// ORA
+		case 0x09:
+			ORA(mode_imm); break;
+		
+		// Load / store
 		
 		// LDA
 		case 0xA9:
@@ -91,8 +97,6 @@ void NES::CPU::execute()
 			LD(&Y, mode_abs); break;
 		case 0xBC:
 			LD(&Y, mode_abs_x); break;
-			
-		// Store instructions
 		
 		// STA
 		case 0x85:
@@ -124,7 +128,7 @@ void NES::CPU::execute()
 		case 0x8C:
 			ST(Y, mode_abs); break;
 		
-		// Stack instructions
+		// Stack
 		
 		// TXS / TSX
 		case 0x9A:
@@ -224,6 +228,8 @@ uint16_t NES::CPU::param_addr(NES::AddressingMode mode)
 	return addr;
 }
 
+// Control transfer
+
 void NES::CPU::JMP(NES::AddressingMode mode)
 {
 	switch (mode)
@@ -263,6 +269,18 @@ void NES::CPU::RTS()
 	PC = h_addr << 8 | l_addr;
 }
 
+// Arithmetic / logical
+
+void NES::CPU::ORA(NES::AddressingMode mode)
+{
+	uint8_t param = get_param(mode);
+	A |= param;
+	P.Z = A == 0; // Is the value zero?
+	P.N = A >> 7; // Set N to 7-th bit of value
+}
+
+// Load / store
+
 void NES::CPU::LD(uint8_t *reg, NES::AddressingMode mode)
 {
 	uint8_t param = get_param(mode);
@@ -270,6 +288,13 @@ void NES::CPU::LD(uint8_t *reg, NES::AddressingMode mode)
 	P.Z = param == 0; // Is the value zero?
 	P.N = param >> 7; // Set N to 7-th bit of value
 }
+
+void NES::CPU::ST(uint8_t reg, NES::AddressingMode mode)
+{
+	write_to(param_addr(mode), reg);
+}
+
+// Stack
 
 void NES::CPU::T(uint8_t *reg_from, uint8_t *reg_to)
 {
@@ -291,9 +316,4 @@ void NES::CPU::PL(uint8_t *reg_to)
 	P.Z = param == 0;
 	P.N = param >> 7;
 	S++;
-}
-
-void NES::CPU::ST(uint8_t reg, NES::AddressingMode mode)
-{
-	write_to(param_addr(mode), reg);
 }

@@ -102,6 +102,8 @@ namespace NES
 		// http://www.6502.org/tutorials/6502opcodes.html - Docs
 		// http://www.qmtpro.com/~nes/misc/nestest.log - Behaviour
 		
+		// Control transfer
+		
 		/// Transfer program execution.
 		/// \param mode Addressing mode to use.
 		void JMP(AddressingMode mode);
@@ -114,10 +116,25 @@ namespace NES
 		/// byte first) and transfers control to that address.
 		void RTS();
 		
+		// Arithmetic / logical
+		
+		/// Performs bitwise OR with the accumulator.
+		/// \param mode Addressing mode of the parameter.
+		void ORA(AddressingMode mode);
+		
+		// Load / store
+		
 		/// Load register `reg` with memory.
 		/// \param reg Register address to load memory to.
 		/// \param addr_fn Addressing mode to use.
 		void LD(uint8_t *reg, AddressingMode mode);
+		
+		/// Store register.
+		/// \param reg Value to store.
+		/// \param mode Addressing mode to use.
+		void ST(uint8_t reg, AddressingMode mode);
+		
+		// Stack
 		
 		/// Transfer from `reg` to `reg_2`.
 		/// \param reg_from Register to transfer from.
@@ -130,11 +147,6 @@ namespace NES
 		/// Pull value from stack.
 		/// \param reg_to Register to pull the value to.
 		void PL(uint8_t *reg_to);
-		
-		/// Store register.
-		/// \param reg Value to store.
-		/// \param mode Addressing mode to use.
-		void ST(uint8_t reg, AddressingMode mode);
 	};
 }
 
