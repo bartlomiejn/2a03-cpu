@@ -55,6 +55,20 @@ void NES::CPU::execute()
 		// ORA
 		case 0x09:
 			ORA(mode_imm); break;
+		case 0x05:
+			ORA(mode_zp); break;
+		case 0x15:
+			ORA(mode_zp_x); break;
+		case 0x0D:
+			ORA(mode_abs); break;
+		case 0x1D:
+			ORA(mode_abs_x); break;
+		case 0x19:
+			ORA(mode_abs_y); break;
+		case 0x01:
+			ORA(mode_idx_ind_x); break;
+		case 0x11:
+			ORA(mode_ind_idx_y); break;
 		
 		// Load / store
 		
