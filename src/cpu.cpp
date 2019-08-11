@@ -153,28 +153,19 @@ uint16_t CPU::param_addr(AddressingMode mode)
 	uint16_t addr = 0x0;
 	switch (mode)
 	{
-		case abs:
-			addr = read16(PC); PC += 2; break;
-		case abs_x:
-			addr = read16(PC) + X; PC += 2; break;
-		case abs_y:
-			addr = read16(PC) + Y; PC += 2; break;
-		case imm:
-			addr = PC; PC++; break;
-		case zp:
-			addr = read(PC); PC++; break;
-		case zp_x:
-			addr = (read(PC) + X) % 0x100; PC++; break;
-		case mode_zp_y:
-			addr = (read(PC) + Y) % 0x100; PC++; break;
-		case idx_ind_x:
-			addr = read16((read(PC) + X) % 0x100, true); PC++; break;
-		case ind_idx_y:
-			addr = read16(read(PC), true) + Y; PC++; break;
+		case abs: 	addr = read16(PC); PC += 2; break;
+		case abs_x: 	addr = read16(PC) + X; PC += 2; break;
+		case abs_y: 	addr = read16(PC) + Y; PC += 2; break;
+		case imm: 	addr = PC; PC++; break;
+		case zp: 	addr = read(PC); PC++; break;
+		case zp_x: 	addr = (read(PC) + X) % 0x100; PC++; break;
+		case mode_zp_y: addr = (read(PC) + Y) % 0x100; PC++; break;
+		case idx_ind_x: addr = read16((read(PC) + X) % 0x100, true);
+				PC++; break;
+		case ind_idx_y: addr = read16(read(PC), true) + Y; PC++; break;
 		case ind:
-		default:
-			std::cerr << "Invalid addressing mode: " << mode
-				  << std::endl;
+		default:	std::cerr << "Invalid addressing mode: " << mode
+				<< std::endl;
 	}
 	return addr;
 }
@@ -227,8 +218,8 @@ void CPU::JSR()
 void CPU::RTS()
 {
 	uint8_t l_addr, h_addr;
-	PL(&l_addr);
-	PL(&h_addr);
+	PL(l_addr);
+	PL(h_addr);
 	PC = h_addr << 8 | l_addr;
 }
 
