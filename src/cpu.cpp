@@ -52,7 +52,6 @@ void CPU::execute()
 		case 0x19: ORA(abs_y); break;
 		case 0x01: ORA(idx_ind_x); break;
 		case 0x11: ORA(ind_idx_y); break;
-		// TODO: Add N, Z, C to ROL / ROR
 		case 0x2A: ROLA(); break;
 		case 0x26: ROL(zp); break;
 		case 0x36: ROL(zp_x); break;
@@ -95,6 +94,15 @@ void CPU::execute()
 		case 0x84: ST(Y, zp); break;
 		case 0x94: ST(Y, zp_x); break;
 		case 0x8C: ST(Y, abs); break;
+		// Register
+		case 0xAA: T(A, X); break;
+		case 0x8A: T(X, A); break;
+		case 0xA8: T(A, Y); break;
+		case 0x98: T(Y, A); break;
+		case 0xCA: DE(X); break;
+		case 0xE8: IN(X); break;
+		case 0x88: DE(Y); break;
+		case 0xC8: IN(Y); break;
 		// Stack
 		case 0x9A: T(X, S); break;
 		case 0xBA: T(S, X); break;
@@ -246,7 +254,6 @@ void CPU::ORA(AddressingMode mode)
 	set_NZ(A);
 }
 
-// TODO: Add N, Z, C to ROL / ROR ops
 void CPU::ROLA()
 {
 	A = rot_l(A);
@@ -283,12 +290,27 @@ void CPU::ST(uint8_t reg, AddressingMode mode)
 	write_to(param_addr(mode), reg);
 }
 
-// Stack
+// Register
 
 void CPU::T(uint8_t &reg_from, uint8_t &reg_to)
 {
 	reg_to = reg_from;
+	set_NZ(reg_from);
 }
+
+void CPU::DE(uint8_t &reg)
+{
+	reg--;
+	set_NZ(reg);
+}
+
+void CPU::IN(uint8_t &reg)
+{
+	reg++;
+	set_NZ(reg);
+}
+
+// Stack
 
 void CPU::PH(uint8_t value)
 {
@@ -312,5 +334,5 @@ void CPU::PL(uint8_t &reg_to)
 
 void CPU::PL(StatusRegister &p)
 {
-	PL(P.status);
+	PL(p.status);
 }

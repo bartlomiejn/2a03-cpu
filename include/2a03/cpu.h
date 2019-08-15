@@ -165,12 +165,20 @@ namespace NES
 		/// \param mode Addressing mode to use.
 		void ST(uint8_t reg, AddressingMode mode);
 		
-		// Stack
+		// Register
 		
 		/// Transfer from `reg` to `reg_2`.
 		/// \param reg_from Register to transfer from.
 		/// \param reg_to Register to transfer to.
 		void T(uint8_t &reg_from, uint8_t &reg_to);
+		
+		/// Decrement register.
+		void DE(uint8_t &reg);
+		
+		/// Increment register.
+		void IN(uint8_t &reg);
+		
+		// Stack
 		
 		/// Push value to stack.
 		void PH(uint8_t value);
