@@ -8,6 +8,7 @@
 
 namespace NES
 {
+	/// Addressing mode for an operation.
 	enum AddressingMode
 	{
 		abs,		///< Absolute
@@ -22,7 +23,9 @@ namespace NES
 		ind		///< Indirect (used only with JMP)
 	};
 	
-	/// Status Register P union representation
+	/// Status register P union representation.
+	/// - Uppercase letters access specific flags.
+	/// - `status` accesses the whole register.
 	union StatusRegister
 	{
 		struct
@@ -63,7 +66,7 @@ namespace NES
 		/// Executes the next instruction.
 		void execute();
 	private:
-		// Memory access
+		// Addressing bus access
 		
 		/// Reads 8 bits of memory at the provided address.
 		/// \param addr Address to read from.
@@ -89,7 +92,7 @@ namespace NES
 		/// mode and increments PC based on param length.
 		/// \param mode Addressing mode.
 		/// \return Parameter address.
-		uint16_t param_addr(NES::AddressingMode mode);
+		uint16_t param_addr(AddressingMode mode);
 		
 		/// Retrieves the current instruction parameter based on
 		/// the addressing mode and increments PC based on parameter
@@ -153,9 +156,13 @@ namespace NES
 		/// \param mode Addressing mode to use.
 		void ROR(AddressingMode mode);
 		
+		/// Subtract with carry.
+		/// \param mode Addressing mode to use.
+		void SBC(AddressingMode mode);
+		
 		// Load / store
 		
-		/// Load register `reg` with memory.
+		/// Load register with memory.
 		/// \param reg Register address to load memory to.
 		/// \param addr_fn Addressing mode to use.
 		void LD(uint8_t &reg, AddressingMode mode);
@@ -167,7 +174,7 @@ namespace NES
 		
 		// Register
 		
-		/// Transfer from `reg` to `reg_2`.
+		/// Transfer between registers.
 		/// \param reg_from Register to transfer from.
 		/// \param reg_to Register to transfer to.
 		void T(uint8_t &reg_from, uint8_t &reg_to);

@@ -20,7 +20,7 @@ void CPU::power_up()
 	// is clocked from the all-0s state, it will shift in a 1.
 	
 	// RAM state is not consistent on power up on a real machine, but we'll
-	// clear it anyway.
+	// clear it here.
 	memset(ram, 0xFF, sizeof(ram));
 }
 
@@ -40,7 +40,7 @@ void CPU::execute()
 	{
 		// Control transfer
 		case 0x4C: JMP(abs); break;
-		case 0x6C: JMP(ind); break;
+		case 0x6C: JMP(ind); break;a
 		case 0x20: JSR(); break;
 		case 0x60: RTS(); break;
 		// Arithmetic / logical
@@ -62,6 +62,7 @@ void CPU::execute()
 		case 0x76: ROR(zp_x); break;
 		case 0x6E: ROR(abs); break;
 		case 0x7E: ROR(abs_x); break;
+		case 0xE9: SBC(imm); break;
 		// Load / store
 		case 0xA9: LD(A, imm); break;
 		case 0xA5: LD(A, zp); break;
@@ -144,6 +145,9 @@ void CPU::write_to(uint16_t addr, uint8_t val)
 	switch (addr)
 	{
 		case 0x0000 ... 0x1FFF:
+			// 0x0000 - 0x00FF is Zero Page
+			// 0x0100 - 0x01FF is stack memory
+			// 0x0200 - 0x07FF is RAM
 			ram[addr % 0x800] = val;
 		default:
 			std::cerr << "Unhandled write to " << std::hex << addr
@@ -225,7 +229,7 @@ void CPU::JMP(AddressingMode mode)
 			PC = read16(PC);
 		default:
 			std::cerr << "Invalid addressing mode for JMP: " << mode
-				  << std::endl;
+				<< std::endl;
 	}
 }
 
@@ -274,6 +278,11 @@ void CPU::ROR(NES::AddressingMode mode)
 {
 	uint16_t addr = param_addr(mode);
 	write_to(addr, rot_r(read(addr)));
+}
+
+void CPU::SBC(NES::AddressingMode mode)
+{
+
 }
 
 // Load / store
