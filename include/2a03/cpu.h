@@ -46,7 +46,6 @@ namespace NES
 	public:
 		// Registers
 		// http://wiki.nesdev.com/w/index.php/CPU_registers
-		
 		uint8_t A; 		///< Accumulator
 		uint8_t X, Y; 		///< Index registers
 		uint16_t PC;		///< Program counter
@@ -101,11 +100,20 @@ namespace NES
 		
 		// Auxiliary functions
 		
-		/// Rotates left the value once.
+		/// Rotates left the value once. Carry is shifted into output
+		/// bit 0, input bit 7 is shifted into Carry.
+		/// \param value Value to rotate left.
+		/// \return Rotated value.
 		uint8_t rot_l(uint8_t value);
 		
-		/// Rotates right the value once.
+		/// Rotates right the value once. Carry is shifted into output
+		/// bit 7, input bit 0 is shifted into Carry.
+		/// \param value Value to rotate right.
+		/// \return Rotated value.
 		uint8_t rot_r(uint8_t value);
+		
+		/// Sets the N and Z flags based on the value provided.
+		void set_NZ(uint8_t value);
 		
 		// Instructions
 		// http://www.6502.org/tutorials/6502opcodes.html - Docs

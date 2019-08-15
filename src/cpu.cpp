@@ -174,12 +174,26 @@ uint16_t CPU::param_addr(AddressingMode mode)
 
 uint8_t CPU::rot_l(uint8_t value)
 {
-	return (value << 1) | (value >> (sizeof(value) * 8 - 1));
+	bool last_C = P.C;
+	P.C = value >> (sizeof(value) * 8 - 1);
+	uint8_t output = value << 1 | last_C;
+	set_NZ(output);
+	return output;
 }
 
 uint8_t CPU::rot_r(uint8_t value)
 {
-	return (value >> 1) | (value << (sizeof(value) * 8 - 1));
+	bool last_C = P.C;
+	P.C = value << (sizeof(value) * 8 - 1);
+	uint8_t output = value >> 1 | last_C;
+	set_NZ(output);
+	return output;
+}
+
+void CPU::set_NZ(uint8_t value)
+{
+	P.Z = value == 0;
+	P.N = value >> 7;
 }
 
 // Control transfer
@@ -229,8 +243,7 @@ void CPU::ORA(AddressingMode mode)
 {
 	uint8_t param = get_param(mode);
 	A |= param;
-	P.Z = A == 0;
-	P.N = A >> 7;
+	set_NZ(A);
 }
 
 // TODO: Add N, Z, C to ROL / ROR ops
@@ -262,8 +275,7 @@ void CPU::LD(uint8_t &reg, AddressingMode mode)
 {
 	uint8_t param = get_param(mode);
 	reg = param;
-	P.Z = param == 0;
-	P.N = param >> 7;
+	set_NZ(param);
 }
 
 void CPU::ST(uint8_t reg, AddressingMode mode)
@@ -293,10 +305,9 @@ void CPU::PH(StatusRegister &p)
 void CPU::PL(uint8_t &reg_to)
 {
 	uint8_t param = read(S);
-	P.Z = param == 0;
-	P.N = param >> 7;
-	reg_to = param;
 	S++;
+	reg_to = param;
+	set_NZ(param);
 }
 
 void CPU::PL(StatusRegister &p)
