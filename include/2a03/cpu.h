@@ -122,6 +122,9 @@ namespace NES
 		/// \return Rotated value.
 		uint8_t rot_r(uint8_t value);
 		
+		/// Performs ADC with the provided operand.
+		void do_ADC(uint8_t operand);
+		
 		/// Sets the N and Z flags based on the value provided.
 		void set_NZ(uint8_t value);
 		

@@ -280,9 +280,22 @@ void CPU::ROR(AddressingMode mode)
 	write_to(addr, rot_r(read(addr)));
 }
 
-
+// ADC/SBC implementation explained in a post here:
+// https://stackoverflow.com/questions/29193303/6502-emulation-proper-way-to-implement-adc-and-sbc
 
 void CPU::ADC(AddressingMode mode)
+{
+	uint8_t operand = get_operand(mode);
+	do_ADC(operand);
+}
+
+void CPU::SBC(AddressingMode mode)
+{
+	uint8_t operand = get_operand(mode);
+	do_ADC(~operand);
+}
+
+void CPU::do_ADC(uint8_t operand)
 {
 	if (P.D)
 	{
@@ -290,22 +303,19 @@ void CPU::ADC(AddressingMode mode)
 		// Decimal mode is not available on 2A03. Since this is a NES
 		// emulator, we don't support decimal mode, which is available
 		// in a MOS 6502.
-		std::cout << "ADC op with decimal mode is unimplemented."
-			<< std::endl;
+		std::cout << "ADC/SBC op with decimal mode is unavailable."
+			  << std::endl;
 		return;
 	}
-	
-	uint8_t operand = get_operand(mode);
 	
 	uint16_t sum = A + operand + P.C;
 	
 	P.C = sum > 0xFF;
 	
-	// https://stackoverflow.com/questions/29193303/6502-emulation-proper-way-to-implement-adc-and-sbc
 	// Overflow occurs when two numbers that have the same sign are
 	// added and the result has a different sign.
-	// ~(A ^ operand) 	True if A and operand have the same sign.
-	// A ^ sum 		True if A (or operand) sign differs from sum.
+	// ~(A ^ operand) 	7th bit is 1 if A and operand have the same sign.
+	// A ^ sum 		7th bit is 1 if A | operand sign differs from sum.
 	// 0x80 		We're interested in the 7th bit only.
 	// >> 7			Shift the most significant bit to least
 	//			significant position and cast to bool so we
@@ -315,11 +325,6 @@ void CPU::ADC(AddressingMode mode)
 	A = (uint8_t)sum;
 	
 	set_NZ(A);
-}
-
-void CPU::SBC(AddressingMode mode)
-{
-
 }
 
 // Load / store
