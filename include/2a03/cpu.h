@@ -142,7 +142,32 @@ namespace NES
 		
 		// Instructions
 		// http://www.6502.org/tutorials/6502opcodes.html - Docs
-		// http://www.qmtpro.com/~nes/misc/nestest.log - Behaviour
+		
+		// Branch instructions
+		
+		/// Branch on plus.
+		void BPL();
+		
+		/// Branch on minus.
+		void BMI();
+		
+		/// Branch on overflow clear
+		void BVC();
+		
+		/// Branch on overflow set
+		void BVS();
+		
+		/// Branch on carry clear
+		void BCC();
+		
+		/// Branch on carry set
+		void BCS();
+		
+		/// Branch on not equal
+		void BNE();
+		
+		/// Branch on equal
+		void BEQ();
 		
 		// Control transfer
 		

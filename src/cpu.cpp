@@ -38,6 +38,15 @@ void CPU::execute()
 {
 	switch (read(PC++))
 	{
+		// Branch instructions
+		case 0x10: BPL(); break;
+		case 0x30: BMI(); break;
+		case 0x50: BVC(); break;
+		case 0x70: BVS(); break;
+		case 0x90: BCC(); break;
+		case 0xB0: BCS(); break;
+		case 0xD0: BNE(); break;
+		case 0xF0: BEQ(); break;
 		// Control transfer
 		case 0x4C: JMP(abs); break;
 		case 0x6C: JMP(ind); break;
@@ -298,6 +307,48 @@ void CPU::set_NZ(uint8_t value)
 {
 	P.Z = value == 0;
 	P.N = value >> 7;
+}
+
+// Branch instructions
+
+void CPU::BPL()
+{
+	if (!P.N) PC += get_operand(imm);
+}
+
+void CPU::BMI()
+{
+	if (P.N) PC += get_operand(imm);
+}
+
+void CPU::BVC()
+{
+	if (!P.V) PC += get_operand(imm);
+}
+
+void CPU::BVS()
+{
+	if (P.V) PC += get_operand(imm);
+}
+
+void CPU::BCC()
+{
+	if (!P.C) PC += get_operand(imm);
+}
+
+void CPU::BCS()
+{
+	if (P.C) PC += get_operand(imm);
+}
+
+void CPU::BNE()
+{
+	if (!P.Z) PC += get_operand(imm);
+}
+
+void CPU::BEQ()
+{
+	if (P.Z) PC += get_operand(imm);
 }
 
 // Control transfer
