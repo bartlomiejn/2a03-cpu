@@ -167,16 +167,16 @@ namespace NES
 		void ROR(AddressingMode mode);
 		
 		/// Add with carry.
-		/// Overflow specifics for ADC/SBC:
-		/// http://www.6502.org/tutorials/vflag.html
 		/// \param mode Addressing mode to use.
 		void ADC(AddressingMode mode);
 		
 		/// Subtract with carry.
-		/// Overflow specifics for ADC/SBC:
-		/// http://www.6502.org/tutorials/vflag.html
 		/// \param mode Addressing mode to use.
 		void SBC(AddressingMode mode);
+		
+		/// Bitwise AND with accumulator.
+		/// \param mode Addressing mode to use.
+		void AND(AddressingMode mode);
 		
 		// Load / store
 		

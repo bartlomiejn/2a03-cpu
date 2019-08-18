@@ -78,6 +78,14 @@ void CPU::execute()
 		case 0xF9: SBC(abs_y); break;
 		case 0xE1: SBC(idx_ind_x); break;
 		case 0xF1: SBC(ind_idx_y); break;
+		case 0x29: AND(imm); break;
+		case 0x25: AND(zp); break;
+		case 0x35: AND(zp_x); break;
+		case 0x2D: AND(abs); break;
+		case 0x3D: AND(abs_x); break;
+		case 0x39: AND(abs_y); break;
+		case 0x21: AND(idx_ind_x); break;
+		case 0x31: AND(ind_idx_y); break;
 		// Load / store
 		case 0xA9: LD(A, imm); break;
 		case 0xA5: LD(A, zp); break;
@@ -341,6 +349,12 @@ void CPU::do_ADC(uint8_t operand)
 	
 	A = (uint8_t)sum;
 	
+	set_NZ(A);
+}
+
+void CPU::AND(AddressingMode mode)
+{
+	A &= get_operand(mode);
 	set_NZ(A);
 }
 
