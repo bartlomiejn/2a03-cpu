@@ -84,6 +84,12 @@ void CPU::execute()
 		case 0xD9: CMP(abs_y); break;
 		case 0xC1: CMP(idx_ind_x); break;
 		case 0xD1: CMP(ind_idx_y); break;
+		case 0xE0: CP(X, imm); break;
+		case 0xE4: CP(X, zp); break;
+		case 0xEC: CP(X, abs); break;
+		case 0xC0: CP(Y, imm); break;
+		case 0xC4: CP(Y, zp); break;
+		case 0xCC: CP(Y, abs); break;
 		case 0x4A: LSR_A(); break;
 		case 0x46: LSR(zp); break;
 		case 0x56: LSR(zp_x); break;
@@ -434,10 +440,15 @@ void CPU::BIT(AddressingMode mode)
 
 void CPU::CMP(AddressingMode mode)
 {
+	CP(A, mode);
+}
+
+void CPU::CP(uint8_t &reg, AddressingMode mode)
+{
 	uint8_t operand = get_operand(mode);
-	P.Z = A == operand;
-	P.C = A >= operand;
-	P.N = (A - operand) >> 7;
+	P.Z = reg == operand;
+	P.C = reg >= operand;
+	P.N = (reg - operand) >> 7;
 }
 
 void CPU::LSR_A()
