@@ -280,19 +280,19 @@ void CPU::ROR(AddressingMode mode)
 	write_to(addr, rot_r(read(addr)));
 }
 
-// ADC/SBC implementation explained in a post here:
+// ADC/SBC implementation:
 // https://stackoverflow.com/questions/29193303/6502-emulation-proper-way-to-implement-adc-and-sbc
+// Overflow on signed arithmetic:
+// http://www.6502.org/tutorials/vflag.html
 
 void CPU::ADC(AddressingMode mode)
 {
-	uint8_t operand = get_operand(mode);
-	do_ADC(operand);
+	do_ADC(get_operand(mode));
 }
 
 void CPU::SBC(AddressingMode mode)
 {
-	uint8_t operand = get_operand(mode);
-	do_ADC(~operand);
+	do_ADC(~get_operand(mode));
 }
 
 void CPU::do_ADC(uint8_t operand)
@@ -301,8 +301,8 @@ void CPU::do_ADC(uint8_t operand)
 	{
 		// In decimal mode treat operands as binary-coded decimals.
 		// Decimal mode is not available on 2A03. Since this is a NES
-		// emulator, we don't support decimal mode, which is available
-		// in a MOS 6502.
+		// emulator, we don't support decimal mode, which is actually
+		// available in a MOS 6502.
 		std::cout << "ADC/SBC op with decimal mode is unavailable."
 			  << std::endl;
 		return;
@@ -312,8 +312,10 @@ void CPU::do_ADC(uint8_t operand)
 	
 	P.C = sum > 0xFF;
 	
-	// Overflow occurs when two numbers that have the same sign are
-	// added and the result has a different sign.
+	// Two-complements overflow happens when the result value is outside of
+	// the [-128, 127] range. According to post above two numbers this is
+	// equivalent to when two operands with the same sign are added and the
+	// result has a different sign.
 	// ~(A ^ operand) 	7th bit is 1 if A and operand have the same sign.
 	// A ^ sum 		7th bit is 1 if A | operand sign differs from sum.
 	// 0x80 		We're interested in the 7th bit only.
