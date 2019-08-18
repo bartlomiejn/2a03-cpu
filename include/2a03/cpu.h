@@ -2,7 +2,6 @@
 #define INC_2A03_CPU_H
 
 #include <cstdint>
-#include <functional>
 #include <2a03/ppu.h>
 #include <2a03/apu.h>
 
@@ -11,16 +10,16 @@ namespace NES
 	/// Addressing mode for an operation.
 	enum AddressingMode
 	{
-		abs,		///< Absolute
-		abs_x,		///< Absolute indexed with X
-		abs_y,		///< Absolute indexed with Y
-		imm,		///< Immediate
-		zp,		///< Zero Page
-		zp_x,		///< Zero Page indexed with X
-		mode_zp_y,	///< Zero Page indexed with Y
-		idx_ind_x,	///< Indexed indirect with X
-		ind_idx_y,	///< Indirect indexed with Y
-		ind		///< Indirect (used only with JMP)
+		abs,		///< Absolute.
+		abs_x,		///< Absolute indexed with X.
+		abs_y,		///< Absolute indexed with Y.
+		imm,		///< Immediate.
+		zp,		///< Zero Page.
+		zp_x,		///< Zero Page indexed with X.
+		mode_zp_y,	///< Zero Page indexed with Y.
+		idx_ind_x,	///< Indexed indirect with X.
+		ind_idx_y,	///< Indirect indexed with Y.
+		ind		///< Indirect.
 	};
 	
 	/// Status register P union representation.
@@ -30,15 +29,23 @@ namespace NES
 	{
 		struct
 		{
-			bool C : 1; 	///< Carry
-			bool Z : 1; 	///< Zero
+			bool C : 1; 	///< Carry.
+					///< Set if the result value is greater
+					///< than 0xFF.
+			bool Z : 1; 	///< Zero.
+					///< Set if result value is 0.
 			bool I : 1; 	///< Interrupt disable
-			bool D : 1; 	///< Decimal
+			bool D : 1; 	///< Decimal mode
 			uint8_t B : 2; 	///< Has no effect on CPU, but certain
 					///< instructions set it
-			bool V : 1;	///< Overflow
-			bool N : 1; 	///< Negative (Set using the 7-th bit of
-					///< a result value)
+			bool V : 1;	///< Overflow.
+					///< Used in signed arithmetic ops. Set
+					///< if the result value is outside of
+					///< [-128, 127] range, which is a two
+					///< complements overflow.
+			bool N : 1; 	///< Negative.
+ 					///< Set using the 7-th bit of a result
+					///< value.
 		};
 		uint8_t status;
 	};
@@ -58,7 +65,7 @@ namespace NES
 		uint8_t ram[0x800]; 	///< RAM
 		
 		/// Starts the CPU.
-		void power_up();
+		void power();
 		
 		/// Resets the CPU.
 		void reset();
@@ -92,25 +99,25 @@ namespace NES
 		/// mode and increments PC based on param length.
 		/// \param mode Addressing mode.
 		/// \return Parameter address.
-		uint16_t param_addr(AddressingMode mode);
+		uint16_t operand_addr(AddressingMode mode);
 		
 		/// Retrieves the current instruction parameter based on
 		/// the addressing mode and increments PC based on parameter
 		/// length.
 		/// \param mode Addressing mode to use.
 		/// \return Parameter for current instruction.
-		uint8_t get_param(AddressingMode mode);
+		uint8_t get_operand(AddressingMode mode);
 		
 		// Auxiliary functions
 		
 		/// Rotates left the value once. Carry is shifted into output
-		/// bit 0, input bit 7 is shifted into Carry.
+		/// bit 0, input bit 7 is shifted into Carry. Sets N, Z, C.
 		/// \param value Value to rotate left.
 		/// \return Rotated value.
 		uint8_t rot_l(uint8_t value);
 		
 		/// Rotates right the value once. Carry is shifted into output
-		/// bit 7, input bit 0 is shifted into Carry.
+		/// bit 7, input bit 0 is shifted into Carry. Sets N, Z, C.
 		/// \param value Value to rotate right.
 		/// \return Rotated value.
 		uint8_t rot_r(uint8_t value);
@@ -156,7 +163,15 @@ namespace NES
 		/// \param mode Addressing mode to use.
 		void ROR(AddressingMode mode);
 		
+		/// Add with carry.
+		/// Overflow specifics for ADC/SBC:
+		/// http://www.6502.org/tutorials/vflag.html
+		/// \param mode Addressing mode to use.
+		void ADC(AddressingMode mode);
+		
 		/// Subtract with carry.
+		/// Overflow specifics for ADC/SBC:
+		/// http://www.6502.org/tutorials/vflag.html
 		/// \param mode Addressing mode to use.
 		void SBC(AddressingMode mode);
 		

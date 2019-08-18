@@ -1,10 +1,10 @@
 #include <2a03/cpu.h>
-#include <cstring>
 #include <iostream>
+#include <cstring>
 
 using namespace NES;
 
-void CPU::power_up()
+void CPU::power()
 {
 	A = 0x0;
 	X = 0x0;
@@ -40,7 +40,7 @@ void CPU::execute()
 	{
 		// Control transfer
 		case 0x4C: JMP(abs); break;
-		case 0x6C: JMP(ind); break;a
+		case 0x6C: JMP(ind); break;
 		case 0x20: JSR(); break;
 		case 0x60: RTS(); break;
 		// Arithmetic / logical
@@ -145,7 +145,7 @@ void CPU::write_to(uint16_t addr, uint8_t val)
 	switch (addr)
 	{
 		case 0x0000 ... 0x1FFF:
-			// 0x0000 - 0x00FF is Zero Page
+			// 0x0000 - 0x00FF is zero page
 			// 0x0100 - 0x01FF is stack memory
 			// 0x0200 - 0x07FF is RAM
 			ram[addr % 0x800] = val;
@@ -155,12 +155,12 @@ void CPU::write_to(uint16_t addr, uint8_t val)
 	}
 }
 
-uint8_t CPU::get_param(AddressingMode mode)
+uint8_t CPU::get_operand(AddressingMode mode)
 {
-	return read(param_addr(mode));
+	return read(operand_addr(mode));
 }
 
-uint16_t CPU::param_addr(AddressingMode mode)
+uint16_t CPU::operand_addr(AddressingMode mode)
 {
 	uint16_t addr = 0x0;
 	switch (mode)
@@ -253,8 +253,8 @@ void CPU::RTS()
 
 void CPU::ORA(AddressingMode mode)
 {
-	uint8_t param = get_param(mode);
-	A |= param;
+	uint8_t operand = get_operand(mode);
+	A |= operand;
 	set_NZ(A);
 }
 
@@ -263,9 +263,9 @@ void CPU::ROLA()
 	A = rot_l(A);
 }
 
-void CPU::ROL(NES::AddressingMode mode)
+void CPU::ROL(AddressingMode mode)
 {
-	uint16_t addr = param_addr(mode);
+	uint16_t addr = operand_addr(mode);
 	write_to(addr, rot_l(read(addr)));
 }
 
@@ -274,13 +274,50 @@ void CPU::RORA()
 	A = rot_r(A);
 }
 
-void CPU::ROR(NES::AddressingMode mode)
+void CPU::ROR(AddressingMode mode)
 {
-	uint16_t addr = param_addr(mode);
+	uint16_t addr = operand_addr(mode);
 	write_to(addr, rot_r(read(addr)));
 }
 
-void CPU::SBC(NES::AddressingMode mode)
+
+
+void CPU::ADC(AddressingMode mode)
+{
+	if (P.D)
+	{
+		// In decimal mode treat operands as binary-coded decimals.
+		// Decimal mode is not available on 2A03. Since this is a NES
+		// emulator, we don't support decimal mode, which is available
+		// in a MOS 6502.
+		std::cout << "ADC op with decimal mode is unimplemented."
+			<< std::endl;
+		return;
+	}
+	
+	uint8_t operand = get_operand(mode);
+	
+	uint16_t sum = A + operand + P.C;
+	
+	P.C = sum > 0xFF;
+	
+	// https://stackoverflow.com/questions/29193303/6502-emulation-proper-way-to-implement-adc-and-sbc
+	// Overflow occurs when two numbers that have the same sign are
+	// added and the result has a different sign.
+	// ~(A ^ operand) 	True if A and operand have the same sign.
+	// A ^ sum 		True if A (or operand) sign differs from sum.
+	// 0x80 		We're interested in the 7th bit only.
+	// >> 7			Shift the most significant bit to least
+	//			significant position and cast to bool so we
+	//			we don't have a type-related warning.
+	P.V = (bool)((~(A ^ operand) & (A ^ sum) & 0x80) >> 7);
+	
+	A = (uint8_t)sum;
+	
+	set_NZ(A);
+}
+
+void CPU::SBC(AddressingMode mode)
 {
 
 }
@@ -289,14 +326,14 @@ void CPU::SBC(NES::AddressingMode mode)
 
 void CPU::LD(uint8_t &reg, AddressingMode mode)
 {
-	uint8_t param = get_param(mode);
-	reg = param;
-	set_NZ(param);
+	uint8_t operand = get_operand(mode);
+	reg = operand;
+	set_NZ(operand);
 }
 
 void CPU::ST(uint8_t reg, AddressingMode mode)
 {
-	write_to(param_addr(mode), reg);
+	write_to(operand_addr(mode), reg);
 }
 
 // Register
@@ -335,10 +372,10 @@ void CPU::PH(StatusRegister &p)
 
 void CPU::PL(uint8_t &reg_to)
 {
-	uint8_t param = read(S);
+	uint8_t operand = read(S);
 	S++;
-	reg_to = param;
-	set_NZ(param);
+	reg_to = operand;
+	set_NZ(operand);
 }
 
 void CPU::PL(StatusRegister &p)
