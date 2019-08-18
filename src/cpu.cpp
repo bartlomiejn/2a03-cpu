@@ -102,6 +102,13 @@ void CPU::execute()
 		case 0x59: EOR(abs_y); break;
 		case 0x41: EOR(idx_ind_x); break;
 		case 0x51: EOR(ind_idx_y); break;
+		case 0x18: CLC(); break;
+		case 0x38: SEC(); break;
+		case 0x58: CLI(); break;
+		case 0x78: SEI(); break;
+		case 0xB8: CLV(); break;
+		case 0xD8: CLD(); break;
+		case 0xF8: SED(); break;
 		case 0x4A: LSR_A(); break;
 		case 0x46: LSR(zp); break;
 		case 0x56: LSR(zp_x); break;
@@ -476,6 +483,41 @@ void CPU::EOR(AddressingMode mode)
 	uint8_t operand = get_operand(mode);
 	A ^= operand;
 	set_NZ(A);
+}
+
+void CPU::CLC()
+{
+	P.C = 0;
+}
+
+void CPU::SEC()
+{
+	P.C = 1;
+}
+
+void CPU::CLI()
+{
+	P.I = 0;
+}
+
+void CPU::SEI()
+{
+	P.I = 1;
+}
+
+void CPU::CLV()
+{
+	P.V = 0;
+}
+
+void CPU::CLD()
+{
+	P.D = 0;
+}
+
+void CPU::SED()
+{
+	P.D = 1;
 }
 
 void CPU::LSR_A()

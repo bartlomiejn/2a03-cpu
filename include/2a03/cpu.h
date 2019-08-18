@@ -228,6 +228,27 @@ namespace NES
 		/// Bitwise XOR. Affects N, Z.
 		void EOR(AddressingMode mode);
 		
+		/// Clear carry flag.
+		void CLC();
+		
+		/// Set carry flag.
+		void SEC();
+		
+		/// Clear interrupt flag.
+		void CLI();
+		
+		/// Set interrupt flag.
+		void SEI();
+		
+		/// Clear overflow flag.
+		void CLV();
+		
+		/// Clear decimal flag.
+		void CLD();
+		
+		/// Set decimal flag.
+		void SED();
+		
 		/// Logical shift right with accumulator. 0 is shifted into bit
 		/// 7 and the original bit 0 is shifted into Carry.
 		void LSR_A();
