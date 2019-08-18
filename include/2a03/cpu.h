@@ -208,6 +208,12 @@ namespace NES
 		/// \param mode Addressing mode to use.
 		void BIT(AddressingMode mode);
 		
+		/// Compare accumulator. Sets flags as if subtraction had been
+		/// carried out. If A >= operand, sets C. N will be set based
+		/// on the sign of result and equality of the operand.
+		/// \param mode Addressing mode to use.
+		void CMP(AddressingMode mode);
+		
 		/// Logical shift right with accumulator. 0 is shifted into bit
 		/// 7 and the original bit 0 is shifted into Carry.
 		void LSR_A();
