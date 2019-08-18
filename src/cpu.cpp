@@ -487,37 +487,37 @@ void CPU::EOR(AddressingMode mode)
 
 void CPU::CLC()
 {
-	P.C = 0;
+	P.C = false;
 }
 
 void CPU::SEC()
 {
-	P.C = 1;
+	P.C = true;
 }
 
 void CPU::CLI()
 {
-	P.I = 0;
+	P.I = false;
 }
 
 void CPU::SEI()
 {
-	P.I = 1;
+	P.I = true;
 }
 
 void CPU::CLV()
 {
-	P.V = 0;
+	P.V = false;
 }
 
 void CPU::CLD()
 {
-	P.D = 0;
+	P.D = false;
 }
 
 void CPU::SED()
 {
-	P.D = 1;
+	P.D = true;
 }
 
 void CPU::LSR_A()

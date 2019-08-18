@@ -10,6 +10,7 @@ Current feature list:
 - Memory access
 - Instruction cycle
 - Addressing modes
+- Official instruction list
 
 In progress:
-- Official opcodes - about 1/3 implemented.
+- Interrupts
