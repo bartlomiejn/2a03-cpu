@@ -62,7 +62,22 @@ void CPU::execute()
 		case 0x76: ROR(zp_x); break;
 		case 0x6E: ROR(abs); break;
 		case 0x7E: ROR(abs_x); break;
+		case 0x69: ADC(imm); break;
+		case 0x65: ADC(zp); break;
+		case 0x75: ADC(zp_x); break;
+		case 0x6D: ADC(abs); break;
+		case 0x7D: ADC(abs_x); break;
+		case 0x79: ADC(abs_y); break;
+		case 0x61: ADC(idx_ind_x); break;
+		case 0x71: ADC(ind_idx_y); break;
 		case 0xE9: SBC(imm); break;
+		case 0xE5: SBC(zp); break;
+		case 0xF5: SBC(zp_x); break;
+		case 0xED: SBC(abs); break;
+		case 0xFD: SBC(abs_x); break;
+		case 0xF9: SBC(abs_y); break;
+		case 0xE1: SBC(idx_ind_x); break;
+		case 0xF1: SBC(ind_idx_y); break;
 		// Load / store
 		case 0xA9: LD(A, imm); break;
 		case 0xA5: LD(A, zp); break;
