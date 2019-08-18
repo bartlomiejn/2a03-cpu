@@ -160,8 +160,40 @@ namespace NES
 		
 		// Arithmetic / logical
 		
+		/// Add with carry.
+		/// \param mode Addressing mode to use.
+		void ADC(AddressingMode mode);
+		
+		/// Bitwise AND with accumulator.
+		/// \param mode Addressing mode to use.
+		void AND(AddressingMode mode);
+		
+		/// Arithmetic shift left with accumulator. 0 is shifted into
+		/// bit 0 and the original bit 7 is shifted into Carry.
+		void ASL_A();
+		
+		/// Arithmetic shift left. 0 is shifted into bit 0 and the
+		/// original bit 7 is shifted into Carry.
+		/// \param mode Addressing mode to use.
+		void ASL(AddressingMode mode);
+		
+		/// Test if one or more bits are set in a target memory
+		/// location. Effectively ANDs with the accumulator which should
+		/// contain a mask pattern. Affects N, V, Z.
+		/// \param mode Addressing mode to use.
+		void BIT(AddressingMode mode);
+		
+		/// Logical shift right with accumulator. 0 is shifted into bit
+		/// 7 and the original bit 0 is shifted into Carry.
+		void LSR_A();
+		
+		/// Logical shift right. 0 is shifted into bit 7 and the
+		/// original bit 0 is shifted into Carry.
+		/// \param mode Addressing mode to use.
+		void LSR(AddressingMode mode);
+		
 		/// Performs bitwise OR with the accumulator.
-		/// \param mode Addressing mode of the parameter.
+		/// \param mode Addressing mode to use.
 		void ORA(AddressingMode mode);
 		
 		/// Rotate left the accumulator.
@@ -177,30 +209,6 @@ namespace NES
 		/// Rotate right a value at the specified address.
 		/// \param mode Addressing mode to use.
 		void ROR(AddressingMode mode);
-		
-		/// Add with carry.
-		/// \param mode Addressing mode to use.
-		void ADC(AddressingMode mode);
-		
-		/// Bitwise AND with accumulator.
-		/// \param mode Addressing mode to use.
-		void AND(AddressingMode mode);
-		
-		/// Arithmetic shift left with accumulator. 0 is shifted into
-		/// bit 0 and the original bit 7 is shifted into Carry.
-		void ASL_A();
-		
-		/// Arithmetic shift left. 0 is shifted into bit 0 and the
-		/// original bit 7 is shifted into Carry.
-		void ASL(AddressingMode mode);
-		
-		/// Logical shift right with accumulator. 0 is shifted into bit
-		/// 7 and the original bit 0 is shifted into Carry.
-		void LSR_A();
-		
-		/// Logical shift right. 0 is shifted into bit 7 and the
-		/// original bit 0 is shifted into Carry.
-		void LSR(AddressingMode mode);
 		
 		/// Subtract with carry.
 		/// \param mode Addressing mode to use.

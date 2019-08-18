@@ -44,24 +44,6 @@ void CPU::execute()
 		case 0x20: JSR(); break;
 		case 0x60: RTS(); break;
 		// Arithmetic / logical
-		case 0x09: ORA(imm); break;
-		case 0x05: ORA(zp); break;
-		case 0x15: ORA(zp_x); break;
-		case 0x0D: ORA(abs); break;
-		case 0x1D: ORA(abs_x); break;
-		case 0x19: ORA(abs_y); break;
-		case 0x01: ORA(idx_ind_x); break;
-		case 0x11: ORA(ind_idx_y); break;
-		case 0x2A: ROL_A(); break;
-		case 0x26: ROL(zp); break;
-		case 0x36: ROL(zp_x); break;
-		case 0x2E: ROL(abs); break;
-		case 0x3E: ROL(abs_x); break;
-		case 0x6A: ROR_A(); break;
-		case 0x66: ROR(zp); break;
-		case 0x76: ROR(zp_x); break;
-		case 0x6E: ROR(abs); break;
-		case 0x7E: ROR(abs_x); break;
 		case 0x69: ADC(imm); break;
 		case 0x65: ADC(zp); break;
 		case 0x75: ADC(zp_x); break;
@@ -83,11 +65,31 @@ void CPU::execute()
 		case 0x16: ASL(zp_x); break;
 		case 0x0E: ASL(abs); break;
 		case 0x1E: ASL(abs_x); break;
+		case 0x24: BIT(zp); break;
+		case 0x2C: BIT(abs); break;
 		case 0x4A: LSR_A(); break;
 		case 0x46: LSR(zp); break;
 		case 0x56: LSR(zp_x); break;
 		case 0x4E: LSR(abs); break;
 		case 0x5E: LSR(abs_x); break;
+		case 0x09: ORA(imm); break;
+		case 0x05: ORA(zp); break;
+		case 0x15: ORA(zp_x); break;
+		case 0x0D: ORA(abs); break;
+		case 0x1D: ORA(abs_x); break;
+		case 0x19: ORA(abs_y); break;
+		case 0x01: ORA(idx_ind_x); break;
+		case 0x11: ORA(ind_idx_y); break;
+		case 0x2A: ROL_A(); break;
+		case 0x26: ROL(zp); break;
+		case 0x36: ROL(zp_x); break;
+		case 0x2E: ROL(abs); break;
+		case 0x3E: ROL(abs_x); break;
+		case 0x6A: ROR_A(); break;
+		case 0x66: ROR(zp); break;
+		case 0x76: ROR(zp_x); break;
+		case 0x6E: ROR(abs); break;
+		case 0x7E: ROR(abs_x); break;
 		case 0xE9: SBC(imm); break;
 		case 0xE5: SBC(zp); break;
 		case 0xF5: SBC(zp_x); break;
@@ -145,7 +147,7 @@ void CPU::execute()
 		case 0x68: PL(A); break;
 		case 0x28: PL(P); break;
 		// Others
-		case 0xEA: /* NOP */ break;
+		case 0xEA: /* NOP. Should cost 2 cycles here. */ break;
 		default:
 			std::cerr << "Unhandled opcode: " << std::hex
 				<< read(PC - 1) << std::endl;
@@ -235,6 +237,63 @@ uint8_t CPU::rot_r(uint8_t value)
 	return output;
 }
 
+uint8_t CPU::shift_l(uint8_t value)
+{
+	bool last_C = P.C;
+	P.C = value >> (sizeof(value) * 8 - 1);
+	uint8_t output = (uint8_t)(value << 1);
+	set_NZ(output);
+	return output;
+}
+
+uint8_t CPU::shift_r(uint8_t value)
+{
+	bool last_C = P.C;
+	P.C = value << (sizeof(value) * 8 - 1);
+	uint8_t output = (uint8_t)(value >> 1);
+	set_NZ(output);
+	return output;
+}
+
+void CPU::do_ADC(uint8_t operand)
+{
+	// ADC/SBC implementation:
+	// https://stackoverflow.com/questions/29193303/6502-emulation-proper-way-to-implement-adc-and-sbc
+	// Overflow on signed arithmetic:
+	// http://www.6502.org/tutorials/vflag.html
+	
+	if (P.D)
+	{
+		// In decimal mode treat operands as binary-coded decimals.
+		// Decimal mode is not available on 2A03. Since this is a NES
+		// emulator, we don't support decimal mode, which is actually
+		// available in a MOS 6502.
+		std::cout << "ADC/SBC op with decimal mode is unavailable."
+			  << std::endl;
+		return;
+	}
+	
+	uint16_t sum = A + operand + P.C;
+	
+	P.C = sum > 0xFF;
+	
+	// Two-complements overflow happens when the result value is outside of
+	// the [-128, 127] range. According to post above two numbers this is
+	// equivalent to when two operands with the same sign are added and the
+	// result has a different sign.
+	// ~(A ^ operand) 	7th bit is 1 if A and operand have the same sign.
+	// A ^ sum 		7th bit is 1 if A | operand sign differs from sum.
+	// 0x80 		We're interested in the 7th bit only.
+	// >> 7			Shift the most significant bit to least
+	//			significant position and cast to bool so we
+	//			we don't have a type-related warning.
+	P.V = (bool)((~(A ^ operand) & (A ^ sum) & 0x80) >> 7);
+	
+	A = (uint8_t)sum;
+	
+	set_NZ(A);
+}
+
 void CPU::set_NZ(uint8_t value)
 {
 	P.Z = value == 0;
@@ -284,6 +343,48 @@ void CPU::RTS()
 
 // Arithmetic / logical
 
+void CPU::ADC(AddressingMode mode)
+{
+	do_ADC(get_operand(mode));
+}
+
+void CPU::AND(AddressingMode mode)
+{
+	A &= get_operand(mode);
+	set_NZ(A);
+}
+
+void CPU::ASL_A()
+{
+	A = shift_l(A);
+}
+
+void CPU::ASL(AddressingMode mode)
+{
+	uint16_t addr = operand_addr(mode);
+	write_to(addr, shift_l(read(addr)));
+}
+
+void CPU::BIT(AddressingMode mode)
+{
+	uint8_t operand = get_operand(mode);
+	P.Z = (A & operand) == 0;
+	P.V = (bool)(operand >> 6);
+	P.N = (bool)(operand >> 7);
+}
+
+void CPU::LSR_A()
+{
+	A = shift_r(A);
+}
+
+void CPU::LSR(AddressingMode mode)
+{
+	uint16_t addr = operand_addr(mode);
+	write_to(addr, shift_r(read(addr)));
+}
+
+
 void CPU::ORA(AddressingMode mode)
 {
 	uint8_t operand = get_operand(mode);
@@ -313,99 +414,9 @@ void CPU::ROR(AddressingMode mode)
 	write_to(addr, rot_r(read(addr)));
 }
 
-// ADC/SBC implementation:
-// https://stackoverflow.com/questions/29193303/6502-emulation-proper-way-to-implement-adc-and-sbc
-// Overflow on signed arithmetic:
-// http://www.6502.org/tutorials/vflag.html
-
-void CPU::ADC(AddressingMode mode)
-{
-	do_ADC(get_operand(mode));
-}
-
 void CPU::SBC(AddressingMode mode)
 {
 	do_ADC(~get_operand(mode));
-}
-
-void CPU::do_ADC(uint8_t operand)
-{
-	if (P.D)
-	{
-		// In decimal mode treat operands as binary-coded decimals.
-		// Decimal mode is not available on 2A03. Since this is a NES
-		// emulator, we don't support decimal mode, which is actually
-		// available in a MOS 6502.
-		std::cout << "ADC/SBC op with decimal mode is unavailable."
-			  << std::endl;
-		return;
-	}
-	
-	uint16_t sum = A + operand + P.C;
-	
-	P.C = sum > 0xFF;
-	
-	// Two-complements overflow happens when the result value is outside of
-	// the [-128, 127] range. According to post above two numbers this is
-	// equivalent to when two operands with the same sign are added and the
-	// result has a different sign.
-	// ~(A ^ operand) 	7th bit is 1 if A and operand have the same sign.
-	// A ^ sum 		7th bit is 1 if A | operand sign differs from sum.
-	// 0x80 		We're interested in the 7th bit only.
-	// >> 7			Shift the most significant bit to least
-	//			significant position and cast to bool so we
-	//			we don't have a type-related warning.
-	P.V = (bool)((~(A ^ operand) & (A ^ sum) & 0x80) >> 7);
-	
-	A = (uint8_t)sum;
-	
-	set_NZ(A);
-}
-
-uint8_t CPU::shift_l(uint8_t value)
-{
-	bool last_C = P.C;
-	P.C = value >> (sizeof(value) * 8 - 1);
-	uint8_t output = (uint8_t)(value << 1);
-	set_NZ(output);
-	return output;
-}
-
-uint8_t CPU::shift_r(uint8_t value)
-{
-	bool last_C = P.C;
-	P.C = value << (sizeof(value) * 8 - 1);
-	uint8_t output = (uint8_t)(value >> 1);
-	set_NZ(output);
-	return output;
-}
-
-void CPU::AND(AddressingMode mode)
-{
-	A &= get_operand(mode);
-	set_NZ(A);
-}
-
-void CPU::ASL_A()
-{
-	A = shift_l(A);
-}
-
-void CPU::ASL(AddressingMode mode)
-{
-	uint16_t addr = operand_addr(mode);
-	write_to(addr, shift_l(read(addr)));
-}
-
-void CPU::LSR_A()
-{
-	A = shift_r(A);
-}
-
-void CPU::LSR(AddressingMode mode)
-{
-	uint16_t addr = operand_addr(mode);
-	write_to(addr, shift_r(read(addr)));
 }
 
 // Load / store
