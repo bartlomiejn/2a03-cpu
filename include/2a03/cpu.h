@@ -122,6 +122,18 @@ namespace NES
 		/// \return Rotated value.
 		uint8_t rot_r(uint8_t value);
 		
+		/// Shifts left the value once. 0 is shifted into bit 0, bit 7
+		/// is shifted into Carry. Sets N, Z, C.
+		/// \param value Value to shift left.
+		/// \return Shifted value.
+		uint8_t shift_l(uint8_t value);
+		
+		/// Shifts right the value once. 0 is shifted into bit 7, bit 0
+		/// is shifted into Carry. Sets N, Z, C.
+		/// \param value Value to shift right.
+		/// \return Shifted value.
+		uint8_t shift_r(uint8_t value);
+		
 		/// Performs ADC with the provided operand.
 		void do_ADC(uint8_t operand);
 		
@@ -153,14 +165,14 @@ namespace NES
 		void ORA(AddressingMode mode);
 		
 		/// Rotate left the accumulator.
-		void ROLA();
+		void ROL_A();
 		
 		/// Rotate left a value at the specified address.
 		/// \param mode Addressing mode to use.
 		void ROL(AddressingMode mode);
 		
 		/// Rotate right the accumulator.
-		void RORA();
+		void ROR_A();
 		
 		/// Rotate right a value at the specified address.
 		/// \param mode Addressing mode to use.
@@ -170,13 +182,29 @@ namespace NES
 		/// \param mode Addressing mode to use.
 		void ADC(AddressingMode mode);
 		
-		/// Subtract with carry.
-		/// \param mode Addressing mode to use.
-		void SBC(AddressingMode mode);
-		
 		/// Bitwise AND with accumulator.
 		/// \param mode Addressing mode to use.
 		void AND(AddressingMode mode);
+		
+		/// Arithmetic shift left with accumulator. 0 is shifted into
+		/// bit 0 and the original bit 7 is shifted into Carry.
+		void ASL_A();
+		
+		/// Arithmetic shift left. 0 is shifted into bit 0 and the
+		/// original bit 7 is shifted into Carry.
+		void ASL(AddressingMode mode);
+		
+		/// Logical shift right with accumulator. 0 is shifted into bit
+		/// 7 and the original bit 0 is shifted into Carry.
+		void LSR_A();
+		
+		/// Logical shift right. 0 is shifted into bit 7 and the
+		/// original bit 0 is shifted into Carry.
+		void LSR(AddressingMode mode);
+		
+		/// Subtract with carry.
+		/// \param mode Addressing mode to use.
+		void SBC(AddressingMode mode);
 		
 		// Load / store
 		

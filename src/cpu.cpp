@@ -52,12 +52,12 @@ void CPU::execute()
 		case 0x19: ORA(abs_y); break;
 		case 0x01: ORA(idx_ind_x); break;
 		case 0x11: ORA(ind_idx_y); break;
-		case 0x2A: ROLA(); break;
+		case 0x2A: ROL_A(); break;
 		case 0x26: ROL(zp); break;
 		case 0x36: ROL(zp_x); break;
 		case 0x2E: ROL(abs); break;
 		case 0x3E: ROL(abs_x); break;
-		case 0x6A: RORA(); break;
+		case 0x6A: ROR_A(); break;
 		case 0x66: ROR(zp); break;
 		case 0x76: ROR(zp_x); break;
 		case 0x6E: ROR(abs); break;
@@ -70,14 +70,6 @@ void CPU::execute()
 		case 0x79: ADC(abs_y); break;
 		case 0x61: ADC(idx_ind_x); break;
 		case 0x71: ADC(ind_idx_y); break;
-		case 0xE9: SBC(imm); break;
-		case 0xE5: SBC(zp); break;
-		case 0xF5: SBC(zp_x); break;
-		case 0xED: SBC(abs); break;
-		case 0xFD: SBC(abs_x); break;
-		case 0xF9: SBC(abs_y); break;
-		case 0xE1: SBC(idx_ind_x); break;
-		case 0xF1: SBC(ind_idx_y); break;
 		case 0x29: AND(imm); break;
 		case 0x25: AND(zp); break;
 		case 0x35: AND(zp_x); break;
@@ -86,6 +78,24 @@ void CPU::execute()
 		case 0x39: AND(abs_y); break;
 		case 0x21: AND(idx_ind_x); break;
 		case 0x31: AND(ind_idx_y); break;
+		case 0x0A: ASL_A(); break;
+		case 0x06: ASL(zp); break;
+		case 0x16: ASL(zp_x); break;
+		case 0x0E: ASL(abs); break;
+		case 0x1E: ASL(abs_x); break;
+		case 0x4A: LSR_A(); break;
+		case 0x46: LSR(zp); break;
+		case 0x56: LSR(zp_x); break;
+		case 0x4E: LSR(abs); break;
+		case 0x5E: LSR(abs_x); break;
+		case 0xE9: SBC(imm); break;
+		case 0xE5: SBC(zp); break;
+		case 0xF5: SBC(zp_x); break;
+		case 0xED: SBC(abs); break;
+		case 0xFD: SBC(abs_x); break;
+		case 0xF9: SBC(abs_y); break;
+		case 0xE1: SBC(idx_ind_x); break;
+		case 0xF1: SBC(ind_idx_y); break;
 		// Load / store
 		case 0xA9: LD(A, imm); break;
 		case 0xA5: LD(A, zp); break;
@@ -281,7 +291,7 @@ void CPU::ORA(AddressingMode mode)
 	set_NZ(A);
 }
 
-void CPU::ROLA()
+void CPU::ROL_A()
 {
 	A = rot_l(A);
 }
@@ -292,7 +302,7 @@ void CPU::ROL(AddressingMode mode)
 	write_to(addr, rot_l(read(addr)));
 }
 
-void CPU::RORA()
+void CPU::ROR_A()
 {
 	A = rot_r(A);
 }
@@ -352,10 +362,50 @@ void CPU::do_ADC(uint8_t operand)
 	set_NZ(A);
 }
 
+uint8_t CPU::shift_l(uint8_t value)
+{
+	bool last_C = P.C;
+	P.C = value >> (sizeof(value) * 8 - 1);
+	uint8_t output = (uint8_t)(value << 1);
+	set_NZ(output);
+	return output;
+}
+
+uint8_t CPU::shift_r(uint8_t value)
+{
+	bool last_C = P.C;
+	P.C = value << (sizeof(value) * 8 - 1);
+	uint8_t output = (uint8_t)(value >> 1);
+	set_NZ(output);
+	return output;
+}
+
 void CPU::AND(AddressingMode mode)
 {
 	A &= get_operand(mode);
 	set_NZ(A);
+}
+
+void CPU::ASL_A()
+{
+	A = shift_l(A);
+}
+
+void CPU::ASL(AddressingMode mode)
+{
+	uint16_t addr = operand_addr(mode);
+	write_to(addr, shift_l(read(addr)));
+}
+
+void CPU::LSR_A()
+{
+	A = shift_r(A);
+}
+
+void CPU::LSR(AddressingMode mode)
+{
+	uint16_t addr = operand_addr(mode);
+	write_to(addr, shift_r(read(addr)));
 }
 
 // Load / store
