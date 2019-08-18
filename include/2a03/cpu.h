@@ -221,6 +221,13 @@ namespace NES
 		/// \param mode Addressing mode to use.
 		void CP(uint8_t &reg, AddressingMode mode);
 		
+		/// Decrement memory. Affects N, Z.
+		/// \param mode Addressing mode to use.
+		void DEC(AddressingMode mode);
+		
+		/// Bitwise XOR. Affects N, Z.
+		void EOR(AddressingMode mode);
+		
 		/// Logical shift right with accumulator. 0 is shifted into bit
 		/// 7 and the original bit 0 is shifted into Carry.
 		void LSR_A();

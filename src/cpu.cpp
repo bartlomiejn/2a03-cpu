@@ -90,6 +90,18 @@ void CPU::execute()
 		case 0xC0: CP(Y, imm); break;
 		case 0xC4: CP(Y, zp); break;
 		case 0xCC: CP(Y, abs); break;
+		case 0xC6: DEC(zp); break;
+		case 0xD6: DEC(zp_x); break;
+		case 0xCE: DEC(abs); break;
+		case 0xDE: DEC(abs_x); break;
+		case 0x49: EOR(imm); break;
+		case 0x45: EOR(zp); break;
+		case 0x55: EOR(zp_x); break;
+		case 0x4D: EOR(abs); break;
+		case 0x5D: EOR(abs_x); break;
+		case 0x59: EOR(abs_y); break;
+		case 0x41: EOR(idx_ind_x); break;
+		case 0x51: EOR(ind_idx_y); break;
 		case 0x4A: LSR_A(); break;
 		case 0x46: LSR(zp); break;
 		case 0x56: LSR(zp_x); break;
@@ -449,6 +461,21 @@ void CPU::CP(uint8_t &reg, AddressingMode mode)
 	P.Z = reg == operand;
 	P.C = reg >= operand;
 	P.N = (reg - operand) >> 7;
+}
+
+void CPU::DEC(AddressingMode mode)
+{
+	uint8_t op_addr = operand_addr(mode);
+	uint8_t result = read(op_addr) - 1;
+	write_to(op_addr, result);
+	set_NZ(result);
+}
+
+void CPU::EOR(AddressingMode mode)
+{
+	uint8_t operand = get_operand(mode);
+	A ^= operand;
+	set_NZ(A);
 }
 
 void CPU::LSR_A()
