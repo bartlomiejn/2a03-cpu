@@ -52,6 +52,7 @@ void CPU::execute()
 		case 0x6C: JMP(ind); break;
 		case 0x20: JSR(); break;
 		case 0x60: RTS(); break;
+		case 0x40: RTI(); break;
 		// Arithmetic / logical
 		case 0x69: ADC(imm); break;
 		case 0x65: ADC(zp); break;
@@ -194,6 +195,19 @@ void CPU::execute()
 			std::cerr << "Unhandled opcode: " << std::hex
 				<< read(PC - 1) << std::endl;
 	}
+	
+	// If an IRQ happens, the 7-clock irq sequence is carried after the
+	// instruction finishes
+	if (IRQ)
+	{
+		P.I = true;
+		// 2 cycles for internal ops
+		// Push high byte of return address
+		// Push low byte of return address
+		// Push P
+		// Get IRQ vector low byte from $FFFE ($FFFA if NMI)
+		// Get IRQ vector high byte from $FFFF ($FFFB if NMI)
+	}
 }
 
 uint8_t CPU::read(uint16_t addr)
@@ -202,6 +216,9 @@ uint8_t CPU::read(uint16_t addr)
 	{
 		case 0x0000 ... 0x1FFF:
 			// Ram has only 2KB, but it wraps around up to 0x1FFF
+			// 0x0000 - 0x00FF is zero page
+			// 0x0100 - 0x01FF is stack memory
+			// 0x0200 - 0x07FF is RAM
 			return ram[addr % 0x800];
 		default:
 			std::cerr << "Unhandled memory access: " << std::hex
@@ -222,9 +239,6 @@ void CPU::write_to(uint16_t addr, uint8_t val)
 	switch (addr)
 	{
 		case 0x0000 ... 0x1FFF:
-			// 0x0000 - 0x00FF is zero page
-			// 0x0100 - 0x01FF is stack memory
-			// 0x0200 - 0x07FF is RAM
 			ram[addr % 0x800] = val;
 		default:
 			std::cerr << "Unhandled write to " << std::hex << addr
@@ -411,6 +425,8 @@ void CPU::JMP(AddressingMode mode)
 
 void CPU::JSR()
 {
+	// JSR return address should be the last byte of the 3-byte JSR
+	// instruction.
 	uint16_t return_addr = (uint16_t)(PC + 1);
 	PH((uint8_t)return_addr >> 8);
 	PH((uint8_t)return_addr);
@@ -604,7 +620,7 @@ void CPU::IN(uint8_t &reg)
 
 void CPU::PH(uint8_t value)
 {
-	write_to(S, value);
+	write_to((uint16_t)(0x100 + S), value);
 	S--;
 }
 
@@ -616,7 +632,7 @@ void CPU::PH(StatusRegister &p)
 
 void CPU::PL(uint8_t &reg_to)
 {
-	uint8_t operand = read(S);
+	uint8_t operand = read((uint16_t)(0x100 + S));
 	S++;
 	reg_to = operand;
 	set_NZ(operand);

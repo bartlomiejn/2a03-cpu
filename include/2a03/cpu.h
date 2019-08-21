@@ -61,6 +61,7 @@ namespace NES
 		uint16_t PC;		///< Program counter
 		uint8_t S;		///< Stack pointer
 		StatusRegister P;	///< Status register
+		bool IRQ;		///< Interrupt line
 		
 		uint8_t ram[0x800]; 	///< RAM
 		
@@ -182,6 +183,10 @@ namespace NES
 		/// Return from subroutine. Pulls two bytes off the stack (low
 		/// byte first) and transfers control to that address.
 		void RTS();
+		
+		/// Return from interrupt. Retrieves the status word and the PC
+		/// value from the stack (first status, then PC).
+		void RTI();
 		
 		// Arithmetic / logical
 		
