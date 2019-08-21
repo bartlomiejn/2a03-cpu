@@ -438,7 +438,16 @@ void CPU::RTS()
 	uint8_t l_addr, h_addr;
 	PL(l_addr);
 	PL(h_addr);
-	PC = h_addr << 8 | l_addr;
+	PC = (h_addr << 8 | l_addr) + 0x1;
+}
+
+void CPU::RTI()
+{
+	uint8_t l_addr, h_addr;
+	PL(P.status);
+	PL(l_addr);
+	PL(h_addr);
+	PC = (h_addr << 8 | l_addr);
 }
 
 // Arithmetic / logical
