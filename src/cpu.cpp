@@ -632,8 +632,8 @@ void CPU::PH(StatusRegister &p)
 
 void CPU::PL(uint8_t &reg_to)
 {
-	uint8_t operand = read((uint16_t)(0x100 + S));
 	S++;
+	uint8_t operand = read((uint16_t)(0x100 + S));
 	reg_to = operand;
 	set_NZ(operand);
 }
