@@ -12,16 +12,14 @@ void CPU::power()
 	S = 0xFD;
 	P.status = 0x24;
 	
+	IRQ = NMI = false;
+	
 	// TODO: Rest of power up logic
 	// $4017 = $00 (frame irq enabled)
 	// $4015 = $00 (all channels disabled)
 	// $4000-$400F = $00 (not sure about $4010-$4013)
 	// All 15 bits of noise channel LFSR = $0000[4]. The first time the LFSR
 	// is clocked from the all-0s state, it will shift in a 1.
-	
-	// RAM state is not consistent on power up on a real machine, but we'll
-	// clear it here.
-	memset(ram, 0xFF, sizeof(ram));
 }
 
 void CPU::reset()
@@ -36,7 +34,7 @@ void CPU::reset()
 
 void CPU::execute()
 {
-	switch (read(PC++))
+	switch (bus.read(PC++))
 	{
 		// Branch instructions
 		case 0x10: BPL(); break;
@@ -193,62 +191,37 @@ void CPU::execute()
 		case 0xEA: /* NOP. Should cost 2 cycles here. */ break;
 		default:
 			std::cerr << "Unhandled opcode: " << std::hex
-				<< read(PC - 1) << std::endl;
+				<< bus.read(PC - 1) << std::endl;
 	}
 	
-	// If an IRQ happens, the 7-clock irq sequence is carried after the
-	// instruction finishes
-	if (IRQ)
+	// If an interrupt happens, the 7-clock irq sequence is carried after
+	// the instruction finishes.
+	if (IRQ || NMI)
 	{
-		P.I = true;
 		// 2 cycles for internal ops
 		// Push high byte of return address
 		// Push low byte of return address
 		// Push P
 		// Get IRQ vector low byte from $FFFE ($FFFA if NMI)
 		// Get IRQ vector high byte from $FFFF ($FFFB if NMI)
-	}
-}
+		
+		uint8_t pcl, pch;
 
-uint8_t CPU::read(uint16_t addr)
-{
-	switch (addr)
-	{
-		case 0x0000 ... 0x1FFF:
-			// Ram has only 2KB, but it wraps around up to 0x1FFF
-			// 0x0000 - 0x00FF is zero page
-			// 0x0100 - 0x01FF is stack memory
-			// 0x0200 - 0x07FF is RAM
-			return ram[addr % 0x800];
-		default:
-			std::cerr << "Unhandled memory access: " << std::hex
-				<< addr << std::endl;
-	}
-}
-
-uint16_t CPU::read16(uint16_t addr, bool is_zp)
-{
-	// If we know this is a zero-page addr, wrap the most-significant bit
-	// around zero-page bounds
-	uint16_t h_addr = is_zp ? ((addr + 1) % 0x100) : (addr + 1);
-	return (read(h_addr) << 8) | read(addr);
-}
-
-void CPU::write_to(uint16_t addr, uint8_t val)
-{
-	switch (addr)
-	{
-		case 0x0000 ... 0x1FFF:
-			ram[addr % 0x800] = val;
-		default:
-			std::cerr << "Unhandled write to " << std::hex << addr
-				<< " with value: " << val << std::endl;
+		PH((uint8_t)PC >> 8);
+		PH((uint8_t)PC);
+		PH(P.status);
+		
+		pcl = bus.read(IRQ ? (uint16_t)0xFFFE : (uint16_t)0xFFFA);
+		P.I = true;
+		pch = bus.read(IRQ ? (uint16_t)0xFFFF : (uint16_t)0xFFFB);
+		
+		PC = pch << 8 | pcl;
 	}
 }
 
 uint8_t CPU::get_operand(AddressingMode mode)
 {
-	return read(operand_addr(mode));
+	return bus.read(operand_addr(mode));
 }
 
 uint16_t CPU::operand_addr(AddressingMode mode)
@@ -256,16 +229,16 @@ uint16_t CPU::operand_addr(AddressingMode mode)
 	uint16_t addr = 0x0;
 	switch (mode)
 	{
-		case abs: 	addr = read16(PC); PC += 2; break;
-		case abs_x: 	addr = read16(PC) + X; PC += 2; break;
-		case abs_y: 	addr = read16(PC) + Y; PC += 2; break;
+		case abs: 	addr = bus.read16(PC); PC += 2; break;
+		case abs_x: 	addr = bus.read16(PC) + X; PC += 2; break;
+		case abs_y: 	addr = bus.read16(PC) + Y; PC += 2; break;
 		case imm: 	addr = PC; PC++; break;
-		case zp: 	addr = read(PC); PC++; break;
-		case zp_x: 	addr = (read(PC) + X) % 0x100; PC++; break;
-		case mode_zp_y: addr = (read(PC) + Y) % 0x100; PC++; break;
-		case idx_ind_x: addr = read16((read(PC) + X) % 0x100, true);
+		case zp: 	addr = bus.read(PC); PC++; break;
+		case zp_x: 	addr = (bus.read(PC) + X) % 0x100; PC++; break;
+		case mode_zp_y: addr = (bus.read(PC) + Y) % 0x100; PC++; break;
+		case idx_ind_x: addr = bus.read16((bus.read(PC) + X) % 0x100, true);
 				PC++; break;
-		case ind_idx_y: addr = read16(read(PC), true) + Y; PC++; break;
+		case ind_idx_y: addr = bus.read16(bus.read(PC), true) + Y; PC++; break;
 		case ind:
 		default:	std::cerr << "Invalid addressing mode: " << mode
 				<< std::endl;
@@ -414,9 +387,9 @@ void CPU::JMP(AddressingMode mode)
 			// rather than $5080 as you intended i.e. the 6502 took
 			// the low byte of the address from $30FF and the high
 			// byte from $3000.
-			PC = read16(read16(PC)); break;
+			PC = bus.read16(bus.read16(PC)); break;
 		case abs:
-			PC = read16(PC);
+			PC = bus.read16(PC);
 		default:
 			std::cerr << "Invalid addressing mode for JMP: " << mode
 				<< std::endl;
@@ -471,7 +444,7 @@ void CPU::ASL_A()
 void CPU::ASL(AddressingMode mode)
 {
 	uint16_t addr = operand_addr(mode);
-	write_to(addr, shift_l(read(addr)));
+	bus.write(addr, shift_l(bus.read(addr)));
 }
 
 void CPU::BIT(AddressingMode mode)
@@ -498,8 +471,8 @@ void CPU::CP(uint8_t &reg, AddressingMode mode)
 void CPU::DEC(AddressingMode mode)
 {
 	uint8_t op_addr = operand_addr(mode);
-	uint8_t result = read(op_addr) - 1;
-	write_to(op_addr, result);
+	uint8_t result = bus.read(op_addr) - 1;
+	bus.write(op_addr, result);
 	set_NZ(result);
 }
 
@@ -553,7 +526,7 @@ void CPU::LSR_A()
 void CPU::LSR(AddressingMode mode)
 {
 	uint16_t addr = operand_addr(mode);
-	write_to(addr, shift_r(read(addr)));
+	bus.write(addr, shift_r(bus.read(addr)));
 }
 
 
@@ -572,7 +545,7 @@ void CPU::ROL_A()
 void CPU::ROL(AddressingMode mode)
 {
 	uint16_t addr = operand_addr(mode);
-	write_to(addr, rot_l(read(addr)));
+	bus.write(addr, rot_l(bus.read(addr)));
 }
 
 void CPU::ROR_A()
@@ -583,7 +556,7 @@ void CPU::ROR_A()
 void CPU::ROR(AddressingMode mode)
 {
 	uint16_t addr = operand_addr(mode);
-	write_to(addr, rot_r(read(addr)));
+	bus.write(addr, rot_r(bus.read(addr)));
 }
 
 void CPU::SBC(AddressingMode mode)
@@ -602,7 +575,7 @@ void CPU::LD(uint8_t &reg, AddressingMode mode)
 
 void CPU::ST(uint8_t reg, AddressingMode mode)
 {
-	write_to(operand_addr(mode), reg);
+	bus.write(operand_addr(mode), reg);
 }
 
 // Register
@@ -629,7 +602,7 @@ void CPU::IN(uint8_t &reg)
 
 void CPU::PH(uint8_t value)
 {
-	write_to((uint16_t)(0x100 + S), value);
+	bus.write((uint16_t) (0x100 + S), value);
 	S--;
 }
 
@@ -642,7 +615,7 @@ void CPU::PH(StatusRegister &p)
 void CPU::PL(uint8_t &reg_to)
 {
 	S++;
-	uint8_t operand = read((uint16_t)(0x100 + S));
+	uint8_t operand = bus.read((uint16_t)(0x100 + S));
 	reg_to = operand;
 	set_NZ(operand);
 }

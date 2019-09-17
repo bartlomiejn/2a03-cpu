@@ -2,8 +2,7 @@
 #define INC_2A03_CPU_H
 
 #include <cstdint>
-#include <2a03/ppu.h>
-#include <2a03/apu.h>
+#include <2a03/bus.h>
 
 namespace NES
 {
@@ -54,16 +53,16 @@ namespace NES
 	class CPU
 	{
 	public:
-		// Registers
-		// http://wiki.nesdev.com/w/index.php/CPU_registers
+		MemoryBus bus;		///< Addressing bus
+		
 		uint8_t A; 		///< Accumulator
 		uint8_t X, Y; 		///< Index registers
 		uint16_t PC;		///< Program counter
 		uint8_t S;		///< Stack pointer
 		StatusRegister P;	///< Status register
-		bool IRQ;		///< Interrupt line
 		
-		uint8_t ram[0x800]; 	///< RAM
+		bool IRQ;		///< Interrupt line
+		bool NMI;		///< Non-maskable interrupt line
 		
 		/// Starts the CPU.
 		void power();
@@ -74,25 +73,6 @@ namespace NES
 		/// Executes the next instruction.
 		void execute();
 	private:
-		// Addressing bus access
-		
-		/// Reads 8 bits of memory at the provided address.
-		/// \param addr Address to read from.
-		/// \return Byte that has been read.
-		uint8_t read(uint16_t addr);
-		
-		/// Reads 16 bits of memory at the provided address.
-		/// \param addr Address to read from
-		/// \param is_zp If it's a zero-page address, wrap the most
-		/// -significant byte around zero-page.
-		/// \return 2 bytes that have been read.
-		uint16_t read16(uint16_t addr, bool is_zp = false);
-		
-		/// Writes a value to the provided address.
-		/// \param addr Address to write the value to.
-		/// \param val Value to write.
-		void write_to(uint16_t addr, uint8_t val);
-		
 		// Addressing mode functions
 		// http://www.obelisk.me.uk/6502/addressing.html
 		
