@@ -8,7 +8,10 @@ namespace NES
 	class MemoryBus
 	{
 	public:
-		uint8_t ram[0x800];
+		uint8_t ram[0x800];		///< Internal RAM
+		uint8_t cartridge[0xBFE0];	///< Cartridge Space: PRG ROM,
+						///< PRG RAM, cartridge mapper
+						///< registers
 		
 		/// Initializes the memory bus.
 		MemoryBus();
