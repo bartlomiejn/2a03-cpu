@@ -10,4 +10,5 @@ Current feature list:
 - Interrupts
 
 In progress:
-- Cartridges and execution of binaries
+- Cartridges
+- Binary execution
