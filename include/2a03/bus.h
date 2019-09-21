@@ -2,16 +2,15 @@
 #define INC_2A03_BUS_H
 
 #include <cstdint>
+#include <array>
 
 namespace NES
 {
 	class MemoryBus
 	{
 	public:
-		uint8_t ram[0x800];		///< Internal RAM
-		uint8_t cartridge[0xBFE0];	///< Cartridge Space: PRG ROM,
-						///< PRG RAM, cartridge mapper
-						///< registers
+		std::array<uint8_t, 0x800> ram;		///< Internal RAM
+		std::array<uint8_t, 0xBFE0> cartridge;	///< Cartridge space
 		
 		/// Initializes the memory bus.
 		MemoryBus();

@@ -4,13 +4,16 @@
 
 using namespace NES::iNESv1;
 
-bool is_magic_valid(std::string &fstring)
+static const int prg_rom_pagesz = 16384;	///< PRG ROM page size - 16KB.
+static const int chr_rom_pagesz = 8192;		///< CHR ROM page size - 8KB.
+
+static bool is_magic_valid(std::string &fstring)
 {
 	std::string magic = fstring.substr(0, 4);
 	return magic == "NES\x1A";
 }
 
-Header get_inesv1_header(std::string &fstring)
+static Header get_inesv1_header(std::string &fstring)
 {
 	auto prg_rom_sz = static_cast<uint8_t>(fstring[4]);
 	auto chr_rom_sz = static_cast<uint8_t>(fstring[5]);
@@ -22,7 +25,7 @@ Header get_inesv1_header(std::string &fstring)
 		prg_rom_sz, chr_rom_sz, flags_6, flags_7, prg_ram_sz, flags_9);
 }
 
-void NES::iNESv1::load(std::string &&filename)
+Cartridge NES::iNESv1::load(std::string &&filename)
 {
 	std::ifstream fstream(filename);
 	if (!fstream)
@@ -44,6 +47,14 @@ void NES::iNESv1::load(std::string &&filename)
 
 	Header header = get_inesv1_header(fstring);
 	
+	std::unique_ptr<uint8_t[]> prg_rom_mem = std::make_unique<uint8_t[]>(new uint8_t[prg_rom_pagesz * header.prg_rom_pages]);
+	uint8_t prg_rom_mem[prg_rom_pagesz * header.prg_rom_pages];
+	uint8_t chr_rom_mem[prg_rom_pagesz * header.prg_rom_pages];
+	
+	Cartridge cart(header, prg_rom_mem, chr_rom_mem);
+	
 	std::cout << filename << " header loaded successfully."
 		<< std::endl;
+	
+	return cart;
 }

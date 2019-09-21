@@ -8,7 +8,7 @@ namespace NES
 {
 namespace iNESv1
 {
-	void load(std::string &&filename);
+	NES::iNESv1::Cartridge load(std::string &&filename);
 	
 	class InvalidFile {};
 	class InvalidMagicNumber {};

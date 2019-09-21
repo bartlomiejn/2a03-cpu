@@ -47,15 +47,15 @@ namespace iNESv1
 	struct Header
 	{
 		Header(
-			uint8_t prg_rom_sz,
-			uint8_t chr_rom_sz,
+			uint8_t prg_rom_pages,
+			uint8_t chr_rom_pages,
 			Byte6 flags_6,
 			Byte7 flags_7,
 			uint8_t prg_ram_sz,
 			Byte9 flags_9
 		){
-			this->prg_rom_sz = prg_rom_sz;
-			this->chr_rom_sz = chr_rom_sz;
+			this->prg_rom_pages = prg_rom_pages;
+			this->chr_rom_pages = chr_rom_pages;
 			this->flags_6 = flags_6;
 			this->flags_7 = flags_7;
 			this->prg_ram_sz = prg_ram_sz;
@@ -63,8 +63,8 @@ namespace iNESv1
 		};
 		
 		// Bytes 0-3 are `NES<EOF>` in ASCII
-		uint8_t prg_rom_sz;	///< Byte 4: PRG ROM pages count in 16KB units.
-		uint8_t chr_rom_sz;	///< Byte 5: CHR ROM pages count in 8KB units.
+		uint8_t prg_rom_pages;	///< Byte 4: PRG ROM pages count in 16KB units.
+		uint8_t chr_rom_pages;	///< Byte 5: CHR ROM pages count in 8KB units.
 		Byte6 flags_6;		///< Byte 6: Flags.
 		Byte7 flags_7;		///< Byte 7: Flags.
 		uint8_t prg_ram_sz;	///< Byte 8: PRG RAM pages count in 8KB units. 0 equals 8KB.

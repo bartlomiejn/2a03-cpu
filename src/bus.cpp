@@ -7,8 +7,8 @@ using namespace NES;
 MemoryBus::MemoryBus()
 {
 	// Ram state is not consistent on a real machine.
-	memset(ram, 0xFF, sizeof(ram));
-	memset(cartridge, 0xFF, sizeof(cartridge));
+	std::fill(ram.begin(), ram.end(), 0xFF);
+	std::fill(cartridge.begin(), cartridge.end(), 0xFF);
 }
 
 uint8_t MemoryBus::read(uint16_t addr)
