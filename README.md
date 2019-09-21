@@ -7,6 +7,8 @@ Current feature list:
 - Instruction cycle
 - Addressing modes
 - Official instruction list
+- Interrupts
 
 In progress:
-- Interrupts
+- Cartridges
+- Binary execution
