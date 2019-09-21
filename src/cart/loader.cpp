@@ -8,7 +8,7 @@ static const unsigned int prg_rom_pagesz = 16384; ///< PRG ROM page size - 16KB.
 static const unsigned int chr_rom_pagesz = 8192;  ///< CHR ROM page size - 8KB.
 static const unsigned int trainer_abssz = 512;	  ///< Trainer absolute size - 512B.
 
-/// Checks if magic number is valid. Modifies the input iterator.
+/// Checks if magic number is valid. Leaves the input iterator at byte 4.
 static bool is_magic_valid(std::string::iterator &iter)
 {
 	std::string magic;
@@ -20,7 +20,7 @@ static bool is_magic_valid(std::string::iterator &iter)
 	return magic == "NES\x1A";
 }
 
-/// Generates an iNESv1 header. Modifies the input iterator.
+/// Generates an iNESv1 header. Leaves the input iterator at byte 10.
 static Header get_inesv1_header(std::string::iterator &iter)
 {
 	auto prg_rom_sz = static_cast<uint8_t>(*iter);
@@ -54,6 +54,8 @@ Cartridge NES::iNESv1::load(std::string &&filename)
 	std::string fstring(
 		(std::istreambuf_iterator<char>(fstream)),
 		std::istreambuf_iterator<char>());
+	fstream.close();
+	
 	std::string::iterator fstr_iter = fstring.begin();
 	
 	// Verify the iNES magic number
@@ -77,6 +79,9 @@ Cartridge NES::iNESv1::load(std::string &&filename)
 		std::make_unique<uint8_t[]>(prg_rom_sz),
 		std::make_unique<uint8_t[]>(chr_rom_sz));
 
+	// Advance to byte 16 which is directly after the header
+	fstr_iter += 6;
+	
 	// If trainer is available, copy trainer memory first
 	if (header.flags_6.has_trainer)
 	{

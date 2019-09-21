@@ -53,14 +53,14 @@ namespace iNESv1
 			Byte7 flags_7,
 			uint8_t prg_ram_sz,
 			Byte9 flags_9
-		){
-			this->prg_rom_pages = prg_rom_pages;
-			this->chr_rom_pages = chr_rom_pages;
-			this->flags_6 = flags_6;
-			this->flags_7 = flags_7;
-			this->prg_ram_sz = prg_ram_sz;
-			this->flags_9 = flags_9;
-		};
+		):
+			prg_rom_pages(prg_rom_pages),
+			chr_rom_pages(chr_rom_pages),
+			flags_6(flags_6),
+			flags_7(flags_7),
+			prg_ram_sz(prg_ram_sz),
+			flags_9(flags_9)
+		{};
 		
 		// Bytes 0-3 are `NES<EOF>` in ASCII
 		uint8_t prg_rom_pages;	///< Byte 4: PRG ROM pages count in 16KB units.
@@ -84,12 +84,12 @@ namespace iNESv1
 			std::unique_ptr<uint8_t[]> trainer,
 			std::unique_ptr<uint8_t[]> prg_rom,
 			std::unique_ptr<uint8_t[]> chr_rom
-		){
-			this->header = header;
-			this->trainer = std::move(trainer);
-			this->prg_rom = std::move(prg_rom);
-			this->chr_rom = std::move(chr_rom);
-		};
+		):
+			header(header),
+			trainer(std::move(trainer)),
+			prg_rom(std::move(prg_rom)),
+			chr_rom(std::move(chr_rom))
+		{};
 		
 		Header header;
 		std::unique_ptr<uint8_t[]> trainer;
