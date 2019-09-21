@@ -2,22 +2,15 @@ cmake_minimum_required(VERSION 3.12)
 project(2a03)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "-std=c++17")
 
 # Add project options
 option(2A03_INCLUDE_TESTS "Include tests in the output." TRUE)
 
-# Disable optimizations for GCC builds
+# Disable optimizations for GCC debug builds
 if(CMAKE_COMPILER_IS_GNUCC)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
 endif(CMAKE_COMPILER_IS_GNUCC)
-
-# Add cppfs to project
-set(CPPFS_DIR lib/cppfs)
-set(CPPFS_INCLUDE ${CPPFS_DIR}/source/cppfs/include)
-add_subdirectory(${CPPFS_DIR})
 
 set(SOURCES src/main.cpp src/cpu.cpp src/bus.cpp src/cart/loader.cpp)
 include_directories(include ${CPPFS_INCLUDE})

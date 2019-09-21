@@ -106,7 +106,7 @@ Cartridge NES::iNESv1::load(std::string &&filename)
 		fstr_iter++;
 	}
 	
-	std::cout << filename << " header loaded successfully."
+	std::cout << filename << " ROM loaded successfully."
 		<< std::endl;
 	
 	return cart;
