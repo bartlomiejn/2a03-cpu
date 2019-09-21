@@ -53,6 +53,8 @@ namespace NES
 	class CPU
 	{
 	public:
+		explicit CPU(MemoryBus &bus);
+		
 		MemoryBus bus;		///< Addressing bus
 		
 		uint8_t A; 		///< Accumulator

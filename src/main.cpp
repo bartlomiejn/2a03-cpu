@@ -4,7 +4,8 @@
 
 int main()
 {
-	NES::CPU cpu;
+	NES::MemoryBus bus;
+	NES::CPU cpu(bus);
 	
 	NES::iNESv1::Cartridge cart =
 		NES::iNESv1::load("test/instr_test-v5/official_only.nes");

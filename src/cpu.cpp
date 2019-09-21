@@ -4,6 +4,11 @@
 
 using namespace NES;
 
+CPU::CPU(NES::MemoryBus &bus) : bus(bus)
+{
+	power();
+}
+
 void CPU::power()
 {
 	A = 0x0;
