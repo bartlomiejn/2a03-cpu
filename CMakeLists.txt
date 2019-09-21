@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/build/)
 
-set(SOURCES main.cpp src/cpu.cpp src/bus.cpp include/2a03/ines/ines.h)
+set(SOURCES src/main.cpp src/cpu.cpp src/bus.cpp src/cart/loader.cpp)
 
 include_directories(include)
 
