@@ -14,7 +14,7 @@ namespace iNESv1
 		{
 			uint8_t nib_l : 4;	///< Lower nibble of mapper number
 			bool ignore_mctrl : 1; 	///< Ignore mirroring control or above mirroring bit
-			bool trainer : 1;	///< 512-byte trainer at $7000-$71FF (before PRG data)
+			bool has_trainer : 1;	///< 512-byte trainer at $7000-$71FF (before PRG data)
 			bool prg_ram : 1;	///< Contains battery-backed PRG RAM ($6000-$7FFF) or other persistent memory
 			bool mirror : 1;	///< Mirroring  0 : horizontal (CIRAM A10 == PPU A11)
 						///< 		1 : vertical (CIRAM A10 == PPU A10)
@@ -76,14 +76,23 @@ namespace iNESv1
 	public:
 		/// iNESv1 cartridge image.
 		/// \param header iNESv1 file header
+		/// \param trainer Trainer data, if it's available.
 		/// \param prg_rom Program code to be executed.
-		/// \param chr_rom ROM which is accessible by the PPU.
+		/// \param chr_rom Data accessible by the PPU.
 		Cartridge(
 			Header header,
+			std::unique_ptr<uint8_t[]> trainer,
 			std::unique_ptr<uint8_t[]> prg_rom,
-			std::unique_ptr<uint8_t[]> chr_rom);
+			std::unique_ptr<uint8_t[]> chr_rom
+		){
+			this->header = header;
+			this->trainer = std::move(trainer);
+			this->prg_rom = std::move(prg_rom);
+			this->chr_rom = std::move(chr_rom);
+		};
 		
 		Header header;
+		std::unique_ptr<uint8_t[]> trainer;
 		std::unique_ptr<uint8_t[]> prg_rom;
 		std::unique_ptr<uint8_t[]> chr_rom;
 	};
