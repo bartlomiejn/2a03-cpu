@@ -18,3 +18,6 @@ binary: $(OUT_DIR)
 
 run: binary
 	$(OUT_DIR)/2a03
+
+debug: binary
+	gdb $(OUT_DIR)/2a03

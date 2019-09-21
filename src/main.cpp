@@ -5,9 +5,10 @@
 int main()
 {
 	NES::CPU cpu;
-	cpu.power();
-	
+
 	NES::iNESv1::load("test/instr_test-v5/official_only.nes");
+	
+	cpu.power();
 	
 	return 0;
 }
