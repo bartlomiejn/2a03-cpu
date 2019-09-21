@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 3.12)
 project(2a03)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_FLAGS "-std=c++17")
+
+# Add project options
+option(2A03_INCLUDE_TESTS "Include tests in the output." TRUE)
 
 # Disable optimizations for GCC builds
 if(CMAKE_COMPILER_IS_GNUCC)

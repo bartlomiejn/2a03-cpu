@@ -3,6 +3,7 @@ OUT_DIR ?= $(SRC_DIR)/output
 ASM_DIR := $(SRC_DIR)/tools/acme091
 ASM ?= acme
 CC_DB ?= gdb
+CXX = /usr/local/Cellar/gcc/9.2.0/bin/c++-9
 
 .PHONY: build_asm binary run
 
@@ -14,7 +15,10 @@ build_asm:
 	cd $(ASM_DIR)/src && $(MAKE) install
 
 binary: $(OUT_DIR)
-	cd $(OUT_DIR) && cmake -DCMAKE_BUILD_TYPE=Debug $(SRC_DIR)
+	cd $(OUT_DIR) && cmake \
+		-DCMAKE_BUILD_TYPE=Debug \
+		-D2A03_INCLUDE_TESTS=TRUE \
+		$(SRC_DIR)
 	$(MAKE) 2a03 -C $(OUT_DIR)
 
 run: binary
