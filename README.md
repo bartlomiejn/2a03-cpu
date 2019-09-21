@@ -8,7 +8,8 @@ Feature list:
 - Addressing modes
 - Official instruction list
 - Interrupts
+- Cartridge ROM loading
 
 In progress:
-- Cartridges loading and binary execution
+- Binary execution
 - Automated tests
