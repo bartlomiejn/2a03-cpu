@@ -2,8 +2,8 @@ SRC_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 OUT_DIR ?= $(SRC_DIR)/output
 ASM_DIR := $(SRC_DIR)/tools/acme091
 ASM ?= acme
+CXX ?= /usr/local/Cellar/gcc/9.2.0/bin/c++-9
 CC_DB ?= gdb
-CXX = /usr/local/Cellar/gcc/9.2.0/bin/c++-9
 
 .PHONY: build_asm binary run
 

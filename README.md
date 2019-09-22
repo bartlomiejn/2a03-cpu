@@ -2,7 +2,13 @@
 
 NES emulator written in C++. 
 
-Feature list:
+#### Build
+
+`make binary CXX={Your C++ compiler}`
+
+I've put my compiler temporarily as the default value which most definitely won't work with your setup. 
+
+#### Feature list:
 - Memory access
 - Instruction cycle
 - Addressing modes
@@ -10,6 +16,6 @@ Feature list:
 - Interrupts
 - Cartridge ROM loading
 
-In progress:
+#### In progress:
 - Binary execution
 - Automated tests

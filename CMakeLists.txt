@@ -3,8 +3,8 @@ project(2a03)
 
 set(CMAKE_CXX_STANDARD 17)
 
-# Add project options
-option(2A03_INCLUDE_TESTS "Include tests in the output." TRUE)
+# Project options
+option(2A03_INCLUDE_TESTS "Include tests in the output." FALSE)
 
 # Disable optimizations for GCC debug builds
 if(CMAKE_COMPILER_IS_GNUCC)
