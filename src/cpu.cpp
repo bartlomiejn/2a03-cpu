@@ -189,6 +189,7 @@ void CPU::execute()
 		case 0x28: PL(P); break;
 		// Others
 		case 0xEA: /* NOP. Should cost 2 cycles here. */ break;
+		// TODO: Implement BRK
 		default:
 			std::cerr << "Unhandled opcode: " << std::hex
 				<< bus.read(PC - 1) << std::endl;

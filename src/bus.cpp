@@ -8,7 +8,6 @@ MemoryBus::MemoryBus()
 {
 	// Ram state is not consistent on a real machine.
 	std::fill(ram.begin(), ram.end(), 0xFF);
-	std::fill(cartridge.begin(), cartridge.end(), 0xFF);
 }
 
 uint8_t MemoryBus::read(uint16_t addr)
@@ -44,7 +43,10 @@ uint8_t MemoryBus::read(uint16_t addr)
 			
 		// Cartridge space: PRG ROM, PRG RAM, mapper registers
 		case 0x6000 ... 0xFFFF:
-			return cartridge[addr - 0x6000];
+			// TODO: Cartridge mappers
+			std::cerr << "Cartridge memory access at "
+				  << std::hex << addr << "." << std::endl;
+			return 0x0;
 			
 		default:
 			// TODO: Shouldn't we crash here really?
