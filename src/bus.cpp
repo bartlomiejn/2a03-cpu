@@ -43,9 +43,14 @@ uint8_t MemoryBus::read(uint16_t addr)
 			
 		// Cartridge space
 		case 0x6000 ... 0xFFFF:
-			// TODO: Cartridge mappers
-			std::cerr << "Cartridge memory access at "
-				  << std::hex << addr << "." << std::endl;
+			if (mapper.has_value())
+			{
+				// TODO: Implement mapper access.
+			}
+			else
+			{
+				// TODO: Implement mapper access.
+			}
 			return 0x0;
 			
 		default:
@@ -76,12 +81,13 @@ void MemoryBus::write(uint16_t addr, uint8_t val)
 		case 0x6000 ... 0xFFFF:
 			if (mapper.has_value())
 			{
-			
+				// TODO: Implement mapper access.
 			}
 			else
 			{
-			
+				// TODO: Implement mapper access.
 			}
+			break;
 		default:
 			std::cerr << "Unhandled write to " << std::hex << addr
 				  << " with value: " << val << std::endl;
