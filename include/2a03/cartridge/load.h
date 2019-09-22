@@ -2,7 +2,7 @@
 #define INC_2A03_INES_LOADER_H
 
 #include <string>
-#include <2a03/cart/ines.h>
+#include <2a03/cartridge/ines.h>
 
 namespace NES
 {

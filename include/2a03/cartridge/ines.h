@@ -67,7 +67,7 @@ namespace iNESv1
 		uint8_t chr_rom_pages;	///< Byte 5: CHR ROM pages count in 8KB units.
 		Byte6 flags_6;		///< Byte 6: Flags.
 		Byte7 flags_7;		///< Byte 7: Flags.
-		uint8_t prg_ram_sz;	///< Byte 8: PRG RAM pages count in 8KB units. 0 equals 8KB.
+		uint8_t prg_ram_sz;	///< Byte 8: PRG RAM pages count in 8KB units.
 		Byte9 flags_9;		///< Byte 9: Flags.
 	};
 	

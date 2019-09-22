@@ -12,8 +12,14 @@ if(CMAKE_COMPILER_IS_GNUCC)
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
 endif(CMAKE_COMPILER_IS_GNUCC)
 
-set(SOURCES src/main.cpp src/cpu.cpp src/bus.cpp src/cart/loader.cpp)
-include_directories(include ${CPPFS_INCLUDE})
+set(SOURCES
+        src/main.cpp
+        src/cpu.cpp
+        src/bus.cpp
+        src/cart/load.cpp
+        src/cart/mapper.cpp)
+
+include_directories(include)
 
 add_executable(2a03 ${SOURCES})
 add_dependencies(2a03 cppfs)

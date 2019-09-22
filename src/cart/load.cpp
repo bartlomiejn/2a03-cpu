@@ -1,12 +1,12 @@
-#include <2a03/cart/loader.h>
 #include <fstream>
 #include <iostream>
+#include <2a03/cartridge/load.h>
 
 using namespace NES::iNESv1;
 
-static const unsigned int prg_rom_pagesz = 16384; ///< PRG ROM page size - 16KB.
-static const unsigned int chr_rom_pagesz = 8192;  ///< CHR ROM page size - 8KB.
-static const unsigned int trainer_abssz = 512;	  ///< Trainer absolute size - 512B.
+static const unsigned int prg_rom_pagesz = 0x4000; ///< PRG ROM page size - 16KB.
+static const unsigned int chr_rom_pagesz = 0x2000; ///< CHR ROM page size - 8KB.
+static const unsigned int trainer_abssz = 0x200;   ///< Trainer absolute size - 512B.
 
 /// Checks if magic number is valid. Leaves the input iterator at byte 4.
 static bool is_magic_valid(std::string::iterator &iter)
@@ -31,7 +31,8 @@ static Header get_inesv1_header(std::string::iterator &iter)
 	iter++;
 	Byte7 flags_7 = { .byte = static_cast<uint8_t>(*iter) };
 	iter++;
-	auto prg_ram_sz = static_cast<uint8_t>(*iter);
+	auto prg_ram = static_cast<uint8_t>(*iter);
+	auto prg_ram_sz = prg_ram ? prg_ram : 0x2000; // If 0 then 8KB
 	iter++;
 	Byte9 flags_9 = { .byte = static_cast<uint8_t>(*iter) };
 	iter++;

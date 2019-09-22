@@ -41,7 +41,7 @@ uint8_t MemoryBus::read(uint16_t addr)
 				<< std::hex << addr << "." << std::endl;
 			return 0x0;
 			
-		// Cartridge space: PRG ROM, PRG RAM, mapper registers
+		// Cartridge space
 		case 0x6000 ... 0xFFFF:
 			// TODO: Cartridge mappers
 			std::cerr << "Cartridge memory access at "
@@ -68,10 +68,23 @@ void MemoryBus::write(uint16_t addr, uint8_t val)
 {
 	switch (addr)
 	{
+		// Internal RAM
 		case 0x0000 ... 0x1FFF:
 			ram[addr % 0x800] = val;
+			break;
+		// Cartridge space
+		case 0x6000 ... 0xFFFF:
+			if (mapper.has_value())
+			{
+			
+			}
+			else
+			{
+			
+			}
 		default:
 			std::cerr << "Unhandled write to " << std::hex << addr
 				  << " with value: " << val << std::endl;
+			break;
 	}
 }

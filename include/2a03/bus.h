@@ -3,14 +3,19 @@
 
 #include <cstdint>
 #include <array>
+#include <optional>
+#include <2a03/cartridge/mapper.h>
+
+static const int internal_ram_sz = 0x800; ///< NES Internal RAM size.
 
 namespace NES
 {
+	
 	class MemoryBus
 	{
 	public:
-		std::array<uint8_t, 0x800> ram;		///< Internal RAM
-		std::array<uint8_t, 0xBFE0> cartridge;	///< Cartridge space
+		std::array<uint8_t, internal_ram_sz> ram; ///< Internal RAM
+		std::optional<Mapper> mapper; ///< Cartridge mapper, if it's inserted.
 		
 		/// Initializes the memory bus.
 		MemoryBus();
