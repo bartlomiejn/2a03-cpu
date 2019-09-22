@@ -15,26 +15,21 @@ void CPU::power()
 	X = 0x0;
 	Y = 0x0;
 	S = 0xFD;
-	P.status = 0x24;
+	P.status = 0x34;
 	
 	IRQ = NMI = false;
 	
+	bus.write(0x4017, 0x0); // Frame IRQ enabled
+	bus.write(0x4015, 0x0); // All channels disabled
+	
+	for (uint16_t i = 0x4000; i <= 0x4013; i++)
+		bus.write(i, 0x0);
+	
 	// TODO: Rest of power up logic
-	// $4017 = $00 (frame irq enabled)
-	// $4015 = $00 (all channels disabled)
-	// $4000-$400F = $00 (not sure about $4010-$4013)
 	// All 15 bits of noise channel LFSR = $0000[4]. The first time the LFSR
 	// is clocked from the all-0s state, it will shift in a 1.
-}
-
-void CPU::reset()
-{
-	S -= 3;
-	P.status |= 0x04;
 	
-	// TODO: Rest of reset logic
-	// APU was silenced ($4015 = 0)
-	// APU triangle phase is reset to 0
+	interrupt(reset);
 }
 
 void CPU::execute()
@@ -199,28 +194,52 @@ void CPU::execute()
 				<< bus.read(PC - 1) << std::endl;
 	}
 	
-	// If an interrupt happens, the 7-clock irq sequence is carried after
-	// the instruction finishes.
-	if (IRQ || NMI)
+	if (NMI)
 	{
-		// 2 cycles for internal ops
-		// Push high byte of return address
-		// Push low byte of return address
-		// Push P
-		// Get IRQ vector low byte from $FFFE ($FFFA if NMI)
-		// Get IRQ vector high byte from $FFFF ($FFFB if NMI)
-		
-		uint8_t pcl, pch;
+		interrupt(nmi);
+	}
+	if (IRQ && !P.I)
+	{
+		interrupt(irq);
+	}
+}
 
+void CPU::interrupt(NES::Interrupt type)
+{
+	if (type != reset)
+	{
 		PH((uint8_t)PC >> 8);
 		PH((uint8_t)PC);
 		PH(P.status);
-		
-		pcl = bus.read(IRQ ? (uint16_t)0xFFFE : (uint16_t)0xFFFA);
-		P.I = true;
-		pch = bus.read(IRQ ? (uint16_t)0xFFFF : (uint16_t)0xFFFB);
-		
-		PC = pch << 8 | pcl;
+	}
+	else // reset
+	{
+		S -= 3;
+		P.status |= 0x04;
+		bus.write(0x4015, 0x0); // All channels disabled
+	}
+	
+	P.I = true;
+	
+	switch (type)
+	{
+		case nmi:
+			PC = bus.read16(0xFFFA); break;
+		case reset:
+			PC = bus.read16(0xFFFC); break;
+		case irq:
+		case brk:
+		default:
+			PC = bus.read16(0xFFFE); break;
+	}
+	
+	if (type == nmi)
+	{
+		NMI = false;
+	}
+	else if (type == irq)
+	{
+		IRQ = false;
 	}
 }
 

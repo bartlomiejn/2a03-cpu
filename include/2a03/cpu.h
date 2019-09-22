@@ -21,6 +21,14 @@ namespace NES
 		ind		///< Indirect.
 	};
 	
+	enum Interrupt
+	{
+		irq,
+		nmi,
+		reset,
+		brk
+	};
+	
 	/// Status register P union representation.
 	/// - Uppercase letters access specific flags.
 	/// - `status` accesses the whole register.
@@ -63,17 +71,17 @@ namespace NES
 		uint8_t S;		///< Stack pointer
 		StatusRegister P;	///< Status register
 		
-		bool IRQ;		///< Interrupt line
-		bool NMI;		///< Non-maskable interrupt line
+		bool IRQ;		///< Interrupt line. Setting to true will trigger an IRQ after next instruction completes.
+		bool NMI;		///< Non-maskable interrupt line. Setting to true will trigger an IRQ after next instruction completes.
 		
 		/// Starts the CPU.
 		void power();
 		
-		/// Resets the CPU.
-		void reset();
-		
 		/// Executes the next instruction.
 		void execute();
+		
+		/// Does the interrupt routine.
+		void interrupt(Interrupt type);
 	private:
 		// Addressing mode functions
 		// http://www.obelisk.me.uk/6502/addressing.html
