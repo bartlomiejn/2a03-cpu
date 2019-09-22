@@ -57,13 +57,14 @@ namespace NES
 		uint8_t status;
 	};
 	
-	/// Ricoh 2A03 CPU emulator
+	/// Ricoh 2A03 CPU emulator. CPU state is invalid until `power` is
+	/// called.
 	class CPU
 	{
 	public:
 		explicit CPU(MemoryBus &bus);
 		
-		MemoryBus bus;		///< Addressing bus
+		MemoryBus &bus;		///< Addressing bus
 		
 		uint8_t A; 		///< Accumulator
 		uint8_t X, Y; 		///< Index registers
@@ -80,7 +81,7 @@ namespace NES
 		/// Executes the next instruction.
 		void execute();
 		
-		/// Does the interrupt routine.
+		/// Performs an interrupt routine
 		void interrupt(Interrupt type);
 	private:
 		// Addressing mode functions

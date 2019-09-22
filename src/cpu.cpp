@@ -4,10 +4,7 @@
 
 using namespace NES;
 
-CPU::CPU(NES::MemoryBus &bus) : bus(bus)
-{
-	power();
-}
+CPU::CPU(NES::MemoryBus &bus) : bus(bus) {}
 
 void CPU::power()
 {

@@ -10,7 +10,7 @@ int main()
 	NES::iNESv1::Cartridge cartridge =
 		NES::iNESv1::load("test/instr_test-v5/official_only.nes");
 	
-	NES::Mapper mapper(std::move(cartridge));
+	NES::iNESv1::Mapper mapper(std::move(cartridge));
 	bus.mapper = std::move(mapper);
 	
 	cpu.power();
