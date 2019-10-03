@@ -210,7 +210,7 @@ void CPU::interrupt(NES::Interrupt type)
 		PH((uint8_t)PC);
 		PH(P.status);
 	}
-	else // reset
+	else
 	{
 		S -= 3;
 		P.status |= 0x04;

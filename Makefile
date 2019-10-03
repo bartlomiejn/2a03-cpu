@@ -1,7 +1,5 @@
 SRC_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 OUT_DIR ?= $(SRC_DIR)/output
-ASM_DIR := $(SRC_DIR)/tools/acme091
-ASM ?= acme
 CXX ?= /usr/local/Cellar/gcc/9.2.0/bin/c++-9
 CC_DB ?= gdb
 
@@ -9,10 +7,6 @@ CC_DB ?= gdb
 
 $(OUT_DIR):
 	mkdir -p $@
-
-build_asm:
-	cd $(ASM_DIR)/src && $(MAKE)
-	cd $(ASM_DIR)/src && $(MAKE) install
 
 binary: $(OUT_DIR)
 	cd $(OUT_DIR) && cmake \
