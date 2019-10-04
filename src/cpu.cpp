@@ -26,7 +26,12 @@ void CPU::power()
 	// All 15 bits of noise channel LFSR = $0000[4]. The first time the LFSR
 	// is clocked from the all-0s state, it will shift in a 1.
 	
-	interrupt(reset);
+	reset();
+}
+
+void CPU::reset()
+{
+	interrupt(i_reset);
 }
 
 void CPU::execute()
@@ -189,22 +194,17 @@ void CPU::execute()
 		// TODO: Implement BRK
 		default:
 			std::cerr << "Unhandled opcode: " << std::hex
-				<< bus.read(PC - 1) << std::endl;
+				  << bus.read(PC - 1) << std::endl;
 	}
-	
 	if (NMI)
-	{
-		interrupt(nmi);
-	}
+		interrupt(i_nmi);
 	if (IRQ && !P.I)
-	{
-		interrupt(irq);
-	}
+		interrupt(i_irq);
 }
 
 void CPU::interrupt(NES::Interrupt type)
 {
-	if (type != reset)
+	if (type != i_reset)
 	{
 		PH((uint8_t)PC >> 8);
 		PH((uint8_t)PC);
@@ -221,24 +221,20 @@ void CPU::interrupt(NES::Interrupt type)
 	
 	switch (type)
 	{
-		case nmi:
+		case i_nmi:
 			PC = bus.read16(0xFFFA); break;
-		case reset:
+		case i_reset:
 			PC = bus.read16(0xFFFC); break;
-		case irq:
-		case brk:
+		case i_irq:
+		case i_brk:
 		default:
 			PC = bus.read16(0xFFFE); break;
 	}
 	
-	if (type == nmi)
-	{
+	if (type == i_nmi)
 		NMI = false;
-	}
-	else if (type == irq)
-	{
+	else if (type == i_irq)
 		IRQ = false;
-	}
 }
 
 uint8_t CPU::get_operand(AddressingMode mode)

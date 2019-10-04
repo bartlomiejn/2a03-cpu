@@ -50,7 +50,6 @@ uint8_t MemoryBus::read(uint16_t addr)
 			return 0x0;
 			
 		default:
-			// TODO: Shouldn't we crash here really?
 			std::cerr << "Unhandled memory access: " << std::hex
 				  << addr << std::endl;
 			return 0x0;

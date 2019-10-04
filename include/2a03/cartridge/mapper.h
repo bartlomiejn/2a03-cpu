@@ -16,19 +16,16 @@ namespace iNESv1
 	{
 	public:
 		/// Initializes a Cartridge Mapper instance.
-		/// \param cartridge Cartridge to use. Takes ownership of the
-		/// cartridge instance.
-		Mapper(NES::iNESv1::Cartridge cartridge);
+		/// \param cartridge Cartridge to use.
+		explicit Mapper(NES::iNESv1::Cartridge &cartridge);
 		
 		/// Reads a byte of memory at the provided address.
 		uint8_t read(uint16_t addr);
 		
 		/// Writes a byte of memory to the provided address.
 		void write(uint16_t addr, uint8_t val);
-		
-		// TODO: Mapper page banking.
 	private:
-		NES::iNESv1::Cartridge cartridge; ///< Cartridge to map.
+		NES::iNESv1::Cartridge &cartridge; ///< Cartridge to map.
 		
 		/// Returns the ID of the mapper.
 		uint8_t mapper_id();

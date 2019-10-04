@@ -23,10 +23,10 @@ namespace NES
 	
 	enum Interrupt
 	{
-		irq,
-		nmi,
-		reset,
-		brk
+		i_irq,
+		i_nmi,
+		i_reset,
+		i_brk
 	};
 	
 	/// Status register P union representation.
@@ -62,24 +62,28 @@ namespace NES
 	class CPU
 	{
 	public:
+		/// Create a CPU instance with provided memory bus.
+		/// \param bus Memory bus to use.
 		explicit CPU(MemoryBus &bus);
-		
-		MemoryBus &bus;		///< Addressing bus
 		
 		uint8_t A; 		///< Accumulator
 		uint8_t X, Y; 		///< Index registers
 		uint16_t PC;		///< Program counter
 		uint8_t S;		///< Stack pointer
 		StatusRegister P;	///< Status register
-		
 		bool IRQ;		///< Interrupt line. Setting to true will trigger an IRQ after next instruction completes.
 		bool NMI;		///< Non-maskable interrupt line. Setting to true will trigger an IRQ after next instruction completes.
 		
 		/// Starts the CPU.
 		void power();
 		
+		/// Resets the CPU.
+		void reset();
+		
 		/// Executes the next instruction.
 		void execute();
+	protected:
+		MemoryBus &bus;		///< Addressing bus
 		
 		/// Performs an interrupt routine
 		void interrupt(Interrupt type);

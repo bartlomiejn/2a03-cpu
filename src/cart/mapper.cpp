@@ -3,9 +3,7 @@
 
 using namespace NES::iNESv1;
 
-Mapper::Mapper(NES::iNESv1::Cartridge cartridge) :
-	cartridge(std::move(cartridge))
-{};
+Mapper::Mapper(NES::iNESv1::Cartridge &cartridge) : cartridge(cartridge) {};
 
 uint8_t Mapper::read(uint16_t addr)
 {
@@ -36,11 +34,10 @@ uint8_t Mapper::read(uint16_t addr)
 
 void Mapper::write(uint16_t addr, uint8_t val)
 {
-	if (mapper_id() == 0)
+	if (mapper_id() == MapperType::NROM)
 		switch (addr)
 		{
 			case 0x6000 ... 0x7FFF:
-				// Mirrored 8KB PRG RAM
 				cartridge.prg_ram[addr - 0x6000] = val;
 				break;
 			default:
