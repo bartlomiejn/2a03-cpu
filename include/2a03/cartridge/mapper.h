@@ -9,7 +9,8 @@ namespace iNESv1
 {
 	enum MapperType
 	{
-		NROM = 0
+		NROM = 0,
+		MMC1 = 1
 	};
 	
 	class Mapper

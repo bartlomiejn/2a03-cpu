@@ -25,7 +25,28 @@ uint8_t Mapper::read(uint16_t addr)
 			default:
 				std::cout << "Invalid Mapper memory access."
 					<< std::endl;
-				break;
+				return 0x0;
+		}
+	}
+	else if (mapper_id() == MapperType::MMC1)
+	{
+		switch (addr)
+		{
+			case 0x6000 ... 0x7FFF:
+				return cartridge.prg_ram[addr - 0x6000];
+			case 0x8000 ... 0xBFFF:
+				// First bank 16KB PRG ROM or switchable
+				return cartridge.prg_rom[addr - 0x8000];
+			case 0xC000 ... 0xFFFF:
+				// Last bank 16KB PRG ROM or switchable
+				if (cartridge.header.prg_rom_pages == 1)
+					return cartridge.prg_rom[addr - 0xC000];
+				else
+					return cartridge.prg_rom[addr - 0x8000];
+			default:
+				std::cout << "Invalid Mapper memory access."
+					  << std::endl;
+				return 0x0;
 		}
 	}
 	else

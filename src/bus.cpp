@@ -80,7 +80,8 @@ void MemoryBus::write(uint16_t addr, uint8_t val)
 			break;
 		default:
 			std::cerr << "Unhandled write to " << std::hex << addr
-				  << " with value: " << val << std::endl;
+				  << " with value: " << std::hex << val << "."
+				  << std::endl;
 			break;
 	}
 }

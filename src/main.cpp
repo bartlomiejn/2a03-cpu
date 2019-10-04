@@ -14,7 +14,7 @@ NES::CPU cpu(bus);
 
 void run_instr_test_v5()
 {
-	std::string test_file = "test/instr_test-v5/official_only.nes";
+	std::string test_file = "../test/instr_test-v5/official_only.nes";
 	
 	std::cout << "Loading " << test_file << "." << std::endl;
 	
@@ -42,7 +42,7 @@ void run_instr_test_v5()
 					<< std::endl;
 				cpu.reset();
 				break;
-			case 0x00 ... 0x7F: // Result code for completed test
+			case 0x00 ... 0x7F:
 				std::cout << "Completed test with result code: "
 					<< std::hex << status << std::endl;
 				break;
