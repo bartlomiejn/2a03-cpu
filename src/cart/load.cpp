@@ -38,7 +38,7 @@ static Header get_inesv1_header(std::string::iterator &iter)
 		prg_rom_sz, chr_rom_sz, flags_6, flags_7, prg_ram_sz, flags_9);
 }
 
-Cartridge NES::iNESv1::load(std::string &&filename)
+Cartridge NES::iNESv1::load(std::string &filename)
 {
 	// Attempt to open the file
 	std::ifstream fstream(filename);

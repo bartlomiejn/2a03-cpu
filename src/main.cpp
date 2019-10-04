@@ -18,10 +18,9 @@ void run_instr_test_v5()
 	
 	std::cout << "Loading " << test_file << "." << std::endl;
 	
-	NES::iNESv1::Cartridge cartridge
-		= NES::iNESv1::load("test/instr_test-v5/official_only.nes");
+	NES::iNESv1::Cartridge cartridge = NES::iNESv1::load(test_file);
 	NES::iNESv1::Mapper mapper(cartridge);
-	bus.mapper = std::optional<NES::iNESv1::Mapper> { mapper };
+	bus.mapper = std::optional { std::ref(mapper) };
 	
 	std::cout << "Powering up." << std::endl;
 	
@@ -32,7 +31,6 @@ void run_instr_test_v5()
 	while (true)
 	{
 		cpu.execute();
-		
 		uint8_t status = cartridge.prg_ram[0x0];
 		switch (status)
 		{
@@ -44,10 +42,9 @@ void run_instr_test_v5()
 					<< std::endl;
 				cpu.reset();
 				break;
-			case 0x0 ... 0x7F: // Result code for completed test
+			case 0x00 ... 0x7F: // Result code for completed test
 				std::cout << "Completed test with result code: "
 					<< std::hex << status << std::endl;
-				
 				break;
 		}
 	}

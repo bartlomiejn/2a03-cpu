@@ -44,10 +44,9 @@ uint8_t MemoryBus::read(uint16_t addr)
 		// Cartridge space
 		case 0x6000 ... 0xFFFF:
 			if (mapper.has_value())
-				return mapper.value().read(addr);
+				return mapper->get().read(addr);
 			else
 				throw MissingCartridge();
-			return 0x0;
 			
 		default:
 			std::cerr << "Unhandled memory access: " << std::hex
@@ -75,7 +74,7 @@ void MemoryBus::write(uint16_t addr, uint8_t val)
 		// Cartridge space
 		case 0x6000 ... 0xFFFF:
 			if (mapper.has_value())
-				mapper.value().write(addr, val);
+				mapper->get().write(addr, val);
 			else
 				throw MissingCartridge();
 			break;

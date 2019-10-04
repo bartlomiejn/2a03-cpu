@@ -22,4 +22,3 @@ set(SOURCES
 include_directories(include)
 
 add_executable(2a03 ${SOURCES})
-add_dependencies(2a03 cppfs)
