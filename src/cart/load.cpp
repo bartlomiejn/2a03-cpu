@@ -4,12 +4,7 @@
 
 using namespace NES::iNESv1;
 
-static const unsigned int prg_rom_pagesz = 0x4000; ///< PRG ROM page size - 16KB.
-static const unsigned int chr_rom_pagesz = 0x2000; ///< CHR ROM page size - 8KB.
-static const unsigned int prg_ram_defsz = 0x2000;  ///< PRG RAM default size - 8KB.
-static const unsigned int trainer_abssz = 0x200;   ///< Trainer absolute size - 512B.
-
-/// Checks if magic number is valid. Leaves the input iterator at byte 4.
+/// Checks if magic number is valid. Increments the input iterator by 4 bytes.
 static bool is_magic_valid(std::string::iterator &iter)
 {
 	std::string magic;
@@ -21,7 +16,7 @@ static bool is_magic_valid(std::string::iterator &iter)
 	return magic == "NES\x1A";
 }
 
-/// Generates an iNESv1 header. Leaves the input iterator at byte 10.
+/// Generates an iNESv1 header. Increments the input iterator by 6 bytes.
 static Header get_inesv1_header(std::string::iterator &iter)
 {
 	auto prg_rom_sz = static_cast<uint8_t>(*iter);
@@ -33,7 +28,9 @@ static Header get_inesv1_header(std::string::iterator &iter)
 	Byte7 flags_7 = { .byte = static_cast<uint8_t>(*iter) };
 	iter++;
 	auto prg_ram = static_cast<uint8_t>(*iter);
-	auto prg_ram_sz = prg_ram ? prg_ram * prg_ram_defsz : prg_ram_defsz; // If 0 then 8KB
+	auto prg_ram_sz = prg_ram != 0
+		? prg_ram * prg_ram_defsz 	// If not 0 then calculate size
+		: prg_ram_defsz; 		// If 0 then 8KB
 	iter++;
 	Byte9 flags_9 = { .byte = static_cast<uint8_t>(*iter) };
 	iter++;
@@ -52,12 +49,11 @@ Cartridge NES::iNESv1::load(std::string &&filename)
 		throw InvalidFile();
 	}
 	
-	// Get the file contents
+	// Get the file contents and create iterator
 	std::string fstring(
 		(std::istreambuf_iterator<char>(fstream)),
 		std::istreambuf_iterator<char>());
 	fstream.close();
-	
 	std::string::iterator fstr_iter = fstring.begin();
 	
 	// Verify the iNES magic number
@@ -75,11 +71,8 @@ Cartridge NES::iNESv1::load(std::string &&filename)
 	unsigned int trainer_sz = header.flags_6.has_trainer ? trainer_abssz : 0;
 	unsigned int prg_rom_sz = prg_rom_pagesz * header.prg_rom_pages;
 	unsigned int chr_rom_sz = chr_rom_pagesz * header.chr_rom_pages;
-	Cartridge cart(
-		header,
-		std::make_unique<uint8_t[]>(trainer_sz),
-		std::make_unique<uint8_t[]>(prg_rom_sz),
-		std::make_unique<uint8_t[]>(chr_rom_sz));
+	unsigned int prg_ram_sz = header.prg_ram_sz;
+	Cartridge cart(header, trainer_sz, prg_rom_sz, chr_rom_sz, prg_ram_sz);
 
 	// Advance to byte 16 which is directly after the header
 	fstr_iter += 6;

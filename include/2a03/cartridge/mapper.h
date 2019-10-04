@@ -7,6 +7,11 @@ namespace NES
 {
 namespace iNESv1
 {
+	enum MapperType
+	{
+		NROM = 0
+	};
+	
 	class Mapper
 	{
 	public:
@@ -18,16 +23,18 @@ namespace iNESv1
 		/// Reads a byte of memory at the provided address.
 		uint8_t read(uint16_t addr);
 		
-		/// Reads 2 bytes of memory at the provided address.
-		uint16_t read16(uint16_t addr);
-		
 		/// Writes a byte of memory to the provided address.
 		void write(uint16_t addr, uint8_t val);
 		
 		// TODO: Mapper page banking.
 	private:
 		NES::iNESv1::Cartridge cartridge; ///< Cartridge to map.
+		
+		/// Returns the ID of the mapper.
+		uint8_t mapper_id();
 	};
+	
+	class UnimplementedMapperType {};
 }
 }
 

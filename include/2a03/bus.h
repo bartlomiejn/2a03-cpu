@@ -10,12 +10,11 @@ static const int internal_ram_sz = 0x800; ///< NES Internal RAM size.
 
 namespace NES
 {
-	
 	class MemoryBus
 	{
 	public:
 		std::array<uint8_t, internal_ram_sz> ram; ///< Internal RAM
-		std::optional<Mapper> mapper; ///< Cartridge mapper, if it's inserted.
+		std::optional<iNESv1::Mapper> mapper; ///< Cartridge mapper, if it's inserted.
 		
 		/// Initializes the memory bus.
 		MemoryBus();
@@ -38,6 +37,8 @@ namespace NES
 		/// \param val Value to write.
 		void write(uint16_t addr, uint8_t val);
 	};
+	
+	class MissingCartridge {};
 }
 
 #endif //INC_2A03_BUS_H

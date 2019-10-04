@@ -76,25 +76,29 @@ namespace iNESv1
 	public:
 		/// iNESv1 cartridge image.
 		/// \param header iNESv1 file header
-		/// \param trainer Trainer data, if it's available.
-		/// \param prg_rom Program code to be executed.
-		/// \param chr_rom Data accessible by the PPU.
+		/// \param trainer_sz Trainer data size, if it's available.
+		/// \param prg_rom_sz Program code size.
+		/// \param chr_rom_sz Size of PPU data.
+		/// \param prg_ram_sz Program RAM size.
 		Cartridge(
 			Header header,
-			std::unique_ptr<uint8_t[]> trainer,
-			std::unique_ptr<uint8_t[]> prg_rom,
-			std::unique_ptr<uint8_t[]> chr_rom
+			unsigned int trainer_sz,
+			unsigned int prg_rom_sz,
+			unsigned int chr_rom_sz,
+			unsigned int prg_ram_sz
 		):
 			header(header),
-			trainer(std::move(trainer)),
-			prg_rom(std::move(prg_rom)),
-			chr_rom(std::move(chr_rom))
+			trainer(std::make_unique<uint8_t[]>(trainer_sz)),
+			prg_rom(std::make_unique<uint8_t[]>(prg_rom_sz)),
+			chr_rom(std::make_unique<uint8_t[]>(chr_rom_sz)),
+			prg_ram(std::make_unique<uint8_t[]>(prg_ram_sz))
 		{};
 		
 		Header header;
 		std::unique_ptr<uint8_t[]> trainer;
 		std::unique_ptr<uint8_t[]> prg_rom;
 		std::unique_ptr<uint8_t[]> chr_rom;
+		std::unique_ptr<uint8_t[]> prg_ram;
 	};
 }
 }
