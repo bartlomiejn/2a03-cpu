@@ -15,8 +15,9 @@ I've put my compiler temporarily as the default value which most definitely won'
 - Official opcodes
 - Interrupts
 - iNESv1 Cartridge model with loading
+- NROM Mapper
 
 #### In progress:
-- Cartridge mapper
+- MMC1 mapper
 - Binary execution
 - Automated tests
