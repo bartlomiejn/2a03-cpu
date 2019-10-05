@@ -70,8 +70,11 @@ namespace Mapper
 	private:
 		uint8_t shift_reg; 	///< Shift register.
 		uint8_t shift_count; 	///< Shift counter.
-		uint8_t l_bank; 	///< Low bank number.
-		uint8_t h_bank; 	///< High bank number.
+		uint8_t l_prgrom_bank; 	///< Low PRG ROM bank number.
+		uint8_t h_prgrom_bank; 	///< High PRG ROM bank number.
+		
+		/// Resets the shift register.
+		void reset_shift_reg();
 	};
 	
 	class UnimplementedType {};

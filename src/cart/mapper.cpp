@@ -64,8 +64,8 @@ Mapper::MMC1::MMC1(Cartridge &cartridge) :
 	Mapper::Base(cartridge),
 	shift_reg(0),
 	shift_count(0),
-	l_bank(0),
-	h_bank(cartridge.header.prg_rom_pages)
+	l_prgrom_bank(0),
+	h_prgrom_bank(cartridge.header.prg_rom_pages)
 {}
 
 uint8_t Mapper::MMC1::read(uint16_t addr)
@@ -73,17 +73,24 @@ uint8_t Mapper::MMC1::read(uint16_t addr)
 	switch (addr)
 	{
 		case 0x6000 ... 0x7FFF:
-			// PRG RAM 8KB bank (switchable)
+			// PRG RAM 8KB bank
 			return cartridge.prg_ram[addr - 0x6000];
 		case 0x8000 ... 0xBFFF:
-			// 16KB PRG ROM bank - first or switchable
-			return cartridge.prg_rom[addr - 0x8000];
+			// 16KB PRG ROM bank
+			
+			uint16_t l_prg_offset = addr - (uint16_t)0x8000;
+			uint32_t l_prg_addr =
+				l_prgrom_bank * prg_rom_pagesz + l_prg_offset;
+			
+			return cartridge.prg_rom[l_prg_addr];
 		case 0xC000 ... 0xFFFF:
-			// 16KB PRG ROM bank - last or switchable
-			if (cartridge.header.prg_rom_pages == 1)
-				return cartridge.prg_rom[addr - 0xC000];
-			else
-				return cartridge.prg_rom[addr - 0x8000];
+			// 16KB PRG ROM bank
+			
+			uint16_t h_prg_offset = addr - (uint16_t)0xC000;
+			uint32_t h_prg_addr =
+				h_prgrom_bank * prg_rom_pagesz + h_prg_offset;
+			
+			return cartridge.prg_rom[h_prg_addr];
 		default:
 			std::cout << "Invalid MMC1 Mapper memory access: $"
 				<< addr << std::endl;
@@ -99,9 +106,32 @@ void Mapper::MMC1::write(uint16_t addr, uint8_t val)
 			cartridge.prg_ram[addr - 0x6000] = val;
 			break;
 		case 0x8000 ... 0xFFFF:
-			// TODO: Load register
+			if (val & 0x80 != 0)
+			{
+				reset_shift_reg();
+				// TODO: Do we reset bank state here as well?
+			}
+			else
+			{
+				shift_reg |= (val & 0b1) < shift_count;
+				shift_count++;
+				
+				if (shift_count == 5)
+				{
+					// TODO: Submit shift_reg to appropriate
+					// TODO: MMC1 register
+					
+					reset_shift_reg();
+				}
+			}
 			break;
 		default:
 			break;
 	}
+}
+
+void Mapper::MMC1::reset_shift_reg()
+{
+	shift_reg = 0x0;
+	shift_count = 0x0;
 }
