@@ -14,7 +14,8 @@ namespace NES
 	{
 	public:
 		std::array<uint8_t, internal_ram_sz> ram; ///< Internal RAM
-		std::optional<std::reference_wrapper<iNESv1::Mapper>> mapper; ///< Cartridge mapper, if it's inserted.
+		iNESv1::Mapper::Base *mapper; 	///< Cartridge mapper, if it's
+						///< inserted.
 		
 		/// Initializes the memory bus.
 		MemoryBus();

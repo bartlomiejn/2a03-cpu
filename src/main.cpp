@@ -22,13 +22,15 @@ NES::CPU cpu(bus);
 
 void run_instr_test_v5()
 {
+	using namespace NES::iNESv1;
+	
 	std::string test_file = "../test/instr_test-v5/official_only.nes";
 	
 	std::cout << "Loading " << test_file << "." << std::endl;
 	
-	NES::iNESv1::Cartridge cartridge = NES::iNESv1::load(test_file);
-	NES::iNESv1::Mapper mapper(cartridge);
-	bus.mapper = std::optional { std::ref(mapper) };
+	Cartridge cartridge = load(test_file);
+	NES::iNESv1::Mapper::Base *mapper = Mapper::mapper(cartridge);
+	bus.mapper = mapper;
 	
 	std::cout << "Powering up." << std::endl;
 	
@@ -67,6 +69,8 @@ void run_instr_test_v5()
 					  << out_str << std::endl;
 		}
 	}
+	
+	delete mapper;
 }
 
 #pragma clang diagnostic pop

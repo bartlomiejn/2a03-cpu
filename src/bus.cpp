@@ -43,8 +43,8 @@ uint8_t MemoryBus::read(uint16_t addr)
 			
 		// Cartridge space
 		case 0x6000 ... 0xFFFF:
-			if (mapper.has_value())
-				return mapper->get().read(addr);
+			if (mapper)
+				return mapper->read(addr);
 			else
 				throw MissingCartridge();
 			
@@ -73,8 +73,8 @@ void MemoryBus::write(uint16_t addr, uint8_t val)
 			break;
 		// Cartridge space
 		case 0x6000 ... 0xFFFF:
-			if (mapper.has_value())
-				mapper->get().write(addr, val);
+			if (mapper)
+				mapper->write(addr, val);
 			else
 				throw MissingCartridge();
 			break;
