@@ -7,7 +7,7 @@ using namespace NES;
 MemoryBus::MemoryBus()
 {
 	// Ram state is not consistent on a real machine.
-	std::fill(ram.begin(), ram.end(), 0xFF);
+	std::fill(ram.begin(), ram.end(), 0x0);
 }
 
 uint8_t MemoryBus::read(uint16_t addr)
@@ -24,20 +24,20 @@ uint8_t MemoryBus::read(uint16_t addr)
 		// PPU registers
 		case 0x2000 ... 0x3FFF:
 			// TODO: Implement PPU, access with (addr % 8)
-			std::cerr << "PPU register access at " << std::hex
+			std::cerr << "PPU register access at 0x" << std::hex
 				  << addr << "." << std::endl;
 			return 0xFF;
 			
 		// APU registers
 		case 0x4000 ... 0x4017:
 			// TODO: Implement APU
-			std::cerr << "APU register access at " << std::hex
+			std::cerr << "APU register access at 0x" << std::hex
 				  << addr << "." << std::endl;
 			return 0xFF;
 			
 		// CPU test mode APU/IO functionality (disabled)
 		case 0x4018 ... 0x401F:
-			std::cerr << "CPU test mode memory access at "
+			std::cerr << "CPU test mode memory access at 0x"
 				<< std::hex << addr << "." << std::endl;
 			return 0x0;
 			
@@ -49,7 +49,7 @@ uint8_t MemoryBus::read(uint16_t addr)
 				throw MissingCartridge();
 			
 		default:
-			std::cerr << "Unhandled memory access: " << std::hex
+			std::cerr << "Unhandled memory access: 0x" << std::hex
 				  << addr << std::endl;
 			return 0x0;
 	}
@@ -79,7 +79,7 @@ void MemoryBus::write(uint16_t addr, uint8_t val)
 				throw MissingCartridge();
 			break;
 		default:
-			std::cerr << "Unhandled write to " << std::hex << addr
+			std::cerr << "Unhandled write to 0x" << std::hex << addr
 				  << " with value: " << std::hex << val << "."
 				  << std::endl;
 			break;

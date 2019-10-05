@@ -3,7 +3,7 @@
 
 using namespace NES::iNESv1;
 
-Mapper::Mapper(NES::iNESv1::Cartridge &cartridge) : cartridge(cartridge) {};
+Mapper::Mapper(Cartridge &cartridge) : cartridge(cartridge) {};
 
 uint8_t Mapper::read(uint16_t addr)
 {
