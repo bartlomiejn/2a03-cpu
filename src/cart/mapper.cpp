@@ -10,9 +10,9 @@ Mapper::Base *Mapper::mapper(NES::iNESv1::Cartridge &cartridge)
 	switch (id)
 	{
 		case Mapper::type_NROM:
-			return new Mapper::NROM(cartridge);
+			return new NES::iNESv1::Mapper::NROM(cartridge);
 		case Mapper::type_MMC1:
-			return new Mapper::MMC1(cartridge);
+			return new NES::iNESv1::Mapper::MMC1(cartridge);
 		default:
 			std::cerr << "Unimplemented mapper type: " << std::hex
 				<< id << "." << std::endl;
@@ -73,19 +73,15 @@ uint8_t Mapper::MMC1::read(uint16_t addr)
 	switch (addr)
 	{
 		case 0x6000 ... 0x7FFF:
-			// PRG RAM 8KB bank
+			// TODO: PRG RAM bankswitching
 			return cartridge.prg_ram[addr - 0x6000];
 		case 0x8000 ... 0xBFFF:
-			// 16KB PRG ROM bank
-			
 			uint16_t l_prg_offset = addr - (uint16_t)0x8000;
 			uint32_t l_prg_addr =
 				l_prgrom_bank * prg_rom_pagesz + l_prg_offset;
 			
 			return cartridge.prg_rom[l_prg_addr];
 		case 0xC000 ... 0xFFFF:
-			// 16KB PRG ROM bank
-			
 			uint16_t h_prg_offset = addr - (uint16_t)0xC000;
 			uint32_t h_prg_addr =
 				h_prgrom_bank * prg_rom_pagesz + h_prg_offset;
@@ -118,15 +114,15 @@ void Mapper::MMC1::write(uint16_t addr, uint8_t val)
 				
 				if (shift_count == 5)
 				{
-					// TODO: Submit shift_reg to appropriate
-					// TODO: MMC1 register
-					
+					set_register(reg_number(addr));
 					reset_shift_reg();
 				}
 			}
 			break;
 		default:
-			break;
+			std::cerr << "Invalid address passed to MMC1: $"
+				  << std::hex << "." << std::endl;
+			throw InvalidAddress();
 	}
 }
 
@@ -134,4 +130,28 @@ void Mapper::MMC1::reset_shift_reg()
 {
 	shift_reg = 0x0;
 	shift_count = 0x0;
+}
+
+int Mapper::MMC1::reg_number(uint16_t addr)
+{
+	switch (addr)
+	{
+		case 0x8000 ... 0x9FFF:
+			return 0;
+		case 0xA000 ... 0xBFFF:
+			return 1;
+		case 0xC000 ... 0xDFFF:
+			return 2;
+		case 0xE000 ... 0xFFFF:
+			return 3;
+		default:
+			std::cerr << "Invalid address passed to MMC1: $"
+				<< std::hex << "." << std::endl;
+			throw InvalidAddress();
+	}
+}
+
+void Mapper::MMC1::set_register(int reg_number)
+{
+
 }
