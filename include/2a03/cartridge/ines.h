@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <algorithm>
 
 namespace NES
 {
@@ -93,7 +94,10 @@ namespace iNESv1
 			chr_rom(std::make_unique<uint8_t[]>(chr_rom_sz)),
 			prg_ram(std::make_unique<uint8_t[]>(prg_ram_sz))
 		{
-			std::fill(std::begin(trainer), std::begin(trainer) + trainer_sz, 0x0);
+			std::fill(trainer.get(), trainer.get() + trainer_sz, 0x0);
+			std::fill(prg_rom.get(), prg_rom.get() + trainer_sz, 0x0);
+			std::fill(chr_rom.get(), chr_rom.get() + trainer_sz, 0x0);
+			std::fill(prg_ram.get(), prg_ram.get() + trainer_sz, 0x0);
 		};
 		
 		Header header;

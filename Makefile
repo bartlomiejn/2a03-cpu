@@ -3,7 +3,7 @@ OUT_DIR ?= $(SRC_DIR)/output
 CXX ?= /usr/local/Cellar/gcc/9.2.0/bin/c++-9
 CC_DB ?= gdb
 
-.PHONY: build_asm binary run
+.PHONY: binary run
 
 $(OUT_DIR):
 	mkdir -p $@

@@ -3,6 +3,7 @@
 #include <2a03/cpu.h>
 #include <2a03/cartridge/load.h>
 #include <2a03/cartridge/mapper.h>
+#include <2a03/utils/string.h>
 
 namespace NES
 {
@@ -16,21 +17,8 @@ namespace NES
 NES::MemoryBus bus;
 NES::CPU cpu(bus);
 
-std::string str_to_hex(const std::string &input)
-{
-	static const char* const lut = "0123456789ABCDEF";
-	size_t len = input.length();
-	
-	std::string output;
-	output.reserve(2 * len);
-	for (size_t i = 0; i < len; ++i)
-	{
-		const unsigned char c = input[i];
-		output.push_back(lut[c >> 4]);
-		output.push_back(lut[c & 15]);
-	}
-	return output;
-}
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-noreturn"
 
 void run_instr_test_v5()
 {
@@ -62,22 +50,26 @@ void run_instr_test_v5()
 					<< std::endl;
 				cpu.reset();
 				break;
-			case 0x00 ... 0x7F:
+			default:
+				if (status >= 0x80)
+					break;
+				
 				std::string runstate(
 					(const char*)cartridge.prg_ram[0x1], 3);
 				std::cout << "Run state: "
-					<< str_to_hex(runstate) << std::endl;
+					  << str_to_hex(runstate) << std::endl;
 				
 				std::string out_str(
 					(const char*)cartridge.prg_ram[0x4]);
 				std::cout << "Completed test with result code: "
-					<< std::hex << status << ". "
-					<< "Output:" << std::endl
-					<< out_str << std::endl;
-				break;
+					  << std::hex << status << ". "
+					  << "Output:" << std::endl
+					  << out_str << std::endl;
 		}
 	}
 }
+
+#pragma clang diagnostic pop
 
 int main()
 {

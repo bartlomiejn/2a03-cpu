@@ -17,7 +17,8 @@ set(SOURCES
         src/cpu.cpp
         src/bus.cpp
         src/cart/load.cpp
-        src/cart/mapper.cpp)
+        src/cart/mapper.cpp
+        src/utils/string.cpp)
 
 include_directories(include)
 
