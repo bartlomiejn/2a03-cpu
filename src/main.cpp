@@ -31,6 +31,7 @@ void run_instr_test_v5()
 	std::cout.flush();
 	
 	Cartridge cartridge = load(test_file);
+	
 	NES::iNESv1::Mapper::Base *mapper = Mapper::mapper(cartridge);
 	bus.mapper = mapper;
 	
@@ -57,7 +58,9 @@ void run_instr_test_v5()
 				std::cout << "Reset required. Performing."
 					<< std::endl;
 				std::cout.flush();
+				
 				cpu.reset();
+				
 				break;
 			default:
 				if (status >= 0x80)
@@ -85,8 +88,8 @@ void run_instr_test_v5()
 				std::cout.flush();
 		}
 		
+		// TODO: Remove once the CPU is correct enough.
 		instr_count++;
-		
 		if (instr_count > 20)
 			break;
 	}
