@@ -25,7 +25,6 @@ namespace NES
 		/// \return Byte that has been read.
 		uint8_t read(uint16_t addr);
 		
-		// TODO: is_zp is redundant, we can infer this from the address
 		/// Reads 16 bits of memory at the provided address.
 		/// \param addr Address to read from
 		/// \param is_zp If it's a zero-page address, wrap the most

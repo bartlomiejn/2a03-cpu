@@ -71,25 +71,25 @@ Mapper::MMC1::MMC1(Cartridge &cartridge) :
 	wram_enable(0),
 {}
 
+static bool is_low_bank(uint16_t addr)
+{
+	return addr >= 0x8000 && addr <= 0xBFFF;
+}
+
 uint8_t Mapper::MMC1::read(uint16_t addr)
 {
 	switch (addr)
 	{
 		case 0x6000 ... 0x7FFF:
-			// TODO: PRG RAM bankswitching
+			// TODO: PRG RAM bankswitching?
 			return cartridge.prg_ram[addr - 0x6000];
-		case 0x8000 ... 0xBFFF:
-//			uint16_t l_prg_offset = addr - (uint16_t)0x8000;
-//			uint32_t l_prg_addr =
-//				l_prg_bank * prg_rom_pagesz + l_prg_offset;
-//
-//			return cartridge.prg_rom[l_prg_addr];
-		case 0xC000 ... 0xFFFF:
-//			uint16_t h_prg_offset = addr - (uint16_t)0xC000;
-//			uint32_t h_prg_addr =
-//				h_prg_bank * prg_rom_pagesz + h_prg_offset;
-//
-//			return cartridge.prg_rom[h_prg_addr];
+		case 0x8000 ... 0xFFFF:
+			if (prg_bank_sz == size_32k)
+				return read_32k_prg_bank(addr);
+			else if (is_low_bank(addr))
+				return read_l_16k_prg_bank(addr);
+			else
+				return read_h_16k_prg_bank(addr);
 		default:
 			std::cout << "Invalid MMC1 Mapper memory access: $"
 				<< addr << std::endl;
@@ -114,7 +114,6 @@ void Mapper::MMC1::write(uint16_t addr, uint8_t val)
 			{
 				shift_reg |= (val & 0b1) < shift_count;
 				shift_count++;
-				
 				if (shift_count == 5)
 				{
 					set_reg(reg_number(addr));
@@ -188,7 +187,6 @@ void Mapper::MMC1::set_main_ctrl_reg(uint8_t value)
 		case 3:
 			break;
 	}
-	
 	prg_bank_swap = PRGBankSwap((value >> 2) & 0b1);
 	prg_bank_sz = PRGBankSize((value >> 3) & 0b1);
 	chr_bank_sz = CHRBankSize((value >> 4) & 0b1);
@@ -196,6 +194,34 @@ void Mapper::MMC1::set_main_ctrl_reg(uint8_t value)
 
 void Mapper::MMC1::set_prg_bank_reg(uint8_t value)
 {
-	prg_bank = (uint8_t)(value & 0b1111);
+	switch (prg_bank_sz)
+	{
+		case size_32k:
+			// In 32K mode only upper 3 bits are used for selection.
+			prg_bank = (uint8_t)((value & 0b1110) >> 1);
+			break;
+		case size_16k:
+			prg_bank = (uint8_t)(value & 0b1111);
+			break;
+	}
 	wram_enable = (bool)((value & 0b10000) >> 4);
+}
+
+uint8_t Mapper::MMC1::read_32k_prg_bank(uint16_t addr)
+{
+	uint16_t offset = addr - (uint16_t)0x8000;
+	uint32_t abs_addr = prg_bank * prg_rom_page_sz + offset;
+	return cartridge.prg_rom[abs_addr];
+}
+
+uint8_t Mapper::MMC1::read_l_16k_prg_bank(uint16_t addr)
+{
+	// TODO: Implement read low 16k PRG Bank
+	return 0x0;
+}
+
+uint8_t Mapper::MMC1::read_h_16k_prg_bank(uint16_t addr)
+{
+	// TODO: Implement read high 16k PRG Bank
+	return 0x0;
 }

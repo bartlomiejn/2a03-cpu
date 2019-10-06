@@ -29,8 +29,8 @@ static Header get_inesv1_header(std::string::iterator &iter)
 	iter++;
 	auto prg_ram = static_cast<uint8_t>(*iter);
 	auto prg_ram_sz = prg_ram != 0
-		? prg_ram * prg_ram_defsz 	// If not 0 then calculate size
-		: prg_ram_defsz; 		// If 0 then 8KB
+		? prg_ram * prg_ram_def_sz 	// If not 0 then calculate size
+		: prg_ram_def_sz; 		// If 0 then 8KB
 	iter++;
 	Byte9 flags_9 = { .byte = static_cast<uint8_t>(*iter) };
 	iter++;
@@ -68,9 +68,9 @@ Cartridge NES::iNESv1::load(std::string &filename)
 	Header header = get_inesv1_header(fstr_iter);
 	
 	// Generate cartridge object based on the header
-	unsigned int trainer_sz = header.flags_6.has_trainer ? trainer_abssz : 0;
-	unsigned int prg_rom_sz = prg_rom_pagesz * header.prg_rom_pages;
-	unsigned int chr_rom_sz = chr_rom_pagesz * header.chr_rom_pages;
+	unsigned int trainer_sz = header.flags_6.has_trainer ? trainer_abs_sz : 0;
+	unsigned int prg_rom_sz = prg_rom_page_sz * header.prg_rom_pages;
+	unsigned int chr_rom_sz = chr_rom_page_sz * header.chr_rom_pages;
 	unsigned int prg_ram_sz = header.prg_ram_sz;
 	Cartridge cart(header, trainer_sz, prg_rom_sz, chr_rom_sz, prg_ram_sz);
 

@@ -105,6 +105,21 @@ namespace Mapper
 		/// Sets the PRG ROM bank register using contents from the
 		/// shift register.
 		void set_prg_bank_reg(uint8_t value)
+		
+		/// Reads from a 32k PRG ROM bank using provided address.
+		/// \param addr Address to read from.
+		/// \return Byte of memory.
+		uint8_t read_32k_prg_bank(uint16_t addr);
+		
+		/// Reads from the low 16k PRG ROM bank using provided address.
+		/// \param addr Address to read from.
+		/// \return Byte of memory.
+		uint8_t read_l_16k_prg_bank(uint16_t addr);
+		
+		/// Reads from the high 16k PRG ROM bank using provided address.
+		/// \param addr Address to read from.
+		/// \return Byte of memory.
+		uint8_t read_h_16k_prg_bank(uint16_t addr);
 	};
 	
 	class UnimplementedType {};
