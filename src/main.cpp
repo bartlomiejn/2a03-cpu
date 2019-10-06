@@ -69,7 +69,8 @@ void run_instr_test_v5()
 					(const char*)cartridge.prg_ram[0x4];
 				
 				std::cout << "Completed test with result code: "
-					<< std::hex << status << ". ";
+					<< std::hex << static_cast<int>(status)
+					<< ". " << std::endl;
 				
 				if (outstr)
 					std::cout << "Output:" << outstr

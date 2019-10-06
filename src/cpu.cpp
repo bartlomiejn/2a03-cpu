@@ -36,6 +36,7 @@ void CPU::reset()
 
 void CPU::execute()
 {
+	uint16_t initial_pc = PC;
 	switch (bus.read(PC++))
 	{
 		// Branch instructions
@@ -194,7 +195,8 @@ void CPU::execute()
 		// TODO: Implement BRK
 		default:
 			std::cerr << "Unhandled opcode: " << std::hex
-				  << bus.read(PC - 1) << std::endl;
+				  << static_cast<int>(bus.read(initial_pc))
+				  << std::endl;
 	}
 	if (NMI)
 		interrupt(i_nmi);
@@ -258,8 +260,8 @@ uint16_t CPU::operand_addr(AddressingMode mode)
 				PC++; break;
 		case ind_idx_y: addr = bus.read16(bus.read(PC), true) + Y; PC++; break;
 		case ind:
-		default:	std::cerr << "Invalid addressing mode: " << mode
-				<< std::endl;
+		default:	std::cerr << "Invalid addressing mode: "
+				<< static_cast<int>(mode) << std::endl;
 	}
 	return addr;
 }

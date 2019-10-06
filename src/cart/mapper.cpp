@@ -41,7 +41,7 @@ uint8_t Mapper::NROM::read(uint16_t addr)
 				return cartridge.prg_rom[addr - 0x8000];
 		default:
 			std::cout << "Invalid NROM Mapper memory access: $"
-				<< addr << std::endl;
+				<< static_cast<int>(addr) << std::endl;
 			return 0x0;
 	}
 }
@@ -92,7 +92,7 @@ uint8_t Mapper::MMC1::read(uint16_t addr)
 				return read_h_16k_prg_bank(addr);
 		default:
 			std::cout << "Invalid MMC1 Mapper memory access: $"
-				<< addr << std::endl;
+				<< static_cast<int>(addr) << std::endl;
 			return 0x0;
 	}
 }
@@ -113,7 +113,8 @@ void Mapper::MMC1::write(uint16_t addr, uint8_t val)
 			break;
 		default:
 			std::cerr << "Invalid address passed to MMC1: $"
-				  << std::hex << "." << std::endl;
+				  << std::hex << static_cast<int>(addr)
+				  << "." << std::endl;
 			throw InvalidAddress();
 	}
 }
@@ -149,7 +150,8 @@ int Mapper::MMC1::reg_number(uint16_t addr)
 			return reg_prg_bank;
 		default:
 			std::cerr << "Invalid address passed to MMC1: $"
-				<< std::hex << "." << std::endl;
+				<< std::hex << static_cast<int>(addr) << "."
+				<< std::endl;
 			throw InvalidAddress();
 	}
 }
