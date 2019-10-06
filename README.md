@@ -16,7 +16,7 @@ I've put my compiler temporarily as the default value which most definitely won'
 - Interrupts
 - iNESv1 Cartridge model with loading
 - NROM, MMC1 mapper
+- Binary execution
 
 #### In progress
-- Binary execution
-- Automated tests
+- Nestest.log-like logging for debug purposes

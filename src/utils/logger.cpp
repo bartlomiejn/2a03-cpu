@@ -50,8 +50,7 @@ void NES::CPULogger::log()
 
 std::string NES::CPULogger::decode(uint8_t opcode)
 {
-	switch (opcode)
-	{
+	switch (opcode) {
 //		case 0x10: BPL;
 //		case 0x30: BMI;
 //		case 0x50: BVC;
@@ -199,4 +198,5 @@ std::string NES::CPULogger::decode(uint8_t opcode)
 //		case 0x28: PL(P); break;
 //		case 0xEA: NOP; break;
 		default: return "???";
+	}
 }
