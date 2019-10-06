@@ -14,15 +14,15 @@ namespace NES
 	};
 }
 
-NES::MemoryBus bus;
-NES::CPU cpu(bus);
-
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
 
 void run_instr_test_v5()
 {
 	using namespace NES::iNESv1;
+	
+	NES::MemoryBus bus;
+	NES::CPU cpu(bus);
 	
 	std::string test_file = "../test/instr_test-v5/official_only.nes";
 	
@@ -56,17 +56,24 @@ void run_instr_test_v5()
 				if (status >= 0x80)
 					break;
 				
-				std::string runstate(
-					(const char*)cartridge.prg_ram[0x1], 3);
-				std::cout << "Run state: "
-					  << str_to_hex(runstate) << std::endl;
+				const char runstate[3] = {
+					(char)cartridge.prg_ram[0x1],
+					(char)cartridge.prg_ram[0x2],
+					(char)cartridge.prg_ram[0x3]
+				};
 				
-				std::string out_str(
-					(const char*)cartridge.prg_ram[0x4]);
+				std::cout << "Run state: "
+					  << runstate << std::endl;
+				
+				const char *outstr =
+					(const char*)cartridge.prg_ram[0x4];
+				
 				std::cout << "Completed test with result code: "
-					  << std::hex << status << ". "
-					  << "Output:" << std::endl
-					  << out_str << std::endl;
+					<< std::hex << status << ". ";
+				
+				if (outstr)
+					std::cout << "Output:" << outstr
+						<< std::endl;
 		}
 	}
 	

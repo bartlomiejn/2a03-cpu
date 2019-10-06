@@ -254,7 +254,7 @@ uint16_t CPU::operand_addr(AddressingMode mode)
 		case zp: 	addr = bus.read(PC); PC++; break;
 		case zp_x: 	addr = (bus.read(PC) + X) % 0x100; PC++; break;
 		case mode_zp_y: addr = (bus.read(PC) + Y) % 0x100; PC++; break;
-		case idx_ind_x: addr = bus.read16((bus.read(PC) + X) % 0x100, true);
+		case idx_ind_x:addr = bus.read16((bus.read(PC) + X) % 0x100, true);
 				PC++; break;
 		case ind_idx_y: addr = bus.read16(bus.read(PC), true) + Y; PC++; break;
 		case ind:
