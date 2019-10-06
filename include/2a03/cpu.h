@@ -3,7 +3,6 @@
 
 #include <cstdint>
 #include <2a03/bus.h>
-#include <2a03/utils/logger.h>
 
 namespace NES
 {

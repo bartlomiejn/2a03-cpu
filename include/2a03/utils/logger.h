@@ -1,6 +1,7 @@
 #ifndef INC_2A03_LOGGER_H
 #define INC_2A03_LOGGER_H
 
+#include <vector>
 #include <2a03/cpu.h>
 #include <2a03/bus.h>
 
@@ -26,6 +27,9 @@ namespace NES
 		NES::CPU &cpu;
 		NES::MemoryBus &bus;
 		std::vector<std::string> logs;
+	private:
+		/// Decodes an opcode into a readable string form.
+		std::string decode(uint8_t opcode);
 	};
 }
 

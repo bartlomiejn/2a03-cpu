@@ -16,11 +16,10 @@ void CPU::power()
 	
 	IRQ = NMI = false;
 	
-	bus.write(0x4017, 0x0); // Frame IRQ enabled
-	bus.write(0x4015, 0x0); // All channels disabled
-	
 	for (uint16_t i = 0x4000; i <= 0x4013; i++)
 		bus.write(i, 0x0);
+	bus.write(0x4015, 0x0); // All channels disabled
+	bus.write(0x4017, 0x0); // Frame IRQ enabled
 	
 	// TODO: Rest of power up logic
 	// All 15 bits of noise channel LFSR = $0000[4]. The first time the LFSR

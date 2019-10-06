@@ -3,7 +3,6 @@
 #include <2a03/cpu.h>
 #include <2a03/cart/load.h>
 #include <2a03/cart/mapper.h>
-#include <2a03/utils/string.h>
 #include <2a03/utils/logger.h>
 
 namespace NES
@@ -24,6 +23,7 @@ void run_instr_test_v5()
 	
 	NES::MemoryBus bus;
 	NES::CPU cpu(bus);
+	NES::CPULogger logger(cpu, bus);
 	
 	std::string test_file = "../test/instr_test-v5/official_only.nes";
 	
@@ -47,6 +47,7 @@ void run_instr_test_v5()
 	
 	while (true)
 	{
+		logger.log();
 		cpu.execute();
 		uint8_t status = cartridge.prg_ram[0x0];
 		switch (status)
