@@ -64,7 +64,7 @@ Mapper::MMC1::MMC1(Cartridge &cartridge) :
 	Mapper::Base(cartridge),
 	shift_reg(0),
 	shift_count(0),
-	prg_bank_swap(PRGBankSwap(0)),
+	prg_bank_swap(PRGBankSwap(1)),
 	prg_bank_sz(PRGBankSize(0)),
 	chr_bank_sz(CHRBankSize(0)),
 	prg_bank(0),
@@ -140,7 +140,7 @@ int Mapper::MMC1::reg_number(uint16_t addr)
 	switch (addr)
 	{
 		case 0x8000 ... 0x9FFF:
-			return reg_main_control;
+			return reg_main_ctrl;
 		case 0xA000 ... 0xBFFF:
 			return reg_l_chr_rom;
 		case 0xC000 ... 0xDFFF:
@@ -158,7 +158,7 @@ void Mapper::MMC1::set_reg(int reg_number)
 {
 	switch (reg_number)
 	{
-		case reg_main_control:
+		case reg_main_ctrl:
 			set_main_ctrl_reg(shift_reg);
 			break;
 		case reg_l_chr_rom:

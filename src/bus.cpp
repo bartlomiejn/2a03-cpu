@@ -79,7 +79,7 @@ void MemoryBus::write(uint16_t addr, uint8_t val)
 				throw MissingCartridge();
 			break;
 		default:
-			std::cerr << "Unhandled write to 0x" << std::hex << addr
+			std::cerr << "Unhandled write to $" << std::hex << addr
 				  << " with value: " << std::hex << val << "."
 				  << std::endl;
 			break;

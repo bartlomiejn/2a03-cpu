@@ -58,7 +58,7 @@ namespace Mapper
 	{
 	public:
 		enum MMC1Register
-		{ reg_main_control, reg_l_chr_rom, reg_h_chr_rom, reg_prg_bank };
+		{ reg_main_ctrl, reg_l_chr_rom, reg_h_chr_rom, reg_prg_bank };
 		enum PRGBankSwap { swap_h_prg_bank, swap_l_prg_bank };
 		enum PRGBankSize { size_32k, size_16k };
 		enum CHRBankSize { size_8k, size_4k };
