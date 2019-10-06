@@ -1,7 +1,7 @@
 #ifndef INC_2A03_CARTRIDGE_H
 #define INC_2A03_CARTRIDGE_H
 
-#include <2a03/cartridge/ines.h>
+#include <2a03/cart/ines.h>
 
 namespace NES
 {
@@ -13,8 +13,8 @@ namespace Mapper
 	
 	enum Type
 	{
-		type_NROM = 0,
-		type_MMC1 = 1
+		type_NROM,
+		type_MMC1
 	};
 	
 	/// Returns an appropriate mapper type for the cartridge provided.
@@ -54,33 +54,15 @@ namespace Mapper
 		void write(uint16_t addr, uint8_t val) final;
 	};
 	
-	/// MMC1 Control Register.
-	union MMC1CR
-	{
-		struct
-		{
-			uint8_t M : 2; 	///< Mirroring type:
-					///< 0b00 - 1-screen mirroring nametable 0.
-					///< 0b01 - 1-screen mirroring nametable 1.
-					///< 0b10 - Vertical mirroring.
-					///< 0b11 - Horizontal mirroring.
-			bool H : 1;	///< PRG ROM swap bank:
-					///< 0 - Low bank fixed, high bank swappable.
-					///< 1 - Low bank swappable, high bank fixed.
-			bool F : 1;	///< PRG swappable bank size:
-					///< 0 - 32K
-					///< 1 - 16K
-			bool C : 1;	///< CHR bank size:
-					///< 0 - Single 8K bank in CHR space.
-					///< 0 - Two 4K banks in CHR space.
-		};
-		uint8_t value;		///< Integer representation of the
-					///< register.
-	};
-	
 	class MMC1 : public NES::iNESv1::Mapper::Base
 	{
 	public:
+		enum MMC1Register
+		{ reg_main_control, reg_l_chrrom, reg_h_chrrom, reg_prg_bank };
+		enum PRGBankSwap { swap_h_prg_bank, swap_l_prg_bank };
+		enum PRGBankSize { size_32k, size_16k };
+		enum CHRBankSize { size_8k, size_4k };
+		
 		/// Initializes an MMC1 (iNES Mapper 1) Cartridge Mapper
 		/// instance.
 		/// \param cartridge Cartridge to use.
@@ -92,16 +74,18 @@ namespace Mapper
 		/// Writes a byte of memory to the provided address.
 		void write(uint16_t addr, uint8_t val) final;
 	private:
-		uint8_t shift_reg; 	///< Shift register.
-		uint8_t shift_count; 	///< Shift counter.
-		uint8_t l_prgrom_bank; 	///< Low PRG ROM bank number.
-		uint8_t h_prgrom_bank; 	///< High PRG ROM bank number.
-		MMC1CR reg0;		///< Main control register 0.
-		uint8_t[4] regs;	///< MMC1 5-bit control/bank registers.
-					///< 0: Main control register
-					///< 1: CHR ROM low bank register
-					///< 2: CHR ROM high bank register
-					///< 3: PRG ROM bank register
+		// Shift register contents
+		uint8_t shift_reg; 		///< Shift register.
+		uint8_t shift_count; 		///< Shift counter.
+		
+		// Main Control Register
+		PRGBankSwap prg_bank_swap; 	///< Decides which PRG Bank is swappable.
+		PRGBankSize prg_bank_sz; 	///< PRG bank size.
+		CHRBankSize chr_bank_sz;	///< CHR bank size.
+		
+		// PRG ROM Bank Register
+		uint8_t prg_bank; 		///< PRG ROM bank number.
+		bool wram_enable;		///< Decides if WRAM is enabled.
 		
 		/// Resets the shift register.
 		void reset_shift_reg();
@@ -112,7 +96,15 @@ namespace Mapper
 		
 		/// Sets a register using contents from the shift register.
 		/// \param reg_number Register number to select.
-		void set_register(int reg_number);
+		void set_reg(int reg_number);
+		
+		/// Sets the main control register using contents from the
+		/// shift register.
+		void set_main_ctrl_reg(uint8_t value)
+		
+		/// Sets the PRG ROM bank register using contents from the
+		/// shift register.
+		void set_prg_bank_reg(uint8_t value)
 	};
 	
 	class UnimplementedType {};

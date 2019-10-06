@@ -1,8 +1,8 @@
 #include <iostream>
 #include <string>
 #include <2a03/cpu.h>
-#include <2a03/cartridge/load.h>
-#include <2a03/cartridge/mapper.h>
+#include <2a03/cart/load.h>
+#include <2a03/cart/mapper.h>
 #include <2a03/utils/string.h>
 
 namespace NES

@@ -1,5 +1,5 @@
 #include <iostream>
-#include <2a03/cartridge/mapper.h>
+#include <2a03/cart/mapper.h>
 
 using namespace NES::iNESv1;
 
@@ -64,8 +64,11 @@ Mapper::MMC1::MMC1(Cartridge &cartridge) :
 	Mapper::Base(cartridge),
 	shift_reg(0),
 	shift_count(0),
-	l_prgrom_bank(0),
-	h_prgrom_bank(cartridge.header.prg_rom_pages)
+	prg_bank_swap(PRGBankSwap(0)),
+	prg_bank_sz(PRGBankSize(0)),
+	chr_bank_sz(CHRBankSize(0)),
+	prg_bank(0),
+	wram_enable(0),
 {}
 
 uint8_t Mapper::MMC1::read(uint16_t addr)
@@ -76,17 +79,17 @@ uint8_t Mapper::MMC1::read(uint16_t addr)
 			// TODO: PRG RAM bankswitching
 			return cartridge.prg_ram[addr - 0x6000];
 		case 0x8000 ... 0xBFFF:
-			uint16_t l_prg_offset = addr - (uint16_t)0x8000;
-			uint32_t l_prg_addr =
-				l_prgrom_bank * prg_rom_pagesz + l_prg_offset;
-			
-			return cartridge.prg_rom[l_prg_addr];
+//			uint16_t l_prg_offset = addr - (uint16_t)0x8000;
+//			uint32_t l_prg_addr =
+//				l_prg_bank * prg_rom_pagesz + l_prg_offset;
+//
+//			return cartridge.prg_rom[l_prg_addr];
 		case 0xC000 ... 0xFFFF:
-			uint16_t h_prg_offset = addr - (uint16_t)0xC000;
-			uint32_t h_prg_addr =
-				h_prgrom_bank * prg_rom_pagesz + h_prg_offset;
-			
-			return cartridge.prg_rom[h_prg_addr];
+//			uint16_t h_prg_offset = addr - (uint16_t)0xC000;
+//			uint32_t h_prg_addr =
+//				h_prg_bank * prg_rom_pagesz + h_prg_offset;
+//
+//			return cartridge.prg_rom[h_prg_addr];
 		default:
 			std::cout << "Invalid MMC1 Mapper memory access: $"
 				<< addr << std::endl;
@@ -102,7 +105,7 @@ void Mapper::MMC1::write(uint16_t addr, uint8_t val)
 			cartridge.prg_ram[addr - 0x6000] = val;
 			break;
 		case 0x8000 ... 0xFFFF:
-			if (val & 0x80 != 0)
+			if ((val & 0x80) != 0)
 			{
 				reset_shift_reg();
 				// TODO: Do we reset bank state here as well?
@@ -114,7 +117,7 @@ void Mapper::MMC1::write(uint16_t addr, uint8_t val)
 				
 				if (shift_count == 5)
 				{
-					set_register(reg_number(addr));
+					set_reg(reg_number(addr));
 					reset_shift_reg();
 				}
 			}
@@ -151,7 +154,48 @@ int Mapper::MMC1::reg_number(uint16_t addr)
 	}
 }
 
-void Mapper::MMC1::set_register(int reg_number)
+void Mapper::MMC1::set_reg(int reg_number)
 {
+	switch (reg_number)
+	{
+		case reg_main_control:
+			set_main_ctrl_reg(shift_reg);
+			break;
+		case reg_l_chrrom:
+			// TODO: L CHR ROM register.
+			std::cerr << "Unimplemented L CHR ROM Bank Register "
+				"access." << std::endl;
+			break;
+		case reg_h_chrrom:
+			// TODO: R CHR ROM register.
+			std::cerr << "Unimplemented R CHR ROM Bank Register "
+				     "access." << std::endl;
+			break;
+		case reg_prg_bank:
+			set_prg_bank_reg(shift_reg);
+			break;
+	}
+}
 
+void Mapper::MMC1::set_main_ctrl_reg(uint8_t value)
+{
+	// TODO: PPU mirroring type for Main Control Register.
+	switch (value & 0b11)
+	{
+		case 0:
+		case 1:
+		case 2:
+		case 3:
+			break;
+	}
+	
+	prg_bank_swap = PRGBankSwap((value >> 2) & 0b1);
+	prg_bank_sz = PRGBankSize((value >> 3) & 0b1);
+	chr_bank_sz = CHRBankSize((value >> 4) & 0b1);
+}
+
+void Mapper::MMC1::set_prg_bank_reg(uint8_t value)
+{
+	prg_bank = (uint8_t)(value & 0b1111);
+	wram_enable = (bool)((value & 0b10000) >> 4);
 }

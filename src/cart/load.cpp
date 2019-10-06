@@ -1,6 +1,6 @@
 #include <fstream>
 #include <iostream>
-#include <2a03/cartridge/load.h>
+#include <2a03/cart/load.h>
 
 using namespace NES::iNESv1;
 

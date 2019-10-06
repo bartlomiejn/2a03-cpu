@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <array>
 #include <optional>
-#include <2a03/cartridge/mapper.h>
+#include <2a03/cart/mapper.h>
 
 static const int internal_ram_sz = 0x800; ///< NES Internal RAM size.
 
