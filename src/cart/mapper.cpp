@@ -106,26 +106,28 @@ void Mapper::MMC1::write(uint16_t addr, uint8_t val)
 			break;
 		case 0x8000 ... 0xFFFF:
 			if ((val & 0x80) != 0)
-			{
 				reset_shift_reg();
 				// TODO: Do we reset bank state here as well?
-			}
 			else
-			{
-				shift_reg |= (val & 0b1) < shift_count;
-				shift_count++;
-				if (shift_count == 5)
-				{
-					set_reg(reg_number(addr));
-					reset_shift_reg();
-				}
-			}
+				set_shift_reg(addr, val);
 			break;
 		default:
 			std::cerr << "Invalid address passed to MMC1: $"
 				  << std::hex << "." << std::endl;
 			throw InvalidAddress();
 	}
+}
+
+void Mapper::MMC1::set_shift_reg(uint16_t addr, uint8_t val)
+{
+	shift_reg |= (val & 0b1) < shift_count;
+	shift_count++;
+	if (shift_count == 5)
+	{
+		set_reg(reg_number(addr));
+		reset_shift_reg();
+	}
+}
 }
 
 void Mapper::MMC1::reset_shift_reg()

@@ -1,5 +1,5 @@
-#ifndef INC_2A03_CARTRIDGE_H
-#define INC_2A03_CARTRIDGE_H
+#ifndef INC_2A03_MAPPER_H
+#define INC_2A03_MAPPER_H
 
 #include <2a03/cart/ines.h>
 
@@ -54,7 +54,7 @@ namespace Mapper
 		void write(uint16_t addr, uint8_t val) final;
 	};
 	
-	class MMC1 : public NES::iNESv1::Mapper::Base
+	class MMC1 : public Mapper::Base
 	{
 	public:
 		enum MMC1Register
@@ -75,7 +75,7 @@ namespace Mapper
 		void write(uint16_t addr, uint8_t val) final;
 	private:
 		// Shift register contents
-		uint8_t shift_reg; 		///< Shift register.
+		uint8_t shift_reg; 		///< Shift register (SR).
 		uint8_t shift_count; 		///< Shift counter.
 		
 		// Main Control Register
@@ -89,6 +89,14 @@ namespace Mapper
 		
 		/// Resets the shift register.
 		void reset_shift_reg();
+		
+		/// Shifts first bit of val to SR. If this is a fifth write
+		/// uses `addr` to determine the internal register to send the
+		/// SR contents to and resets the SR state.
+		/// \param addr Address used for the write command.
+		/// \param val Value of the register which is shifted into the
+		/// SR.
+		void set_shift_reg(uint16_t addr, uint8_t val)
 		
 		/// Returns the number of the accessed register based on the
 		/// address used.
@@ -128,4 +136,4 @@ namespace Mapper
 }
 }
 
-#endif //INC_2A03_CARTRIDGE_H
+#endif //INC_2A03_MAPPER_H
