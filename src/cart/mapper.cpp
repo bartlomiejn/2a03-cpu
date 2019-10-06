@@ -68,7 +68,7 @@ Mapper::MMC1::MMC1(Cartridge &cartridge) :
 	prg_bank_sz(PRGBankSize(0)),
 	chr_bank_sz(CHRBankSize(0)),
 	prg_bank(0),
-	wram_enable(0),
+	wram_enable(0)
 {}
 
 static bool is_low_bank(uint16_t addr)
@@ -127,7 +127,6 @@ void Mapper::MMC1::set_shift_reg(uint16_t addr, uint8_t val)
 		set_reg(reg_number(addr));
 		reset_shift_reg();
 	}
-}
 }
 
 void Mapper::MMC1::reset_shift_reg()

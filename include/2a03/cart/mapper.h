@@ -97,7 +97,7 @@ namespace Mapper
 		/// \param addr Address used for the shift.
 		/// \param val Value of the register which is shifted into the
 		/// SR.
-		void set_shift_reg(uint16_t addr, uint8_t val)
+		void set_shift_reg(uint16_t addr, uint8_t val);
 		
 		/// Returns the number of the accessed register based on the
 		/// address used.
@@ -109,11 +109,11 @@ namespace Mapper
 		
 		/// Sets the main control register using contents from the
 		/// shift register.
-		void set_main_ctrl_reg(uint8_t value)
+		void set_main_ctrl_reg(uint8_t value);
 		
 		/// Sets the PRG ROM bank register using contents from the
 		/// shift register.
-		void set_prg_bank_reg(uint8_t value)
+		void set_prg_bank_reg(uint8_t value);
 		
 		/// Reads from a 32k PRG ROM bank using provided address.
 		/// \param addr Address to read from.
