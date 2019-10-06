@@ -29,6 +29,8 @@ namespace Mapper
 		/// Initializes a Cartridge Mapper instance.
 		/// \param cartridge Cartridge to use.
 		explicit Base(Cartridge &cartridge) : cartridge(cartridge) {};
+		
+		virtual ~Base() = default;
 
 		/// Reads a byte of memory at the provided address.
 		virtual uint8_t read(uint16_t addr) = 0;

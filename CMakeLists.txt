@@ -18,7 +18,8 @@ set(SOURCES
         src/bus.cpp
         src/cart/load.cpp
         src/cart/mapper.cpp
-        src/utils/string.cpp)
+        src/utils/string.cpp
+        src/utils/logger.cpp)
 
 include_directories(include)
 

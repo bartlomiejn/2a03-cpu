@@ -4,6 +4,7 @@
 #include <2a03/cart/load.h>
 #include <2a03/cart/mapper.h>
 #include <2a03/utils/string.h>
+#include <2a03/utils/logger.h>
 
 namespace NES
 {
@@ -68,8 +69,8 @@ void run_instr_test_v5()
 					(char)cartridge.prg_ram[0x3]
 				};
 				
-				std::cout << "Run state: "
-					  << runstate << std::endl;
+				std::cout << "Run state: " << runstate
+					<< std::endl;
 				
 				const char *outstr =
 					(const char*)cartridge.prg_ram[0x4];
