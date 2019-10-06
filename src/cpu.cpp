@@ -197,6 +197,7 @@ void CPU::execute()
 			std::cerr << "Unhandled opcode: " << std::hex
 				  << static_cast<int>(bus.read(initial_pc))
 				  << std::endl;
+			std::cerr.flush();
 	}
 	if (NMI)
 		interrupt(i_nmi);
@@ -256,12 +257,15 @@ uint16_t CPU::operand_addr(AddressingMode mode)
 		case zp: 	addr = bus.read(PC); PC++; break;
 		case zp_x: 	addr = (bus.read(PC) + X) % 0x100; PC++; break;
 		case mode_zp_y: addr = (bus.read(PC) + Y) % 0x100; PC++; break;
-		case idx_ind_x:addr = bus.read16((bus.read(PC) + X) % 0x100, true);
+		case idx_ind_x: addr = bus.read16((bus.read(PC) + X) % 0x100, true);
 				PC++; break;
 		case ind_idx_y: addr = bus.read16(bus.read(PC), true) + Y; PC++; break;
 		case ind:
-		default:	std::cerr << "Invalid addressing mode: "
-				<< static_cast<int>(mode) << std::endl;
+		default:
+			std::cerr << "Invalid addressing mode: "
+			<< std::hex << int(mode) << std::endl;
+			std::cerr.flush();
+		
 	}
 	return addr;
 }
@@ -318,6 +322,7 @@ void CPU::do_ADC(uint8_t operand)
 		// in a 6502.
 		std::cerr << "ADC/SBC op with decimal mode is unavailable."
 			  << std::endl;
+		std::cerr.flush();
 		return;
 	}
 	
@@ -411,6 +416,7 @@ void CPU::JMP(AddressingMode mode)
 		default:
 			std::cerr << "Invalid addressing mode for JMP: " << mode
 				<< std::endl;
+			std::cerr.flush();
 	}
 }
 

@@ -24,21 +24,24 @@ uint8_t MemoryBus::read(uint16_t addr)
 		// PPU registers
 		case 0x2000 ... 0x3FFF:
 			// TODO: Implement PPU, access with (addr % 8)
-			std::cerr << "PPU register access at 0x" << std::hex
-				  << addr << "." << std::endl;
+			std::cerr << "PPU register access at $" << std::hex
+				  << (int)addr << "." << std::endl;
+			std::cerr.flush();
 			return 0xFF;
 			
 		// APU registers
 		case 0x4000 ... 0x4017:
 			// TODO: Implement APU
-			std::cerr << "APU register access at 0x" << std::hex
-				  << addr << "." << std::endl;
+			std::cerr << "APU register access at $" << std::hex
+				  << (int)addr << "." << std::endl;
+			std::cerr.flush();
 			return 0xFF;
 			
 		// CPU test mode APU/IO functionality (disabled)
 		case 0x4018 ... 0x401F:
-			std::cerr << "CPU test mode memory access at 0x"
-				<< std::hex << addr << "." << std::endl;
+			std::cerr << "CPU test mode memory access at $"
+				<< std::hex << (int)addr << "." << std::endl;
+			std::cerr.flush();
 			return 0x0;
 			
 		// Cartridge space
@@ -49,8 +52,9 @@ uint8_t MemoryBus::read(uint16_t addr)
 				throw MissingCartridge();
 			
 		default:
-			std::cerr << "Unhandled memory access: 0x" << std::hex
-				  << addr << std::endl;
+			std::cerr << "Unhandled memory access: $" << std::hex
+				  << (int)addr << std::endl;
+			std::cerr.flush();
 			return 0x0;
 	}
 }
@@ -79,9 +83,10 @@ void MemoryBus::write(uint16_t addr, uint8_t val)
 				throw MissingCartridge();
 			break;
 		default:
-			std::cerr << "Unhandled write to $" << std::hex << addr
-				  << " with value: " << std::hex << val << "."
-				  << std::endl;
+			std::cerr << "Unhandled write to $" << std::hex
+				<< (int)addr << " with value: " << std::hex
+				<< (int)val << "." << std::endl;
+			std::cerr.flush();
 			break;
 	}
 }

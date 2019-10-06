@@ -27,16 +27,21 @@ void run_instr_test_v5()
 	std::string test_file = "../test/instr_test-v5/official_only.nes";
 	
 	std::cout << "Loading " << test_file << "." << std::endl;
+	std::cout.flush();
 	
 	Cartridge cartridge = load(test_file);
 	NES::iNESv1::Mapper::Base *mapper = Mapper::mapper(cartridge);
 	bus.mapper = mapper;
 	
 	std::cout << "Powering up." << std::endl;
+	std::cout.flush();
 	
 	cpu.power();
 	
 	std::cout << "Entering runloop." << std::endl;
+	std::cout.flush();
+	
+	int instr_count = 0;
 	
 	while (true)
 	{
@@ -50,6 +55,7 @@ void run_instr_test_v5()
 			case NES::reset_required:
 				std::cout << "Reset required. Performing."
 					<< std::endl;
+				std::cout.flush();
 				cpu.reset();
 				break;
 			default:
@@ -75,7 +81,13 @@ void run_instr_test_v5()
 				if (outstr)
 					std::cout << "Output:" << outstr
 						<< std::endl;
+				std::cout.flush();
 		}
+		
+		instr_count++;
+		
+		if (instr_count > 20)
+			break;
 	}
 	
 	delete mapper;
