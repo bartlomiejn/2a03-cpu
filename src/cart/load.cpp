@@ -69,9 +69,9 @@ Cartridge NES::iNESv1::load(std::string &filename)
 	
 	// Generate cartridge object based on the header
 	unsigned int trainer_sz = header.flags_6.has_trainer ? trainer_abs_sz : 0;
-	unsigned int prg_rom_sz = prg_rom_page_sz * header.prg_rom_pages;
-	unsigned int chr_rom_sz = chr_rom_page_sz * header.chr_rom_pages;
-	unsigned int prg_ram_sz = header.prg_ram_sz;
+	unsigned int prg_rom_sz = prg_rom_page_sz * header.prg_rom_banks;
+	unsigned int chr_rom_sz = chr_rom_page_sz * header.chr_rom_banks;
+	unsigned int prg_ram_sz = header.prg_ram_banks;
 	Cartridge cart(header, trainer_sz, prg_rom_sz, chr_rom_sz, prg_ram_sz);
 
 	// Advance to byte 16 which is directly after the header

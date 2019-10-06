@@ -35,7 +35,7 @@ uint8_t Mapper::NROM::read(uint16_t addr)
 			return cartridge.prg_rom[addr - 0x8000];
 		case 0xC000 ... 0xFFFF:
 			// High 16KB PRG ROM, or mirrored low if 16KB
-			if (cartridge.header.prg_rom_pages == 1)
+			if (cartridge.header.prg_rom_banks == 1)
 				return cartridge.prg_rom[addr - 0xC000];
 			else
 				return cartridge.prg_rom[addr - 0x8000];
@@ -105,11 +105,11 @@ void Mapper::MMC1::write(uint16_t addr, uint8_t val)
 			cartridge.prg_ram[addr - 0x6000] = val;
 			break;
 		case 0x8000 ... 0xFFFF:
-			if ((val & 0x80) != 0)
-				reset_shift_reg();
-				// TODO: Do we reset bank state here as well?
-			else
+			if ((val & 0x80) == 0)
 				set_shift_reg(addr, val);
+			else
+				reset_shift_reg();
+				// TODO: Should we reset bank state as well?
 			break;
 		default:
 			std::cerr << "Invalid address passed to MMC1: $"
@@ -141,13 +141,13 @@ int Mapper::MMC1::reg_number(uint16_t addr)
 	switch (addr)
 	{
 		case 0x8000 ... 0x9FFF:
-			return 0;
+			return reg_main_control;
 		case 0xA000 ... 0xBFFF:
-			return 1;
+			return reg_l_chr_rom;
 		case 0xC000 ... 0xDFFF:
-			return 2;
+			return reg_h_chr_rom;
 		case 0xE000 ... 0xFFFF:
-			return 3;
+			return reg_prg_bank;
 		default:
 			std::cerr << "Invalid address passed to MMC1: $"
 				<< std::hex << "." << std::endl;
@@ -162,12 +162,12 @@ void Mapper::MMC1::set_reg(int reg_number)
 		case reg_main_control:
 			set_main_ctrl_reg(shift_reg);
 			break;
-		case reg_l_chrrom:
+		case reg_l_chr_rom:
 			// TODO: L CHR ROM register.
 			std::cerr << "Unimplemented L CHR ROM Bank Register "
 				"access." << std::endl;
 			break;
-		case reg_h_chrrom:
+		case reg_h_chr_rom:
 			// TODO: R CHR ROM register.
 			std::cerr << "Unimplemented R CHR ROM Bank Register "
 				     "access." << std::endl;
@@ -180,7 +180,7 @@ void Mapper::MMC1::set_reg(int reg_number)
 
 void Mapper::MMC1::set_main_ctrl_reg(uint8_t value)
 {
-	// TODO: PPU mirroring type for Main Control Register.
+	// TODO: PPU mirroring type.
 	switch (value & 0b11)
 	{
 		case 0:
@@ -196,34 +196,42 @@ void Mapper::MMC1::set_main_ctrl_reg(uint8_t value)
 
 void Mapper::MMC1::set_prg_bank_reg(uint8_t value)
 {
-	switch (prg_bank_sz)
-	{
-		case size_32k:
-			// In 32K mode only upper 3 bits are used for selection.
-			prg_bank = (uint8_t)((value & 0b1110) >> 1);
-			break;
-		case size_16k:
-			prg_bank = (uint8_t)(value & 0b1111);
-			break;
-	}
+	prg_bank = (uint8_t)(value & 0b1111);
 	wram_enable = (bool)((value & 0b10000) >> 4);
 }
 
 uint8_t Mapper::MMC1::read_32k_prg_bank(uint16_t addr)
 {
-	uint16_t offset = addr - (uint16_t)0x8000;
-	uint32_t abs_addr = prg_bank * prg_rom_page_sz + offset;
+	uint16_t prg_offset = addr - (uint16_t)0x8000;
+	// Only upper 3 bits are used when determining a 32k PRG bank
+	uint32_t abs_addr = (prg_bank >> 1) * prg_rom_page_sz + prg_offset;
 	return cartridge.prg_rom[abs_addr];
 }
 
 uint8_t Mapper::MMC1::read_l_16k_prg_bank(uint16_t addr)
 {
-	// TODO: Implement read low 16k PRG Bank
-	return 0x0;
+	uint16_t prg_offset = addr - (uint16_t)0x8000;
+	if (prg_bank_swap == swap_h_prg_bank)
+		return cartridge.prg_rom[prg_offset];
+	else // Low bank is swappable.
+	{
+		uint32_t abs_addr = prg_bank * prg_rom_page_sz + prg_offset;
+		return cartridge.prg_rom[abs_addr];
+	}
 }
 
 uint8_t Mapper::MMC1::read_h_16k_prg_bank(uint16_t addr)
 {
-	// TODO: Implement read high 16k PRG Bank
-	return 0x0;
+	uint16_t prg_offset = addr - (uint16_t)0xC000;
+	if (prg_bank_swap == swap_l_prg_bank)
+	{
+		uint16_t abs_addr = cartridge.header.prg_rom_banks
+			* prg_rom_page_sz + prg_offset;
+		return cartridge.prg_rom[abs_addr];
+	}
+	else // High bank is swappable.
+	{
+		uint32_t abs_addr = prg_bank * prg_rom_page_sz + prg_offset;
+		return cartridge.prg_rom[abs_addr];
+	}
 }

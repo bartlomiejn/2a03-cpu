@@ -9,10 +9,10 @@ namespace NES
 {
 namespace iNESv1
 {
-	const unsigned int prg_rom_page_sz = 0x4000; ///< PRG ROM page size - 16KB.
-	const unsigned int chr_rom_page_sz = 0x2000; ///< CHR ROM page size - 8KB.
-	const unsigned int prg_ram_def_sz = 0x2000;  ///< PRG RAM default size - 8KB.
-	const unsigned int trainer_abs_sz = 0x200;   ///< Trainer absolute size - 512B.
+	const uint16_t prg_rom_page_sz = 0x4000; ///< PRG ROM page size - 16KB.
+	const uint16_t chr_rom_page_sz = 0x2000; ///< CHR ROM page size - 8KB.
+	const uint16_t prg_ram_def_sz = 0x2000;  ///< PRG RAM default size - 8KB.
+	const uint16_t trainer_abs_sz = 0x200;   ///< Trainer absolute size - 512B.
 	
 	union Byte6
 	{
@@ -60,20 +60,20 @@ namespace iNESv1
 			uint8_t prg_ram_sz,
 			Byte9 flags_9
 		):
-			prg_rom_pages(prg_rom_pages),
-			chr_rom_pages(chr_rom_pages),
+			prg_rom_banks(prg_rom_pages),
+			chr_rom_banks(chr_rom_pages),
 			flags_6(flags_6),
 			flags_7(flags_7),
-			prg_ram_sz(prg_ram_sz),
+			prg_ram_banks(prg_ram_sz),
 			flags_9(flags_9)
 		{};
 		
 		// Bytes 0-3 are `NES<EOF>` in ASCII
-		uint8_t prg_rom_pages;	///< Byte 4: PRG ROM pages count in 16KB units.
-		uint8_t chr_rom_pages;	///< Byte 5: CHR ROM pages count in 8KB units.
+		uint8_t prg_rom_banks;	///< Byte 4: PRG ROM bank count in 16KB units.
+		uint8_t chr_rom_banks;	///< Byte 5: CHR ROM bank count in 8KB units.
 		Byte6 flags_6;		///< Byte 6: Flags.
 		Byte7 flags_7;		///< Byte 7: Flags.
-		uint8_t prg_ram_sz;	///< Byte 8: PRG RAM pages count in 8KB units.
+		uint8_t prg_ram_banks;	///< Byte 8: PRG RAM bank count in 8KB units.
 		Byte9 flags_9;		///< Byte 9: Flags.
 	};
 	

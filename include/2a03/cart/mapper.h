@@ -58,7 +58,7 @@ namespace Mapper
 	{
 	public:
 		enum MMC1Register
-		{ reg_main_control, reg_l_chrrom, reg_h_chrrom, reg_prg_bank };
+		{ reg_main_control, reg_l_chr_rom, reg_h_chr_rom, reg_prg_bank };
 		enum PRGBankSwap { swap_h_prg_bank, swap_l_prg_bank };
 		enum PRGBankSize { size_32k, size_16k };
 		enum CHRBankSize { size_8k, size_4k };
@@ -79,7 +79,8 @@ namespace Mapper
 		uint8_t shift_count; 		///< Shift counter.
 		
 		// Main Control Register
-		PRGBankSwap prg_bank_swap; 	///< Decides which PRG Bank is swappable.
+		PRGBankSwap prg_bank_swap; 	///< Decides which PRG Bank is
+						///< swappable.
 		PRGBankSize prg_bank_sz; 	///< PRG bank size.
 		CHRBankSize chr_bank_sz;	///< CHR bank size.
 		
@@ -93,7 +94,7 @@ namespace Mapper
 		/// Shifts first bit of val to SR. If this is a fifth write
 		/// uses `addr` to determine the internal register to send the
 		/// SR contents to and resets the SR state.
-		/// \param addr Address used for the write command.
+		/// \param addr Address used for the shift.
 		/// \param val Value of the register which is shifted into the
 		/// SR.
 		void set_shift_reg(uint16_t addr, uint8_t val)
