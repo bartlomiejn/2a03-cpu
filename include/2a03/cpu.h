@@ -73,6 +73,7 @@ namespace NES
 		StatusRegister P;	///< Status register
 		bool IRQ;		///< Interrupt line. Setting to true will trigger an IRQ after next instruction completes.
 		bool NMI;		///< Non-maskable interrupt line. Setting to true will trigger an IRQ after next instruction completes.
+		uint32_t cycles;	///< Cycle counter.
 		
 		/// Starts the CPU.
 		void power();

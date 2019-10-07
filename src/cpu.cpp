@@ -355,42 +355,105 @@ void CPU::set_NZ(uint8_t value)
 
 void CPU::BPL()
 {
-	if (!P.N) PC += get_operand(imm);
+	cycles += 2;
+	if (!P.N)
+	{
+		uint8_t op = get_operand(imm);
+		cycles++;
+		if ((PC & 0xFF00) != ((PC + op) & 0xFF00))
+			cycles++;
+		PC += op;
+	}
 }
 
 void CPU::BMI()
 {
-	if (P.N) PC += get_operand(imm);
+	cycles += 2;
+	if (P.N)
+	{
+		uint8_t op = get_operand(imm);
+		cycles++;
+		if ((PC & 0xFF00) != ((PC + op) & 0xFF00))
+			cycles++;
+		PC += op;
+	}
 }
 
 void CPU::BVC()
 {
-	if (!P.V) PC += get_operand(imm);
+	cycles += 2;
+	if (!P.V)
+	{
+		uint8_t op = get_operand(imm);
+		cycles++;
+		if ((PC & 0xFF00) != ((PC + op) & 0xFF00))
+			cycles++;
+		PC += op;
+	}
 }
 
 void CPU::BVS()
 {
-	if (P.V) PC += get_operand(imm);
+	cycles += 2;
+	if (P.V)
+	{
+		uint8_t op = get_operand(imm);
+		cycles++;
+		if ((PC & 0xFF00) != ((PC + op) & 0xFF00))
+			cycles++;
+		PC += op;
+	}
 }
 
 void CPU::BCC()
 {
-	if (!P.C) PC += get_operand(imm);
+	if (!P.C)
+	{
+		uint8_t op = get_operand(imm);
+		cycles++;
+		if ((PC & 0xFF00) != ((PC + op) & 0xFF00))
+			cycles++;
+		PC += op;
+	}
 }
 
 void CPU::BCS()
 {
-	if (P.C) PC += get_operand(imm);
+	cycles += 2;
+	if (P.C)
+	{
+		uint8_t op = get_operand(imm);
+		cycles++;
+		if ((PC & 0xFF00) != ((PC + op) & 0xFF00))
+			cycles++;
+		PC += op;
+	}
 }
 
 void CPU::BNE()
 {
-	if (!P.Z) PC += get_operand(imm);
+	cycles += 2;
+	if (!P.Z)
+	{
+		uint8_t op = get_operand(imm);
+		cycles++;
+		if ((PC & 0xFF00) != ((PC + op) & 0xFF00))
+			cycles++;
+		PC += op;
+	}
 }
 
 void CPU::BEQ()
 {
-	if (P.Z) PC += get_operand(imm);
+	cycles += 2;
+	if (P.Z)
+	{
+		uint8_t op = get_operand(imm);
+		cycles++;
+		if ((PC & 0xFF00) != ((PC + op) & 0xFF00))
+			cycles++;
+		PC += op;
+	}
 }
 
 // Control transfer
