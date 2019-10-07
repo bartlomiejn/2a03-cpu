@@ -73,6 +73,9 @@ void run_instr_test_v5()
 					(char)cartridge.prg_ram[0x3]
 				};
 				
+				if (runstate[0] == 0)
+					break;
+				
 				std::cout << "Run state: " << runstate
 					<< std::endl;
 				
