@@ -15,7 +15,7 @@ namespace NES
 		imm,		///< Immediate.
 		zp,		///< Zero Page.
 		zp_x,		///< Zero Page indexed with X.
-		mode_zp_y,	///< Zero Page indexed with Y.
+		zp_y,		///< Zero Page indexed with Y.
 		idx_ind_x,	///< Indexed indirect with X.
 		ind_idx_y,	///< Indirect indexed with Y.
 		ind		///< Indirect.

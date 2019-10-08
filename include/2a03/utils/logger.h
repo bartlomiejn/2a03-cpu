@@ -20,16 +20,21 @@ namespace NES
 		bool is_cout_each_line_enabled; ///< Set to true to enable
 						///< output to cout for each
 						///< line.
-		
+						
 		/// Logs a line with CPU state.
 		void log();
 	protected:
-		NES::CPU &cpu;
-		NES::MemoryBus &bus;
-		std::vector<std::string> logs;
+		NES::CPU &cpu;		///< CPU whose state is logged.
+		NES::MemoryBus &bus;	///< Bus whose devices are logged.
+		std::vector<std::string> logs; 	///< Contains logs of CPU state
+						///< on each `log` call.
 	private:
 		/// Decodes an opcode into a readable string form.
 		std::string decode(uint8_t opcode);
+		
+		/// Returns the addressing mode for an opcode, if it's
+		/// applicable.
+		std::optional<NES::AddressingMode> addr_mode(uint8_t opcode);
 	};
 }
 

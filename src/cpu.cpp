@@ -152,7 +152,7 @@ void CPU::execute()
 		case 0xB1: LD(A, ind_idx_y); break;
 		case 0xA2: LD(X, imm); break;
 		case 0xA6: LD(X, zp); break;
-		case 0xB6: LD(X, mode_zp_y); break;
+		case 0xB6: LD(X, zp_y); break;
 		case 0xAE: LD(X, abs); break;
 		case 0xBE: LD(X, abs_y); break;
 		case 0xA0: LD(Y, imm); break;
@@ -168,7 +168,7 @@ void CPU::execute()
 		case 0x81: ST(A, idx_ind_x); break;
 		case 0x91: ST(A, ind_idx_y); break;
 		case 0x86: ST(X, zp); break;
-		case 0x96: ST(X, mode_zp_y); break;
+		case 0x96: ST(X, zp_y); break;
 		case 0x8E: ST(X, abs); break;
 		case 0x84: ST(Y, zp); break;
 		case 0x94: ST(Y, zp_x); break;
@@ -190,7 +190,7 @@ void CPU::execute()
 		case 0x68: PL(A); break;
 		case 0x28: PL(P); break;
 		// Others
-		case 0xEA: /* NOP. Should cost 2 cycles here. */ break;
+		case 0xEA: /* NOP */ cycles += 2; break;
 		// TODO: Implement BRK
 		default:
 			std::cerr << "Unhandled opcode: " << std::hex
@@ -255,7 +255,7 @@ uint16_t CPU::operand_addr(AddressingMode mode)
 		case imm: 	addr = PC; PC++; break;
 		case zp: 	addr = bus.read(PC); PC++; break;
 		case zp_x: 	addr = (bus.read(PC) + X) % 0x100; PC++; break;
-		case mode_zp_y: addr = (bus.read(PC) + Y) % 0x100; PC++; break;
+		case zp_y: addr = (bus.read(PC) + Y) % 0x100; PC++; break;
 		case idx_ind_x: addr = bus.read16((bus.read(PC) + X) % 0x100, true);
 				PC++; break;
 		case ind_idx_y: addr = bus.read16(bus.read(PC), true) + Y; PC++; break;
