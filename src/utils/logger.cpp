@@ -6,6 +6,8 @@
 
 using namespace NES;
 
+static const std::string operand_pat = "{{OPERAND}}";
+
 CPULogger::CPULogger(CPU &cpu, MemoryBus &bus) :
 	cpu(cpu),
 	bus(bus),
@@ -19,13 +21,15 @@ void CPULogger::log()
 	
 	string line;
 	stringstream ss;
-	uint8_t oplen;
+	string operand_str;
+	uint8_t op_len;
 	uint8_t opcode = bus.read(cpu.PC);
 	std::optional<AddressingMode> addr_mode = addr_mode_for_op(opcode);
+	
 	if (addr_mode.has_value())
-		oplen = operand_len(addr_mode.value());
+		op_len = operand_len(addr_mode.value());
 	else
-		oplen = 0;
+		op_len = 0;
 	
 	// PC as a 4-char wide hex string.
 	ss << setfill('0') << setw(4) << hex << (int)cpu.PC << "  ";
@@ -37,10 +41,12 @@ void CPULogger::log()
 	line += string(ss.str());
 	ss.str(string());
 	
+	// TODO: Find a better way to do whitespace than counting spaces.
+	
 	// Fill opcode parameters as 2-char wide hex values.
-	if (oplen > 0)
+	if (op_len > 0)
 	{
-		for (int i = 0; i < oplen; i++)
+		for (int i = 0; i < op_len; i++)
 		{
 			uint8_t operand = bus.read(
 				cpu.PC + (uint8_t)1 + (uint8_t)i);
@@ -49,7 +55,7 @@ void CPULogger::log()
 			line += string(ss.str());
 			ss.str(string());
 		}
-		for (int j = 2 - oplen; j > 0; j--)
+		for (int j = 2 - op_len; j > 0; j--)
 			line += "   ";
 		line += " ";
 	}
@@ -57,10 +63,39 @@ void CPULogger::log()
 		line += "       ";
 	
 	// Decode opcode to string.
-	line += decode(opcode);
+	line += decode(opcode) + " ";
 	
-	// TODO: Decode opcode param / addressing mode here.
-	line += "                             ";
+	if (addr_mode.has_value() && op_len > 0)
+	{
+		// Get template for used addressing mode.
+		operand_str = templ_for_mode(addr_mode.value());
+		
+		// TODO: Add ` = {actual value}` for appropriate modes.
+		
+		// Revert endianness for printing out.
+		for (int i = op_len; i > 0; i--)
+		{
+			uint8_t operand = bus.read(cpu.PC + (uint8_t)i);
+			ss << setfill('0') << setw(2) << hex << (int)operand;
+		}
+		string operand_le(ss.str());
+		ss.str(string());
+		
+		// Replace template with the operand in little endian
+		operand_str.replace(
+			operand_str.find(operand_pat),
+			operand_pat.length(),
+			operand_le);
+		
+		line += operand_str;
+		
+		int wspace_len = 30 - (int)operand_str.length();
+		for (int j = 0; j < wspace_len; j++)
+			line += " ";
+	}
+	else
+		for (int j = 0; j < 30; j++)
+			line += " ";
 	
 	// CPU register status as 2-char wide hex.
 	ss << "A:" << setfill('0') << setw(2) << hex << (int)cpu.A << " ";
@@ -398,25 +433,25 @@ std::string CPULogger::templ_for_mode(AddressingMode addr_mode)
 	switch (addr_mode)
 	{
 		case abs:
-			return "${{OPERAND}}";
+			return "$" + operand_pat;
 		case abs_x:
-			return "${{OPERAND}},X";
+			return "$" + operand_pat + ",X";
 		case abs_y:
-			return "${{OPERAND}},Y";
+			return "$" + operand_pat + ",Y";
 		case imm:
-			return "#${{OPERAND}}";
+			return "#$" + operand_pat;
 		case zp:
-			return "${{OPERAND}}";
+			return "$" + operand_pat;
 		case zp_x:
-			return "${{OPERAND}},X";
+			return "$" + operand_pat + ",X";
 		case zp_y:
-			return "${{OPERAND}},Y";
+			return "$" + operand_pat + ",Y";
 		case idx_ind_x:
-			return "(${{OPERAND}},X)";
+			return "($" + operand_pat + ",X)";
 		case ind_idx_y:
-			return "(${{OPERAND}}),Y";
+			return "($" + operand_pat + "),Y";
 		case ind:
-			return "${{OPERAND}}";
+			return operand_pat;
 		default:
 			return "";
 		
