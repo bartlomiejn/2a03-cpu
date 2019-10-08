@@ -353,107 +353,60 @@ void CPU::set_NZ(uint8_t value)
 
 // Branch instructions
 
+void CPU::branch_rel()
+{
+	uint8_t op = get_operand(imm);
+	cycles++;
+	if ((PC & 0xFF00) != ((PC + op) & 0xFF00))
+		cycles++;
+	PC += op;
+}
+
 void CPU::BPL()
 {
 	cycles += 2;
-	if (!P.N)
-	{
-		uint8_t op = get_operand(imm);
-		cycles++;
-		if ((PC & 0xFF00) != ((PC + op) & 0xFF00))
-			cycles++;
-		PC += op;
-	}
+	if (!P.N) branch_rel();
 }
 
 void CPU::BMI()
 {
 	cycles += 2;
-	if (P.N)
-	{
-		uint8_t op = get_operand(imm);
-		cycles++;
-		if ((PC & 0xFF00) != ((PC + op) & 0xFF00))
-			cycles++;
-		PC += op;
-	}
+	if (P.N) branch_rel();
 }
 
 void CPU::BVC()
 {
 	cycles += 2;
-	if (!P.V)
-	{
-		uint8_t op = get_operand(imm);
-		cycles++;
-		if ((PC & 0xFF00) != ((PC + op) & 0xFF00))
-			cycles++;
-		PC += op;
-	}
+	if (!P.V) branch_rel();
 }
 
 void CPU::BVS()
 {
 	cycles += 2;
-	if (P.V)
-	{
-		uint8_t op = get_operand(imm);
-		cycles++;
-		if ((PC & 0xFF00) != ((PC + op) & 0xFF00))
-			cycles++;
-		PC += op;
-	}
+	if (P.V) branch_rel();
 }
 
 void CPU::BCC()
 {
-	if (!P.C)
-	{
-		uint8_t op = get_operand(imm);
-		cycles++;
-		if ((PC & 0xFF00) != ((PC + op) & 0xFF00))
-			cycles++;
-		PC += op;
-	}
+	if (!P.C) branch_rel();
 }
 
 void CPU::BCS()
 {
 	cycles += 2;
-	if (P.C)
-	{
-		uint8_t op = get_operand(imm);
-		cycles++;
-		if ((PC & 0xFF00) != ((PC + op) & 0xFF00))
-			cycles++;
-		PC += op;
-	}
+	if (P.C) branch_rel();
 }
 
 void CPU::BNE()
 {
 	cycles += 2;
-	if (!P.Z)
-	{
-		uint8_t op = get_operand(imm);
-		cycles++;
-		if ((PC & 0xFF00) != ((PC + op) & 0xFF00))
-			cycles++;
-		PC += op;
-	}
+	if (!P.Z) branch_rel();
 }
 
 void CPU::BEQ()
 {
 	cycles += 2;
-	if (P.Z)
-	{
-		uint8_t op = get_operand(imm);
-		cycles++;
-		if ((PC & 0xFF00) != ((PC + op) & 0xFF00))
-			cycles++;
-		PC += op;
-	}
+	if (P.Z) branch_rel();
 }
 
 // Control transfer

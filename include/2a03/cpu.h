@@ -142,6 +142,9 @@ namespace NES
 		
 		// Branch instructions
 		
+		/// Does a relative branch using the opcode's operand.
+		void branch_rel();
+		
 		/// Branch on plus.
 		void BPL();
 		

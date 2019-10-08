@@ -120,7 +120,7 @@ std::string NES::CPULogger::decode(uint8_t opcode)
 		case 0xB8: return "CLV"; //(); break;
 		case 0xD8: return "CLD"; //(); break;
 		case 0xF8: return "SED"; //(); break;
-		case 0x4A: return "LSR_A"; //(); break;
+		case 0x4A: return "LSR A"; //(); break;
 		case 0x46: return "LSR"; //(zp); break;
 		case 0x56: return "LSR"; //(zp_x); break;
 		case 0x4E: return "LSR"; //(abs); break;
@@ -133,12 +133,12 @@ std::string NES::CPULogger::decode(uint8_t opcode)
 		case 0x19: return "ORA"; //(abs_y); break;
 		case 0x01: return "ORA"; //(idx_ind_x); break;
 		case 0x11: return "ORA"; //(ind_idx_y); break;
-		case 0x2A: return "ROL_A"; //(); break;
+		case 0x2A: return "ROL A"; //(); break;
 		case 0x26: return "ROL"; //(zp); break;
 		case 0x36: return "ROL"; //(zp_x); break;
 		case 0x2E: return "ROL"; //(abs); break;
 		case 0x3E: return "ROL"; //(abs_x); break;
-		case 0x6A: return "ROR_A"; //(); break;
+		case 0x6A: return "ROR A"; //(); break;
 		case 0x66: return "ROR"; //(zp); break;
 		case 0x76: return "ROR"; //(zp_x); break;
 		case 0x6E: return "ROR"; //(abs); break;
