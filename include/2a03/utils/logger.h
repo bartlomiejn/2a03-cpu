@@ -34,7 +34,8 @@ namespace NES
 		
 		/// Returns the addressing mode for an opcode, if it's
 		/// applicable.
-		std::optional<NES::AddressingMode> addr_mode(uint8_t opcode);
+		std::optional<NES::AddressingMode> addr_mode_for_op(
+			uint8_t opcode);
 		
 		/// Returns a templated string for provided mode.
 		/// \param addr_mode Addressing mode to provide a template for.

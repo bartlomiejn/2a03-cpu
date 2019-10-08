@@ -19,21 +19,39 @@ void CPULogger::log()
 	
 	string line;
 	stringstream ss;
-	int opcode;
+	uint8_t oplen;
+	uint8_t opcode = bus.read(cpu.PC);
+	std::optional<AddressingMode> addr_mode = addr_mode_for_op(opcode);
+	if (addr_mode.has_value())
+		oplen = operand_len(addr_mode.value());
+	else
+		oplen = 0;
 	
 	// PC as a 4-char wide hex string.
 	ss << setfill('0') << setw(4) << hex << (int)cpu.PC << "  ";
 	line += string(ss.str());
 	ss.str(string());
 	
-	// Current opcode as hex.
-	opcode = (int)bus.read(cpu.PC);
-	ss << setfill('0') << setw(2) << hex << opcode << " ";
+	// Current opcode as 2-char wide hex.
+	ss << setfill('0') << setw(2) << hex << (int)opcode << " ";
 	line += string(ss.str());
 	ss.str(string());
 	
-	// TODO: Fill opcode parameters here instead of empty space.
-	line += "       ";
+	// Fill opcode parameters as 2-char wide hex values.
+	if (oplen > 0)
+	{
+		for (int i = 0; i < oplen; i++)
+		{
+			uint8_t operand = bus.read(
+				cpu.PC + (uint8_t)1 + (uint8_t)i);
+			ss << setfill('0') << setw(2) << hex << (int)operand
+				<< " ";
+		}
+		for (int j = 2 - oplen; j > 0; j--)
+			line += "   ";
+	}
+	else
+		line += "       ";
 	
 	// Decode opcode to string.
 	line += decode(opcode);
@@ -41,7 +59,7 @@ void CPULogger::log()
 	// TODO: Decode opcode param / addressing mode here.
 	line += "                             ";
 	
-	// CPU register status.
+	// CPU register status as 2-char wide hex.
 	ss << "A:" << setfill('0') << setw(2) << hex << (int)cpu.A << " ";
 	ss << "X:" << setfill('0') << setw(2) << hex << (int)cpu.X << " ";
 	ss << "Y:" << setfill('0') << setw(2) << hex << (int)cpu.Y << " ";
@@ -218,7 +236,7 @@ std::string CPULogger::decode(uint8_t opcode)
 	}
 }
 
-std::optional<AddressingMode> CPULogger::addr_mode(uint8_t opcode)
+std::optional<AddressingMode> CPULogger::addr_mode_for_op(uint8_t opcode)
 {
 	switch (opcode) {
 		// De facto mode is relative for each conditional branch opcode
