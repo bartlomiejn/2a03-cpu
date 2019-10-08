@@ -41,7 +41,7 @@ void CPULogger::log()
 	line += string(ss.str());
 	ss.str(string());
 	
-	// TODO: Find a better way to do whitespace than counting spaces.
+	// TODO: More elegant way to do whitespace than counting spaces.
 	
 	// Fill opcode parameters as 2-char wide hex values.
 	if (op_len > 0)
@@ -65,14 +65,15 @@ void CPULogger::log()
 	// Decode opcode to string.
 	line += decode(opcode) + " ";
 	
+	// Pretty print parameter with addresing mode.
 	if (addr_mode.has_value() && op_len > 0)
 	{
-		// Get template for used addressing mode.
+		// Get template for the mode.
 		operand_str = templ_for_mode(addr_mode.value());
 		
 		// TODO: Add ` = {actual value}` for appropriate modes.
 		
-		// Revert endianness for printing out.
+		// Revert endianness.
 		for (int i = op_len; i > 0; i--)
 		{
 			uint8_t operand = bus.read(cpu.PC + (uint8_t)i);
@@ -81,7 +82,7 @@ void CPULogger::log()
 		string operand_le(ss.str());
 		ss.str(string());
 		
-		// Replace template with the operand in little endian
+		// Replace template with the operand in little endian.
 		operand_str.replace(
 			operand_str.find(operand_pat),
 			operand_pat.length(),
@@ -89,6 +90,7 @@ void CPULogger::log()
 		
 		line += operand_str;
 		
+		// Add whitespace to fill 30 chars in total
 		int wspace_len = 30 - (int)operand_str.length();
 		for (int j = 0; j < wspace_len; j++)
 			line += " ";

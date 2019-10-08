@@ -17,6 +17,7 @@ I've put my compiler temporarily as the default value which most definitely won'
 - iNESv1 Cartridge model with loading
 - NROM, MMC1 mapper
 - Binary execution
+- Debug logger
 
 #### In progress
-- Nestest.log-like logging for debug purposes
+- Cycle counting

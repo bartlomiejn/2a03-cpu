@@ -193,7 +193,7 @@ void CPU::execute()
 		case 0xEA: /* NOP */ cycles += 2; break;
 		// TODO: Implement BRK
 		default:
-			std::cerr << "Unhandled opcode: " << std::hex
+			std::cerr << "Unhandled / invalid opcode: " << std::hex
 				  << static_cast<int>(bus.read(initial_pc))
 				  << std::endl;
 			std::cerr.flush();
