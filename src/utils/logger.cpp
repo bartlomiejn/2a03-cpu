@@ -46,9 +46,12 @@ void CPULogger::log()
 				cpu.PC + (uint8_t)1 + (uint8_t)i);
 			ss << setfill('0') << setw(2) << hex << (int)operand
 				<< " ";
+			line += string(ss.str());
+			ss.str(string());
 		}
 		for (int j = 2 - oplen; j > 0; j--)
 			line += "   ";
+		line += " ";
 	}
 	else
 		line += "       ";
