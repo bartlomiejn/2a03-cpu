@@ -18,25 +18,41 @@ void NES::CPULogger::log()
 	int opcode;
 	
 	// PC as a 4-char wide hex string.
-	ss << std::setfill('0') << std::setw(4) << std::hex << (int)cpu.PC;
+	ss << std::setfill('0') << std::setw(4) << std::hex << (int)cpu.PC
+		<< "  ";
 	line += std::string(ss.str());
 	ss.str(std::string());
-	
-	line += "  ";
 	
 	// Current opcode as hex.
 	opcode = (int)bus.read(cpu.PC);
-	ss << std::setfill('0') << std::setw(2) << std::hex << opcode;
+	ss << std::setfill('0') << std::setw(2) << std::hex << opcode << " ";
 	line += std::string(ss.str());
 	ss.str(std::string());
-	
-	line += " ";
 	
 	// TODO: Fill opcode parameters here instead of empty space.
 	line += "       ";
 	
 	// Decode opcode to string.
 	line += decode(opcode);
+	
+	// TODO: Decode opcode param / addressing mode here.
+	line += "                             ";
+	
+	// CPU register status.
+	ss << "A:" << std::setfill('0') << std::setw(2) << std::hex
+		<< (int)cpu.A << " ";
+	ss << "X:" << std::setfill('0') << std::setw(2) << std::hex
+		<< (int)cpu.X << " ";
+	ss << "Y:" << std::setfill('0') << std::setw(2) << std::hex
+	   	<< (int)cpu.Y << " ";
+	ss << "P:" << std::setfill('0') << std::setw(2) << std::hex
+	   	<< (int)cpu.P.status << " ";
+	ss << "SP:" << std::setfill('0') << std::setw(2) << std::hex
+	   	<< (int)cpu.S << " ";
+	ss << "PPU:   ,   " << " ";
+	ss << "CYC:" << std::dec << (int)cpu.cycles << std::endl;
+	line += std::string(ss.str());
+	ss.str(std::string());
 	
 	// Convert to uppercase chars and push to log storage.
 	std::transform(line.begin(), line.end(), line.begin(),
