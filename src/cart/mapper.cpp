@@ -64,8 +64,8 @@ Mapper::MMC1::MMC1(Cartridge &cartridge) :
 	Mapper::Base(cartridge),
 	shift_reg(0),
 	shift_count(0),
-	prg_bank_swap(PRGBankSwap(1)),
-	prg_bank_sz(PRGBankSize(0)),
+	prg_bank_swap(swap_l_prg_bank),
+	prg_bank_sz(size_16k),
 	chr_bank_sz(CHRBankSize(0)),
 	prg_bank(0),
 	wram_enable(0)
@@ -226,7 +226,7 @@ uint8_t Mapper::MMC1::read_h_16k_prg_bank(uint16_t addr)
 	uint16_t prg_offset = addr - (uint16_t)0xC000;
 	if (prg_bank_swap == swap_l_prg_bank)
 	{
-		uint16_t abs_addr = cartridge.header.prg_rom_banks
+		uint32_t abs_addr = (cartridge.header.prg_rom_banks - 1)
 			* prg_rom_page_sz + prg_offset;
 		return cartridge.prg_rom[abs_addr];
 	}

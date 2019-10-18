@@ -65,7 +65,7 @@ void CPULogger::log()
 	// Decode opcode to string.
 	line += decode(opcode) + " ";
 	
-	// Pretty print parameter with addresing mode.
+	// Pretty print parameter with addressing mode.
 	if (addr_mode.has_value() && op_len > 0)
 	{
 		// Get template for the mode.
