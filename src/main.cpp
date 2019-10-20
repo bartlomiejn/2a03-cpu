@@ -46,32 +46,21 @@ void run_nestest()
 	std::cout << "Entering runloop." << std::endl;
 	std::cout.flush();
 	
-	int instr_count = 0;
-	
 	while (true)
 	{
 		logger.log();
-		try
-		{
-			cpu.execute();
-		}
-		catch (NES::InvalidOpcode err)
-		{
-			std::cout << "Invalid opcode, terminating."
-				<< std::endl;
-			break;
-		}
+		
+		try { cpu.execute(); }
+		catch (NES::InvalidOpcode err) { break; }
 		
 		if (bus.read(0x02) != 0x0) // Some sort of error occured:
 		{
 			std::cerr << "Nestest failure code: " << std::hex
 				<< bus.read16(0x02) << "." << std::endl;
 		}
-		
-		instr_count++;
-		if (instr_count > 8991)
-			break;
 	}
+	
+	std::cout << "Terminating." << std::endl;
 	
 	delete mapper;
 }
