@@ -201,6 +201,7 @@ void CPU::execute()
 				  << static_cast<int>(bus.read(initial_pc))
 				  << std::endl;
 			std::cerr.flush();
+			throw InvalidOpcode();
 	}
 	if (NMI)
 		interrupt(i_nmi);
@@ -218,7 +219,6 @@ void CPU::interrupt(NES::Interrupt type)
 	}
 	else
 	{
-		S -= 3;
 		P.status |= 0x04;
 		// TODO: Reenable once the PPU is implemented
 		while (false)
@@ -374,6 +374,7 @@ void CPU::BPL()
 {
 	cycles += 2;
 	if (!P.N) branch_rel();
+	else PC++;
 }
 
 void CPU::BMI()

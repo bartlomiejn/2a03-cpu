@@ -51,52 +51,8 @@ void run_nestest()
 	{
 		logger.log();
 		cpu.execute();
-		uint8_t status = cartridge.prg_ram[0x0];
-		switch (status)
-		{
-			case NES::running:
-				// Test is running
-				break;
-			case NES::reset_required:
-				std::cout << "Reset required. Performing."
-					<< std::endl;
-				std::cout.flush();
-				
-				cpu.reset();
-				
-				break;
-			default:
-				if (status >= 0x80)
-					break;
-				
-				const char runstate[3] = {
-					(char)cartridge.prg_ram[0x1],
-					(char)cartridge.prg_ram[0x2],
-					(char)cartridge.prg_ram[0x3]
-				};
-				
-				if (runstate[0] == 0)
-					break;
-				
-				std::cout << "Run state: " << runstate
-					<< std::endl;
-				
-				const char *outstr =
-					(const char*)cartridge.prg_ram[0x4];
-				
-				std::cout << "Completed test with result code: "
-					<< std::hex << static_cast<int>(status)
-					<< ". " << std::endl;
-				
-				if (outstr)
-					std::cout << "Output:" << outstr
-						<< std::endl;
-				std::cout.flush();
-		}
-		
-		// TODO: Remove once the CPU is correct enough.
 		instr_count++;
-		if (instr_count > 20)
+		if (instr_count > 200)
 			break;
 	}
 	

@@ -325,6 +325,8 @@ namespace NES
 		/// \param p P register to pull the value to.
 		void PL(StatusRegister &p);
 	};
+	
+	class InvalidOpcode {};
 }
 
 #endif //INC_2A03_CPU_H
