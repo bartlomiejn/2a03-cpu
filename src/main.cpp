@@ -52,7 +52,7 @@ void run_nestest()
 		logger.log();
 		cpu.execute();
 		instr_count++;
-		if (instr_count > 200)
+		if (instr_count > 8991)
 			break;
 	}
 	

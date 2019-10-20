@@ -296,6 +296,10 @@ namespace NES
 		/// \param mode Addressing mode to use.
 		void ST(uint8_t reg, AddressingMode mode);
 		
+		/// Increment memory.
+		/// \param mode Addressing mode to use.
+		void INC(AddressingMode mode);
+		
 		// Register
 		
 		/// Transfer between registers.

@@ -177,6 +177,10 @@ void CPU::execute()
 		case 0x84: ST(Y, zp); break;
 		case 0x94: ST(Y, zp_x); break;
 		case 0x8C: ST(Y, abs); break;
+		case 0xE6: INC(zp); break;
+		case 0xF6: INC(zp_x); break;
+		case 0xEE: INC(abs); break;
+		case 0xFE: INC(abs_x); break;
 		// Register
 		case 0xAA: T(A, X); break;
 		case 0x8A: T(X, A); break;
@@ -630,6 +634,14 @@ void CPU::LD(uint8_t &reg, AddressingMode mode)
 void CPU::ST(uint8_t reg, AddressingMode mode)
 {
 	bus.write(operand_addr(mode), reg);
+}
+
+void CPU::INC(AddressingMode mode)
+{
+	uint16_t addr = operand_addr(mode);
+	auto newval = (uint8_t)(bus.read(addr) + 1);
+	bus.write(addr, newval);
+	set_NZ(newval);
 }
 
 // Register
