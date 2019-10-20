@@ -4,11 +4,11 @@ NES emulator written in C++.
 
 tl;dr version: The CPU works 100% correctly for official opcodes... and only CPU. 
 
-## Build instructions
+To build: `make binary`
 
-`make binary CXX={Your C++ compiler}`
+To run: `make run`
 
-I've put my compiler temporarily as the default value which most definitely won't work with your setup, so make sure to fill it in if you want to build it. 
+To debug: `make debug CC_DB={Default: gdb}` 
 
 ## Feature list
 

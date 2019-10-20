@@ -1,7 +1,6 @@
 SRC_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 OUT_DIR ?= $(SRC_DIR)/output
-CXX ?= /usr/local/Cellar/gcc/9.2.0/bin/c++-9
-CC_DB ?= gdb
+CC_DBG ?= gdb
 
 .PHONY: binary run
 
@@ -19,7 +18,7 @@ run: binary
 	$(OUT_DIR)/2a03
 
 debug: binary
-	$(CC_DB) $(OUT_DIR)/2a03
+	$(CC_DBG) $(OUT_DIR)/2a03
 
 clean:
 	rm -rf $(OUT_DIR)
