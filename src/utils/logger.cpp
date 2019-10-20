@@ -59,10 +59,15 @@ void CPULogger::log()
 		}
 		for (int j = 2 - op_len; j > 0; j--)
 			line += "   ";
-		line += " ";
 	}
 	else
-		line += "       ";
+		line += "      ";
+	
+	// Add sign if opcode is unofficial
+	if (is_opcode_legal(opcode))
+		line += " ";
+	else
+		line += "*";
 	
 	// Decode opcode to string.
 	line += decode(opcode) + " ";
@@ -288,7 +293,38 @@ std::string CPULogger::decode(uint8_t opcode)
 		case 0x68: return "PLA";
 		case 0x28: return "PLP";
 		case 0xEA: return "NOP";
+		// Unofficial
+		case 0x04:
+		case 0x44:
+		case 0x64:
+		case 0x14:
+		case 0x34:
+		case 0x54:
+		case 0x74:
+		case 0xD4:
+		case 0xF4:
+		case 0x0C: return "NOP";
 		default: return "???";
+	}
+}
+
+bool CPULogger::is_opcode_legal(uint8_t opcode)
+{
+	switch (opcode)
+	{
+		case 0x04:
+		case 0x44:
+		case 0x64:
+		case 0x14:
+		case 0x34:
+		case 0x54:
+		case 0x74:
+		case 0xD4:
+		case 0xF4:
+		case 0x0C:
+			return false;
+		default:
+			return true;
 	}
 }
 
@@ -444,6 +480,17 @@ std::optional<AddressingMode> CPULogger::addr_mode_for_op(uint8_t opcode)
 		case 0x68: return std::nullopt;
 		case 0x28: return std::nullopt;
 		case 0xEA: return std::nullopt;
+		// Unofficial
+		case 0x04:
+		case 0x44:
+		case 0x64: return { AddressingMode::zp };
+		case 0x14:
+		case 0x34:
+		case 0x54:
+		case 0x74:
+		case 0xD4:
+		case 0xF4: return { AddressingMode::idx_ind_x };
+		case 0x0C: return { AddressingMode::imm };
 		default: return std::nullopt;
 	}
 }

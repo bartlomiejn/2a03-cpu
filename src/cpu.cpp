@@ -202,8 +202,14 @@ void CPU::execute()
 		// Unofficial
 		case 0x04:
 		case 0x44:
-		case 0x64:
-			/* 2-byte NOP */ PC++; cycles += 3; break;
+		case 0x64: /* 1-byte NOP */ PC++; cycles += 3; break;
+		case 0x14:
+		case 0x34:
+		case 0x54:
+		case 0x74:
+		case 0xD4:
+		case 0xF4: /* 1-byte NOP */ PC++; cycles += 4; break;
+		case 0x0C: /* 2-byte NOP */ PC += 2; cycles += 4; break;
 		// TODO: Implement BRK
 		default:
 			std::cerr << "Unhandled / invalid opcode: " << std::hex

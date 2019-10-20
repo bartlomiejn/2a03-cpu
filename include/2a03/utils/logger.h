@@ -53,6 +53,10 @@ namespace NES
 		
 		/// Retrieve target value for specified addressing mode.
 		uint16_t target_value(NES::AddressingMode addr_mode);
+		
+		/// Returns true if provided `opcode` is part of the official
+		/// instruction set.
+		bool is_opcode_legal(uint8_t opcode);
 	};
 }
 
