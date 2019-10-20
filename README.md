@@ -1,26 +1,28 @@
 # 2a03
 
 NES emulator written in C++. 
-
-tl;dr version: The CPU works 100% correctly for official opcodes. 
+ 
+Currently: The CPU is implemented and works 100% correctly for official opcodes. 
 
 To build: `make binary`
 
 To run: `make run`
 
-To debug: `make debug CC_DB={Default: gdb}` 
+To debug: `make debug CXX_DEBUG={Default: gdb}` 
 
 ## Feature list
 
-#### v0.2 In progress
+### v0.2
+
+In progress:
 - Cycle counting
 - Unofficial instructions
 
-#### v0.2 Upcoming
-- Official instruction correctness
+Done:
+- Official opcode correctness
 
-#### v0.1
-Release date: 20.10.2019
+### v0.1
+Release: `20.10.2019`
 - Instruction cycle
 - Addressing modes
 - Memory bus

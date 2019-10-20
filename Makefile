@@ -1,6 +1,6 @@
 SRC_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 OUT_DIR ?= $(SRC_DIR)/output
-CC_DBG ?= gdb
+CXX_DEBUG ?= gdb
 
 .PHONY: binary run
 
@@ -18,7 +18,7 @@ run: binary
 	$(OUT_DIR)/2a03
 
 debug: binary
-	$(CC_DBG) $(OUT_DIR)/2a03
+	$(CXX_DEBUG) $(OUT_DIR)/2a03
 
 clean:
 	rm -rf $(OUT_DIR)
