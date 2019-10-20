@@ -199,6 +199,11 @@ void CPU::execute()
 		case 0x28: PL(P); break;
 		// Others
 		case 0xEA: /* NOP */ cycles += 2; break;
+		// Unofficial
+		case 0x04:
+		case 0x44:
+		case 0x64:
+			/* 2-byte NOP */ PC++; cycles += 3; break;
 		// TODO: Implement BRK
 		default:
 			std::cerr << "Unhandled / invalid opcode: " << std::hex
@@ -463,7 +468,7 @@ void CPU::JMP(AddressingMode mode)
 void CPU::JSR()
 {
 	// JSR return address should be the last byte of the 3-byte JSR instr.
-	uint16_t return_addr = (uint16_t)(PC + 1);
+	auto return_addr = (uint16_t)(PC + 1);
 	PH((uint8_t)(return_addr >> 8));
 	PH((uint8_t)return_addr);
 	JMP(abs);
@@ -474,7 +479,7 @@ void CPU::RTS()
 	uint8_t l_addr, h_addr;
 	PL(l_addr);
 	PL(h_addr);
-	PC = (h_addr << 8 | l_addr) + 0x1;
+	PC = (h_addr << 8 | l_addr) + (uint8_t)0x1;
 }
 
 void CPU::RTI()
