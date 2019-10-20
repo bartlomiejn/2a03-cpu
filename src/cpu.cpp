@@ -456,7 +456,7 @@ void CPU::JSR()
 	// JSR return address should be the last byte of the 3-byte JSR
 	// instruction.
 	uint16_t return_addr = (uint16_t)(PC + 1);
-	PH((uint8_t)return_addr >> 8);
+	PH((uint8_t)(return_addr >> 8));
 	PH((uint8_t)return_addr);
 	JMP(abs);
 }
