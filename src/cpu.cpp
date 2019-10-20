@@ -453,8 +453,7 @@ void CPU::JMP(AddressingMode mode)
 
 void CPU::JSR()
 {
-	// JSR return address should be the last byte of the 3-byte JSR
-	// instruction.
+	// JSR return address should be the last byte of the 3-byte JSR instr.
 	uint16_t return_addr = (uint16_t)(PC + 1);
 	PH((uint8_t)(return_addr >> 8));
 	PH((uint8_t)return_addr);
@@ -664,7 +663,6 @@ void CPU::PH(uint8_t value)
 void CPU::PH(StatusRegister &p)
 {
 	PH(p.status);
-	p.B = 0x3;
 }
 
 void CPU::PL(uint8_t &reg_to)

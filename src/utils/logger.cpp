@@ -105,7 +105,7 @@ void CPULogger::log()
 	ss << "P:" << setfill('0') << setw(2) << hex << (int)cpu.P.status
 		<< " ";
 	ss << "SP:" << setfill('0') << setw(2) << hex << (int)cpu.S << " ";
-	ss << "PPU:???,???" << " ";
+	ss << "PPU:  0,  0" << " ";
 	ss << "CYC:" << dec << (int)cpu.cycles;
 	line += string(ss.str());
 	ss.str(string());
