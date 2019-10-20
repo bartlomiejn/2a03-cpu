@@ -41,6 +41,7 @@ void run_nestest()
 	cpu.power();
 	
 	cpu.PC = 0xC000;
+	cpu.cycles = 7;
 	
 	std::cout << "Entering runloop." << std::endl;
 	std::cout.flush();
@@ -59,6 +60,12 @@ void run_nestest()
 			std::cout << "Invalid opcode, terminating."
 				<< std::endl;
 			break;
+		}
+		
+		if (bus.read(0x02) != 0x0) // Some sort of error occured:
+		{
+			std::cerr << "Nestest failure code: " << std::hex
+				<< bus.read16(0x02) << "." << std::endl;
 		}
 		
 		instr_count++;

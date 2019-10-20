@@ -8,9 +8,12 @@ NES emulator written in C++.
 
 I've put my compiler temporarily as the default value which most definitely won't work with your setup, so make sure to fill it in if you want to build it. 
 
-#### In progress
-- Instruction correctness according to nestest output
+#### v0.2 WIP
 - Cycle counting
+- Unofficial instructions
+
+#### v0.2 Feature list (WIP)
+- Official instruction correctness
 
 #### v0.1 Feature list 
 - Instruction cycle

@@ -137,6 +137,10 @@ namespace NES
 		/// Sets the N and Z flags based on the value provided.
 		void set_NZ(uint8_t value);
 		
+		/// Updates the cycle count based on `operand` used and
+		/// addressing `mode`.
+		void update_cycles(uint8_t operand, AddressingMode mode);
+		
 		// Instructions
 		// http://www.6502.org/tutorials/6502opcodes.html - Docs
 		

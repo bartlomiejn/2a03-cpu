@@ -383,6 +383,14 @@ void CPU::set_NZ(uint8_t value)
 	P.N = value >> 7;
 }
 
+void CPU::update_cycles(uint8_t operand, NES::AddressingMode mode)
+{
+	switch (operand)
+	{
+	
+	}
+}
+
 // Branch instructions
 
 void CPU::branch_rel()
