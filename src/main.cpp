@@ -17,7 +17,7 @@ namespace NES
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
 
-void run_instr_test_v5()
+void run_nestest()
 {
 	using namespace NES::iNESv1;
 	
@@ -25,7 +25,7 @@ void run_instr_test_v5()
 	NES::CPU cpu(bus);
 	NES::CPULogger logger(cpu, bus);
 	
-	std::string test_file = "../test/instr_test-v5/official_only.nes";
+	std::string test_file = "../test/nestest/nestest.nes";
 	
 	std::cout << "Loading " << test_file << "." << std::endl;
 	std::cout.flush();
@@ -39,6 +39,8 @@ void run_instr_test_v5()
 	std::cout.flush();
 	
 	cpu.power();
+	
+	cpu.PC = 0xC000;
 	
 	std::cout << "Entering runloop." << std::endl;
 	std::cout.flush();
@@ -105,6 +107,6 @@ void run_instr_test_v5()
 
 int main()
 {
-	run_instr_test_v5();
+	run_nestest();
 	return 0;
 }

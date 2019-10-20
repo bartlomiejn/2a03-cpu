@@ -16,10 +16,14 @@ void CPU::power()
 	
 	IRQ = NMI = false;
 	
-	for (uint16_t i = 0x4000; i <= 0x4013; i++)
-		bus.write(i, 0x0);
-	bus.write(0x4015, 0x0); // All channels disabled
-	bus.write(0x4017, 0x0); // Frame IRQ enabled
+	// TODO: Reenable once PPU is implemented
+	while (false)
+	{
+		for (uint16_t i = 0x4000; i <= 0x4013; i++)
+			bus.write(i, 0x0);
+		bus.write(0x4015, 0x0); // All channels disabled
+		bus.write(0x4017, 0x0); // Frame IRQ enabled
+	}
 	
 	// TODO: Rest of power up logic
 	// All 15 bits of noise channel LFSR = $0000[4]. The first time the LFSR
@@ -216,7 +220,11 @@ void CPU::interrupt(NES::Interrupt type)
 	{
 		S -= 3;
 		P.status |= 0x04;
-		bus.write(0x4015, 0x0); // All channels disabled
+		// TODO: Reenable once the PPU is implemented
+		while (false)
+		{
+			bus.write(0x4015, 0x0); // All channels disabled
+		}
 	}
 	
 	P.I = true;
@@ -415,6 +423,8 @@ void CPU::JMP(AddressingMode mode)
 {
 	switch (mode)
 	{
+		case abs:
+			PC = bus.read16(PC); break;
 		case ind:
 			// TODO: Implement indirect jump quirk
 			// AN INDIRECT JUMP MUST NEVER USE A VECTOR BEGINNING ON
@@ -426,8 +436,6 @@ void CPU::JMP(AddressingMode mode)
 			// the low byte of the address from $30FF and the high
 			// byte from $3000.
 			PC = bus.read16(bus.read16(PC)); break;
-		case abs:
-			PC = bus.read16(PC);
 		default:
 			std::cerr << "Invalid addressing mode for JMP: " << mode
 				<< std::endl;
