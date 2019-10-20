@@ -454,7 +454,7 @@ std::string CPULogger::templ_for_mode(AddressingMode addr_mode)
 		case ind_idx_y:
 			return "($" + operand_pat + "),Y";
 		case ind:
-			return operand_pat;
+			return "($" + operand_pat + ")";
 		default:
 			return "";
 		
@@ -468,6 +468,7 @@ uint8_t CPULogger::operand_len(NES::AddressingMode addr_mode)
 		case abs:
 		case abs_x:
 		case abs_y:
+		case ind:
 			return 2;
 		case zp:
 		case zp_x:
@@ -475,7 +476,6 @@ uint8_t CPULogger::operand_len(NES::AddressingMode addr_mode)
 		case imm:
 		case idx_ind_x:
 		case ind_idx_y:
-		case ind:
 			return 1;
 		default:
 			return 0;
