@@ -438,16 +438,21 @@ void CPU::JMP(AddressingMode mode)
 		case abs:
 			PC = bus.read16(PC); break;
 		case ind:
-			// TODO: Implement indirect jump quirk
-			// AN INDIRECT JUMP MUST NEVER USE A VECTOR BEGINNING ON
-			// THE LAST BYTE OF A PAGE
-			// For example if address $3000 contains $40, $30FF
-			// contains $80, and $3100 contains $50, the result of
-			// JMP ($30FF) will be a transfer of control to $4080
-			// rather than $5080 as you intended i.e. the 6502 took
-			// the low byte of the address from $30FF and the high
-			// byte from $3000.
-			PC = bus.read16(bus.read16(PC)); break;
+			// Vector beginning on a last byte of a page will take
+			// the high byte of the address from the beginning of
+			// the same page rather than the next one.
+			// $3000 = $40
+			// $30FF = $80
+			// $3100 = $50
+			// JMP ($30FF) will transfer control to $4080 rather
+			// than $5080.
+			uint16_t h_addr, l_addr;
+			l_addr = bus.read16(PC);
+			h_addr = (l_addr % 0x100 == 0xFF)
+				? (uint16_t)(l_addr - l_addr % 0x100)
+				: (uint16_t)(l_addr + 1);
+			PC = (uint16_t)(bus.read(h_addr)) << 8 | bus.read(l_addr);
+			break;
 		default:
 			std::cerr << "Invalid addressing mode for JMP: " << mode
 				<< std::endl;

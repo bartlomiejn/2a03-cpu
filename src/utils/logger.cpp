@@ -7,6 +7,7 @@
 using namespace NES;
 
 static const std::string operand_pat = "{{OPERAND}}";
+static const std::string target_pat = "{{TARGET}}";
 
 CPULogger::CPULogger(CPU &cpu, MemoryBus &bus) :
 	cpu(cpu),
@@ -15,14 +16,17 @@ CPULogger::CPULogger(CPU &cpu, MemoryBus &bus) :
 	is_cout_each_line_enabled(true)
 {}
 
+// TODO: (REFACTOR) This is a massive mess.
 void CPULogger::log()
 {
 	using namespace std;
 	
 	string line;
 	stringstream ss;
-	string operand_str;
+	string op_templ;
 	uint8_t op_len;
+	uint16_t operand = 0;
+	uint8_t tgt_len;
 	uint8_t opcode = bus.read(cpu.PC);
 	std::optional<AddressingMode> addr_mode = addr_mode_for_op(opcode);
 	
@@ -41,15 +45,14 @@ void CPULogger::log()
 	line += string(ss.str());
 	ss.str(string());
 	
-	// TODO: More elegant way to do whitespace than counting spaces.
 	// Fill opcode parameters as 2-char wide hex values.
 	if (op_len > 0)
 	{
 		for (int i = 0; i < op_len; i++)
 		{
-			uint8_t operand = bus.read(
+			uint8_t op8 = bus.read(
 				cpu.PC + (uint8_t)1 + (uint8_t)i);
-			ss << setfill('0') << setw(2) << hex << (int)operand
+			ss << setfill('0') << setw(2) << hex << (int)op8
 				<< " ";
 			line += string(ss.str());
 			ss.str(string());
@@ -68,29 +71,43 @@ void CPULogger::log()
 	if (addr_mode.has_value() && op_len > 0)
 	{
 		// Get template for the mode.
-		operand_str = templ_for_mode(addr_mode.value());
-		
-		// TODO: Add ` = {actual value}` for appropriate modes.
+		op_templ = templ_for_mode(addr_mode.value());
 		
 		// Revert endianness.
 		for (int i = op_len; i > 0; i--)
 		{
-			uint8_t operand = bus.read(cpu.PC + (uint8_t)i);
-			ss << setfill('0') << setw(2) << hex << (int)operand;
+			uint8_t op8 = bus.read(cpu.PC + (uint8_t)i);
+			ss << setfill('0') << setw(2) << hex << (int)op8;
+			operand |= op8 << (i - 1) * 8;
 		}
-		string operand_le(ss.str());
-		ss.str(string());
 		
 		// Replace template with the operand in little endian.
-		operand_str.replace(
-			operand_str.find(operand_pat),
+		op_templ.replace(
+			op_templ.find(operand_pat),
 			operand_pat.length(),
-			operand_le);
+			ss.str());
 		
-		line += operand_str;
+		ss.str(string());
+		
+		tgt_len = target_len(addr_mode.value());
+		if (tgt_len > 0)
+		{
+			uint16_t val = target_value(addr_mode.value());
+			
+			ss << setfill('0') << setw(tgt_len * 2) << hex << val;
+			
+			op_templ.replace(
+				op_templ.find(target_pat),
+				target_pat.length(),
+				ss.str());
+			
+			ss.str(string());
+		}
+		
+		line += op_templ;
 		
 		// Add whitespace to fill 30 chars in total
-		int wspace_len = 30 - (int)operand_str.length();
+		int wspace_len = 30 - (int)op_templ.length();
 		for (int j = 0; j < wspace_len; j++)
 			line += " ";
 	}
@@ -436,7 +453,7 @@ std::string CPULogger::templ_for_mode(AddressingMode addr_mode)
 	switch (addr_mode)
 	{
 		case abs:
-			return "$" + operand_pat;
+			return "$" + operand_pat + " = " + target_pat;
 		case abs_x:
 			return "$" + operand_pat + ",X";
 		case abs_y:
@@ -454,7 +471,7 @@ std::string CPULogger::templ_for_mode(AddressingMode addr_mode)
 		case ind_idx_y:
 			return "($" + operand_pat + "),Y";
 		case ind:
-			return "($" + operand_pat + ")";
+			return "($" + operand_pat + ") = " + target_pat;
 		default:
 			return "";
 		
@@ -480,5 +497,37 @@ uint8_t CPULogger::operand_len(NES::AddressingMode addr_mode)
 		default:
 			return 0;
 		
+	}
+}
+
+uint8_t CPULogger::target_len(NES::AddressingMode addr_mode)
+{
+	switch (addr_mode)
+	{
+		case abs:
+			return 1;
+		case ind:
+			return 2;
+		default:
+			return 0;
+	}
+}
+
+uint16_t CPULogger::target_value(NES::AddressingMode addr_mode)
+{
+	switch (addr_mode)
+	{
+		case abs:
+			return (uint16_t)bus.read(bus.read16((uint16_t)(cpu.PC + 1)));
+		case ind:
+			// TODO: (REFACTOR) This is directly copied from CPU::JMP()
+			uint16_t h_addr, l_addr;
+			l_addr = bus.read16((uint16_t)(cpu.PC + 1));
+			h_addr = (l_addr % 0x100 == 0xFF)
+				 ? (uint16_t)(l_addr - l_addr % 0x100)
+				 : (uint16_t)(l_addr + 1);
+			return (uint16_t)(bus.read(h_addr)) << 8 | bus.read(l_addr);
+		default:
+			break;
 	}
 }

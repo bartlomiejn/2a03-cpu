@@ -50,7 +50,17 @@ void run_nestest()
 	while (true)
 	{
 		logger.log();
-		cpu.execute();
+		try
+		{
+			cpu.execute();
+		}
+		catch (NES::InvalidOpcode err)
+		{
+			std::cout << "Invalid opcode, terminating."
+				<< std::endl;
+			break;
+		}
+		
 		instr_count++;
 		if (instr_count > 8991)
 			break;
