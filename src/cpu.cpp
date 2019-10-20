@@ -380,41 +380,48 @@ void CPU::BMI()
 {
 	cycles += 2;
 	if (P.N) branch_rel();
+	else PC++;
 }
 
 void CPU::BVC()
 {
 	cycles += 2;
 	if (!P.V) branch_rel();
+	else PC++;
 }
 
 void CPU::BVS()
 {
 	cycles += 2;
 	if (P.V) branch_rel();
+	else PC++;
 }
 
 void CPU::BCC()
 {
 	if (!P.C) branch_rel();
+	else PC++;
 }
 
 void CPU::BCS()
 {
 	cycles += 2;
 	if (P.C) branch_rel();
+	else PC++;
 }
 
 void CPU::BNE()
 {
 	cycles += 2;
 	if (!P.Z) branch_rel();
+	else PC++;
 }
 
 void CPU::BEQ()
 {
 	cycles += 2;
 	if (P.Z) branch_rel();
+	else PC++;
 }
 
 // Control transfer
