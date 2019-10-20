@@ -42,7 +42,6 @@ void CPULogger::log()
 	ss.str(string());
 	
 	// TODO: More elegant way to do whitespace than counting spaces.
-	
 	// Fill opcode parameters as 2-char wide hex values.
 	if (op_len > 0)
 	{
@@ -279,7 +278,9 @@ std::string CPULogger::decode(uint8_t opcode)
 std::optional<AddressingMode> CPULogger::addr_mode_for_op(uint8_t opcode)
 {
 	switch (opcode) {
-		// De facto mode is relative for each conditional branch opcode
+		// De facto mode is relative for each conditional branch opcode.
+		// TODO: Nestest.log prints relative out as the branch address
+		// TODO: rather than offset.
 		case 0x10: return { AddressingMode::imm };
 		case 0x30: return { AddressingMode::imm };
 		case 0x50: return { AddressingMode::imm };

@@ -12,7 +12,7 @@ void CPU::power()
 	X = 0x0;
 	Y = 0x0;
 	S = 0xFD;
-	P.status = 0x34;
+	P.status = 0x24;
 	
 	IRQ = NMI = false;
 	
