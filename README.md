@@ -2,7 +2,7 @@
 
 NES emulator written in C++. 
 
-tl;dr version: The CPU works 100% correctly for official opcodes... and only CPU. 
+tl;dr version: The CPU works 100% correctly for official opcodes. 
 
 To build: `make binary`
 
@@ -20,6 +20,7 @@ To debug: `make debug CC_DB={Default: gdb}`
 - Official instruction correctness
 
 #### v0.1
+Release date: 20.10.2019
 - Instruction cycle
 - Addressing modes
 - Memory bus
