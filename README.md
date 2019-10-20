@@ -8,7 +8,11 @@ NES emulator written in C++.
 
 I've put my compiler temporarily as the default value which most definitely won't work with your setup, so make sure to fill it in if you want to build it. 
 
-#### Feature list
+#### In progress
+- Instruction correctness according to nestest output
+- Cycle counting
+
+#### v0.1 Feature list 
 - Instruction cycle
 - Addressing modes
 - Memory bus
@@ -18,6 +22,3 @@ I've put my compiler temporarily as the default value which most definitely won'
 - NROM, MMC1 mapper
 - Binary execution
 - Debug logger
-
-#### In progress
-- Cycle counting
