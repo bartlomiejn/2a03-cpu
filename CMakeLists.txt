@@ -15,6 +15,7 @@ endif(CMAKE_COMPILER_IS_GNUCC)
 set(SOURCES
         src/main.cpp
         src/cpu.cpp
+        src/ppu.cpp
         src/bus.cpp
         src/cart/load.cpp
         src/cart/mapper.cpp

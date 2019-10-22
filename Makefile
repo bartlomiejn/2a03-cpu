@@ -15,7 +15,7 @@ binary: $(OUT_DIR)
 	$(MAKE) 2a03 -C $(OUT_DIR)
 
 run: binary
-	$(OUT_DIR)/2a03
+	cd $(OUT_DIR) && ./2a03
 
 debug: binary
 	$(CXX_DEBUG) $(OUT_DIR)/2a03

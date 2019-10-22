@@ -1,6 +1,7 @@
 #include <cstring>
 #include <iostream>
 #include <2a03/bus.h>
+#include <2a03/ppu.h>
 
 using namespace NES;
 
