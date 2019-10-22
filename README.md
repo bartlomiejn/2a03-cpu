@@ -6,7 +6,7 @@ Currently: The CPU is implemented and works 100% correctly for official opcodes.
 
 To build: `make binary`
 
-To run: `make run`
+To run: `make run`. It will load the `nestest.nes` ROM and run about 6k instructions until it encounters the unimplemented unofficial ones.
 
 To debug: `make debug CXX_DEBUG={Default: gdb}` 
 
