@@ -237,6 +237,7 @@ void CPU::interrupt(NES::Interrupt type)
 	else
 	{
 		P.status |= 0x04;
+		
 		// TODO: Reenable once the PPU is implemented
 		while (false)
 		{
@@ -476,7 +477,7 @@ void CPU::JSR()
 	auto return_addr = (uint16_t)(PC + 1);
 	PH((uint8_t)(return_addr >> 8));
 	PH((uint8_t)return_addr);
-	JMP(abs);
+	PC = bus.read16(PC);
 	cycles += 6;
 }
 

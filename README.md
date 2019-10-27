@@ -15,11 +15,12 @@ To debug: `make debug CXX_DEBUG={Default: gdb}`
 ### v0.2
 
 In progress:
-- Cycle counting
-- Unofficial instructions
+- Cycle counting correctness
+- PPU
 
 Done:
 - Official opcode correctness
+- Cycle counting
 
 ### v0.1
 Release: `20.10.2019`
