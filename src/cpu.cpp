@@ -640,7 +640,7 @@ void CPU::EOR(AddressingMode mode)
 { \
 	P.flag = value; \
 	cycles += 2; \
-} 
+}
 
 void CPU::CLC() set_status_flag(C, false)
 void CPU::SEC() set_status_flag(C, true)
@@ -653,12 +653,22 @@ void CPU::SED() set_status_flag(D, true)
 void CPU::LSR_A()
 {
 	A = shift_r(A);
+	cycles += 2;
 }
 
 void CPU::LSR(AddressingMode mode)
 {
 	uint16_t addr = operand_addr(mode);
 	bus.write(addr, shift_r(bus.read(addr)));
+	switch (mode)
+	{
+		case zp: 	cycles += 5; break;
+		case zp_x: 	cycles += 6; break;
+		case abs: 	cycles += 6; break;
+		case abs_x: 	cycles += 7; break;
+		default: 	std::cerr << "Invalid addressing mode for LSR."
+				<< std::endl;
+	}
 }
 
 
@@ -667,28 +677,61 @@ void CPU::ORA(AddressingMode mode)
 	uint8_t operand = get_operand(mode);
 	A |= operand;
 	set_NZ(A);
+	switch (mode)
+	{
+		case imm: 	cycles += 2; break;
+		case zp: 	cycles += 3; break;
+		case zp_x: 	cycles += 4; break;
+		case abs: 	cycles += 4; break;
+		case abs_x: 	cycles += 4; break;
+		case abs_y: 	cycles += 4; break;
+		case idx_ind_x: cycles += 6; break;
+		case ind_idx_y: cycles += 5; break;
+		default:	std::cerr << "Invalid addressing mode for CPx."
+				<< std::endl;
+	}
 }
 
 void CPU::ROL_A()
 {
 	A = rot_l(A);
+	cycles += 2;
 }
 
 void CPU::ROL(AddressingMode mode)
 {
 	uint16_t addr = operand_addr(mode);
 	bus.write(addr, rot_l(bus.read(addr)));
+	switch (mode)
+	{
+		case zp: 	cycles += 5; break;
+		case zp_x: 	cycles += 6; break;
+		case abs: 	cycles += 6; break;
+		case abs_x: 	cycles += 7; break;
+		default: 	std::cerr << "Invalid addressing mode for ROL."
+				<< std::endl;
+	}
 }
 
 void CPU::ROR_A()
 {
 	A = rot_r(A);
+	cycles += 2;
 }
 
 void CPU::ROR(AddressingMode mode)
 {
 	uint16_t addr = operand_addr(mode);
 	bus.write(addr, rot_r(bus.read(addr)));
+	switch (mode)
+	{
+		case zp: 	cycles += 5; break;
+		case zp_x: 	cycles += 6; break;
+		case abs: 	cycles += 6; break;
+		case abs_x: 	cycles += 7; break;
+		default: 	std::cerr << "Invalid addressing mode for ROR."
+				<< std::endl;
+	}
 }
 
 void CPU::SBC(AddressingMode mode)
@@ -697,17 +740,16 @@ void CPU::SBC(AddressingMode mode)
 	do_ADC(~bus.read(op_addr));
 	switch (mode)
 	{
-		case imm: cycles += 2; break;
-		case zp: cycles += 3; break;
-		case zp_x: cycles += 4; break;
-		case abs: cycles += 4; break;
-		case abs_x: cycles += 4; break;
-		case abs_y: cycles += 4; break;
+		case imm: 	cycles += 2; break;
+		case zp: 	cycles += 3; break;
+		case zp_x: 	cycles += 4; break;
+		case abs: 	cycles += 4; break;
+		case abs_x: 	cycles += 4; break;
+		case abs_y: 	cycles += 4; break;
 		case idx_ind_x: cycles += 6; break;
 		case ind_idx_y: cycles += 5; break;
-		default:
-			std::cerr << "Invalid addressing mode for ADC."
-				  << std::endl;
+		default: 	std::cerr << "Invalid addressing mode for SBC."
+				<< std::endl;
 	}
 }
 
@@ -718,11 +760,36 @@ void CPU::LD(uint8_t &reg, AddressingMode mode)
 	uint8_t operand = get_operand(mode);
 	reg = operand;
 	set_NZ(operand);
+	switch (mode)
+	{
+		case imm: 	cycles += 2; break;
+		case zp: 	cycles += 3; break;
+		case zp_x: 	cycles += 4; break;
+		case abs: 	cycles += 4; break;
+		case abs_x: 	cycles += 4; break;
+		case abs_y: 	cycles += 4; break;
+		case idx_ind_x: cycles += 6; break;
+		case ind_idx_y: cycles += 5; break;
+		default: 	std::cerr << "Invalid addressing mode for LDx."
+					  << std::endl;
+	}
 }
 
 void CPU::ST(uint8_t reg, AddressingMode mode)
 {
 	bus.write(operand_addr(mode), reg);
+	switch (mode)
+	{
+		case zp: 	cycles += 3; break;
+		case zp_x: 	cycles += 4; break;
+		case abs: 	cycles += 4; break;
+		case abs_x: 	cycles += 5; break;
+		case abs_y: 	cycles += 5; break;
+		case idx_ind_x: cycles += 6; break;
+		case ind_idx_y: cycles += 6; break;
+		default: 	std::cerr << "Invalid addressing mode for STx."
+					  << std::endl;
+	}
 }
 
 void CPU::INC(AddressingMode mode)
@@ -731,6 +798,15 @@ void CPU::INC(AddressingMode mode)
 	auto newval = (uint8_t)(bus.read(addr) + 1);
 	bus.write(addr, newval);
 	set_NZ(newval);
+	switch (mode)
+	{
+		case zp: 	cycles += 5; break;
+		case zp_x: 	cycles += 6; break;
+		case abs: 	cycles += 6; break;
+		case abs_x: 	cycles += 7; break;
+		default: 	std::cerr << "Invalid addressing mode for INC."
+					  << std::endl;
+	}
 }
 
 // Register
@@ -739,18 +815,21 @@ void CPU::T(uint8_t &reg_from, uint8_t &reg_to)
 {
 	reg_to = reg_from;
 	set_NZ(reg_from);
+	cycles += 2;
 }
 
 void CPU::DE(uint8_t &reg)
 {
 	reg--;
 	set_NZ(reg);
+	cycles += 2;
 }
 
 void CPU::IN(uint8_t &reg)
 {
 	reg++;
 	set_NZ(reg);
+	cycles += 2;
 }
 
 // Stack
@@ -759,6 +838,7 @@ void CPU::PH(uint8_t value)
 {
 	bus.write((uint16_t)(0x100 + S), value);
 	S--;
+	cycles += 3;
 }
 
 void CPU::PH(StatusRegister &p)
@@ -772,6 +852,7 @@ void CPU::PL(uint8_t &reg_to)
 	uint8_t operand = bus.read((uint16_t)(0x100 + S));
 	reg_to = operand;
 	set_NZ(operand);
+	cycles += 4;
 }
 
 void CPU::PL(StatusRegister &p)
