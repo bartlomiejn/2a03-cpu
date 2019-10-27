@@ -321,9 +321,8 @@ uint16_t CPU::operand_addr(AddressingMode mode)
 		case ind:
 		default:
 			std::cerr << "Invalid addressing mode: "
-			<< std::hex << int(mode) << std::endl;
+				<< std::hex << int(mode) << std::endl;
 			std::cerr.flush();
-		
 	}
 	return addr;
 }
@@ -508,16 +507,15 @@ void CPU::ADC(AddressingMode mode)
 	do_ADC(bus.read(op_addr));
 	switch (mode)
 	{
-		case imm: cycles += 2; break;
-		case zp: cycles += 3; break;
-		case zp_x: cycles += 4; break;
-		case abs: cycles += 4; break;
-		case abs_x: cycles += 4; break;
-		case abs_y: cycles += 4; break;
+		case imm: 	cycles += 2; break;
+		case zp: 	cycles += 3; break;
+		case zp_x: 	cycles += 4; break;
+		case abs: 	cycles += 4; break;
+		case abs_x: 	cycles += 4; break;
+		case abs_y: 	cycles += 4; break;
 		case idx_ind_x: cycles += 6; break;
 		case ind_idx_y: cycles += 5; break;
-		default:
-			std::cerr << "Invalid addressing mode for ADC."
+		default:	std::cerr << "Invalid addressing mode for ADC."
 				<< std::endl;
 	}
 }
@@ -526,17 +524,40 @@ void CPU::AND(AddressingMode mode)
 {
 	A &= get_operand(mode);
 	set_NZ(A);
+	switch (mode)
+	{
+		case imm: 	cycles += 2; break;
+		case zp: 	cycles += 3; break;
+		case zp_x: 	cycles += 4; break;
+		case abs: 	cycles += 4; break;
+		case abs_x: 	cycles += 4; break;
+		case abs_y: 	cycles += 4; break;
+		case idx_ind_x: cycles += 6; break;
+		case ind_idx_y: cycles += 5; break;
+		default:	std::cerr << "Invalid addressing mode for AND."
+				<< std::endl;
+	}
 }
 
 void CPU::ASL_A()
 {
 	A = shift_l(A);
+	cycles += 2;
 }
 
 void CPU::ASL(AddressingMode mode)
 {
 	uint16_t addr = operand_addr(mode);
 	bus.write(addr, shift_l(bus.read(addr)));
+	switch (mode)
+	{
+		case zp: 	cycles += 5; break;
+		case zp_x: 	cycles += 6; break;
+		case abs: 	cycles += 6; break;
+		case abs_x: 	cycles += 7; break;
+		default: 	std::cerr << "Invalid addressing mode for ASL."
+				<< std::endl;
+	}
 }
 
 void CPU::BIT(AddressingMode mode)
@@ -545,6 +566,10 @@ void CPU::BIT(AddressingMode mode)
 	P.Z = (A & operand) == 0;
 	P.V = (bool)(operand >> 6);
 	P.N = (bool)(operand >> 7);
+	if (mode == zp)
+		cycles += 3;
+	else if (mode == abs)
+		cycles += 4;
 }
 
 void CPU::CMP(AddressingMode mode)
@@ -558,14 +583,37 @@ void CPU::CP(uint8_t &reg, AddressingMode mode)
 	P.Z = reg == operand;
 	P.C = reg >= operand;
 	P.N = (reg - operand) >> 7;
+	switch (mode)
+	{
+		case imm: 	cycles += 2; break;
+		case zp: 	cycles += 3; break;
+		case zp_x: 	cycles += 4; break;
+		case abs: 	cycles += 4; break;
+		case abs_x: 	cycles += 4; break;
+		case abs_y: 	cycles += 4; break;
+		case idx_ind_x: cycles += 6; break;
+		case ind_idx_y: cycles += 5; break;
+		default:	std::cerr << "Invalid addressing mode for CPx."
+				<< std::endl;
+	}
 }
 
 void CPU::DEC(AddressingMode mode)
 {
+	// TODO: Is below being uint8_t instead of uint16_t a bug?
 	uint8_t op_addr = operand_addr(mode);
 	uint8_t result = bus.read(op_addr) - 1;
 	bus.write(op_addr, result);
 	set_NZ(result);
+	switch (mode)
+	{
+		case zp: 	cycles += 5; break;
+		case zp_x: 	cycles += 6; break;
+		case abs: 	cycles += 6; break;
+		case abs_x: 	cycles += 7; break;
+		default:	std::cerr << "Invalid addressing mode for DEC."
+				<< std::endl;
+	}
 }
 
 void CPU::EOR(AddressingMode mode)
@@ -573,42 +621,34 @@ void CPU::EOR(AddressingMode mode)
 	uint8_t operand = get_operand(mode);
 	A ^= operand;
 	set_NZ(A);
+	switch (mode)
+	{
+		case imm: 	cycles += 2; break;
+		case zp: 	cycles += 3; break;
+		case zp_x: 	cycles += 4; break;
+		case abs: 	cycles += 4; break;
+		case abs_x: 	cycles += 4; break;
+		case abs_y: 	cycles += 4; break;
+		case idx_ind_x: cycles += 6; break;
+		case ind_idx_y: cycles += 5; break;
+		default:	std::cerr << "Invalid addressing mode for EOR."
+				<< std::endl;
+	}
 }
 
-void CPU::CLC()
-{
-	P.C = false;
-}
+#define set_status_flag(flag, value) \
+{ \
+	P.flag = value; \
+	cycles += 2; \
+} 
 
-void CPU::SEC()
-{
-	P.C = true;
-}
-
-void CPU::CLI()
-{
-	P.I = false;
-}
-
-void CPU::SEI()
-{
-	P.I = true;
-}
-
-void CPU::CLV()
-{
-	P.V = false;
-}
-
-void CPU::CLD()
-{
-	P.D = false;
-}
-
-void CPU::SED()
-{
-	P.D = true;
-}
+void CPU::CLC() set_status_flag(C, false)
+void CPU::SEC() set_status_flag(C, true)
+void CPU::CLI() set_status_flag(I, false)
+void CPU::SEI() set_status_flag(I, true)
+void CPU::CLV() set_status_flag(V, false)
+void CPU::CLD() set_status_flag(D, false)
+void CPU::SED() set_status_flag(D, true)
 
 void CPU::LSR_A()
 {
@@ -653,7 +693,22 @@ void CPU::ROR(AddressingMode mode)
 
 void CPU::SBC(AddressingMode mode)
 {
-	do_ADC(~get_operand(mode));
+	uint16_t op_addr = operand_addr(mode);
+	do_ADC(~bus.read(op_addr));
+	switch (mode)
+	{
+		case imm: cycles += 2; break;
+		case zp: cycles += 3; break;
+		case zp_x: cycles += 4; break;
+		case abs: cycles += 4; break;
+		case abs_x: cycles += 4; break;
+		case abs_y: cycles += 4; break;
+		case idx_ind_x: cycles += 6; break;
+		case ind_idx_y: cycles += 5; break;
+		default:
+			std::cerr << "Invalid addressing mode for ADC."
+				  << std::endl;
+	}
 }
 
 // Load / store
