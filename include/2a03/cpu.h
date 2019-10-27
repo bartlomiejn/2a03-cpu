@@ -128,9 +128,8 @@ namespace NES
 		/// Sets the N and Z flags based on the value provided.
 		void set_NZ(uint8_t value);
 		
-		/// Updates the cycle count based on `operand` used and
-		/// addressing `mode`.
-		void update_cycles(uint8_t operand, AddressingMode mode);
+		/// Returns `true` if addr and addr2 are on the same page.
+		bool is_same_page(uint16_t addr, uint16_t addr2);
 		
 		// Instructions
 		// http://www.6502.org/tutorials/6502opcodes.html - Docs

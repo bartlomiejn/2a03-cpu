@@ -269,21 +269,55 @@ uint8_t CPU::get_operand(AddressingMode mode)
 	return bus.read(operand_addr(mode));
 }
 
+bool CPU::is_same_page(uint16_t addr, uint16_t addr2)
+{
+	return (addr & 0xFF00) == (addr2 & 0xFF00);
+}
+
 uint16_t CPU::operand_addr(AddressingMode mode)
 {
 	uint16_t addr = 0x0;
 	switch (mode)
 	{
-		case abs: 	addr = bus.read16(PC); PC += 2; break;
-		case abs_x: 	addr = bus.read16(PC) + X; PC += 2; break;
-		case abs_y: 	addr = bus.read16(PC) + Y; PC += 2; break;
-		case imm: 	addr = PC; PC++; break;
-		case zp: 	addr = bus.read(PC); PC++; break;
-		case zp_x: 	addr = (bus.read(PC) + X) % 0x100; PC++; break;
-		case zp_y: 	addr = (bus.read(PC) + Y) % 0x100; PC++; break;
-		case idx_ind_x: addr = bus.read16((bus.read(PC) + X) % 0x100, true);
-				PC++; break;
-		case ind_idx_y: addr = bus.read16(bus.read(PC), true) + Y; PC++; break;
+		case abs:
+			addr = bus.read16(PC);
+			PC += 2;
+			break;
+		case abs_x:
+			addr = bus.read16(PC) + X;
+			PC += 2;
+			if (!is_same_page(addr - X, addr)) cycles++;
+			break;
+		case abs_y:
+			addr = bus.read16(PC) + Y;
+			PC += 2;
+			if (!is_same_page(addr - Y, addr)) cycles++;
+			break;
+		case imm:
+			addr = PC;
+			PC++;
+			break;
+		case zp:
+			addr = bus.read(PC);
+			PC++;
+			break;
+		case zp_x:
+			addr = (bus.read(PC) + X) % 0x100;
+			PC++;
+			break;
+		case zp_y:
+			addr = (bus.read(PC) + Y) % 0x100;
+			PC++;
+			break;
+		case idx_ind_x:
+			addr = bus.read16((bus.read(PC) + X) % 0x100, true);
+			PC++;
+			break;
+		case ind_idx_y:
+			addr = bus.read16(bus.read(PC), true) + Y;
+			PC++;
+			if (!is_same_page(addr - Y, addr)) cycles++;
+			break;
 		case ind:
 		default:
 			std::cerr << "Invalid addressing mode: "
@@ -395,19 +429,12 @@ void CPU::branch_rel()
 }
 
 void CPU::BPL() branch_rel_if(!P.N)
-
 void CPU::BMI() branch_rel_if(P.N)
-
 void CPU::BVC() branch_rel_if(!P.V)
-
 void CPU::BVS() branch_rel_if(P.V)
-
 void CPU::BCC() branch_rel_if(!P.C)
-
 void CPU::BCS() branch_rel_if(P.C)
-
 void CPU::BNE() branch_rel_if(!P.Z)
-
 void CPU::BEQ() branch_rel_if(P.Z)
 
 // Control transfer
@@ -477,7 +504,22 @@ void CPU::RTI()
 
 void CPU::ADC(AddressingMode mode)
 {
-	do_ADC(get_operand(mode));
+	uint16_t op_addr = operand_addr(mode);
+	do_ADC(bus.read(op_addr));
+	switch (mode)
+	{
+		case imm: cycles += 2; break;
+		case zp: cycles += 3; break;
+		case zp_x: cycles += 4; break;
+		case abs: cycles += 4; break;
+		case abs_x: cycles += 4; break;
+		case abs_y: cycles += 4; break;
+		case idx_ind_x: cycles += 6; break;
+		case ind_idx_y: cycles += 5; break;
+		default:
+			std::cerr << "Invalid addressing mode for ADC."
+				<< std::endl;
+	}
 }
 
 void CPU::AND(AddressingMode mode)
