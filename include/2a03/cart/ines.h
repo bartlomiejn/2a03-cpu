@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <memory>
 #include <algorithm>
+#include <2a03/utils/bitfield.h>
 
 namespace NES
 {
@@ -14,41 +15,26 @@ namespace iNESv1
 	const uint16_t prg_ram_def_sz = 0x2000;  ///< PRG RAM default size - 8KB.
 	const uint16_t trainer_abs_sz = 0x200;   ///< Trainer absolute size - 512B.
 	
-	union Byte6
-	{
-		struct
-		{
-			uint8_t nib_l : 4;	///< Lower nibble of mapper number
-			bool ignore_mctrl : 1; 	///< Ignore mirroring control or above mirroring bit
-			bool has_trainer : 1;	///< 512-byte trainer at $7000-$71FF (before PRG data)
-			bool prg_ram : 1;	///< Contains battery-backed PRG RAM ($6000-$7FFF) or other persistent memory
-			bool mirror : 1;	///< Mirroring  0 : horizontal (CIRAM A10 == PPU A11)
-						///< 		1 : vertical (CIRAM A10 == PPU A10)
-		};
-		uint8_t byte;
-	};
+	bitfield_union(Byte6, uint8_t byte,
+		uint8_t nib_l : 4;	///< Lower nibble of mapper number
+		bool ignore_mctrl : 1; 	///< Ignore mirroring control or above mirroring bit
+		bool has_trainer : 1;	///< 512-byte trainer at $7000-$71FF (before PRG data)
+		bool prg_ram : 1;	///< Contains battery-backed PRG RAM ($6000-$7FFF) or other persistent memory
+		bool mirror : 1;	///< Mirroring  0 : horizontal (CIRAM A10 == PPU A11)
+					///< 		1 : vertical (CIRAM A10 == PPU A10)
+	);
 	
-	union Byte7
-	{
-		struct
-		{
-			uint8_t nib_h : 4;	///< Upper nibble of mapper number.
-			uint8_t ines_v2 : 2;	///< If equals 2, flags 8-15 are iNESv2.
-			bool pc_10 : 1;		///< Is PlayChoice-10 (8KB hint screen stored after CHR data).
-			bool vs_unisys : 1;	///< Is VS Unisystem.
-		};
-		uint8_t byte;
-	};
+	bitfield_union(Byte7, uint8_t byte,
+		uint8_t nib_h : 4;	///< Upper nibble of mapper number.
+		uint8_t ines_v2 : 2;	///< If equals 2, flags 8-15 are iNESv2.
+		bool pc_10 : 1;		///< Is PlayChoice-10 (8KB hint screen stored after CHR data).
+		bool vs_unisys : 1;	///< Is VS Unisystem.
+	);
 	
-	union Byte9
-	{
-		struct
-		{
-			uint8_t reserved : 7; 	///< Reserved.
-			bool tv_sys : 1; 	///< 0 for NTSC, 1 for PAL.
-		};
-		uint8_t byte;
-	};
+	bitfield_union(Byte9, uint8_t byte,
+		uint8_t RESERVED : 7;
+		bool tv_sys : 1; 	///< 0 for NTSC, 1 for PAL.
+	);
 	
 	struct Header
 	{

@@ -22,6 +22,7 @@ namespace NES
 		ind		///< Indirect.
 	};
 	
+	/// Interrupt type.
 	enum Interrupt
 	{
 		i_irq,

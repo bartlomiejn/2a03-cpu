@@ -42,7 +42,6 @@ void CPU::execute()
 	uint16_t initial_pc = PC;
 	switch (bus.read(PC++))
 	{
-		// Branch instructions
 		case 0x10: BPL(); break;
 		case 0x30: BMI(); break;
 		case 0x50: BVC(); break;
@@ -51,13 +50,11 @@ void CPU::execute()
 		case 0xB0: BCS(); break;
 		case 0xD0: BNE(); break;
 		case 0xF0: BEQ(); break;
-		// Control transfer
 		case 0x4C: JMP(abs); break;
 		case 0x6C: JMP(ind); break;
 		case 0x20: JSR(); break;
 		case 0x60: RTS(); break;
 		case 0x40: RTI(); break;
-		// Arithmetic / logical
 		case 0x69: ADC(imm); break;
 		case 0x65: ADC(zp); break;
 		case 0x75: ADC(zp_x); break;
@@ -145,7 +142,6 @@ void CPU::execute()
 		case 0xF9: SBC(abs_y); break;
 		case 0xE1: SBC(idx_ind_x); break;
 		case 0xF1: SBC(ind_idx_y); break;
-		// Load / store
 		case 0xA9: LD(A, imm); break;
 		case 0xA5: LD(A, zp); break;
 		case 0xB5: LD(A, zp_x); break;
@@ -181,7 +177,6 @@ void CPU::execute()
 		case 0xF6: INC(zp_x); break;
 		case 0xEE: INC(abs); break;
 		case 0xFE: INC(abs_x); break;
-		// Register
 		case 0xAA: T(A, X); break;
 		case 0x8A: T(X, A); break;
 		case 0xA8: T(A, Y); break;
@@ -190,15 +185,14 @@ void CPU::execute()
 		case 0xE8: IN(X); break;
 		case 0x88: DE(Y); break;
 		case 0xC8: IN(Y); break;
-		// Stack
 		case 0x9A: T(X, S); break;
 		case 0xBA: T(S, X); break;
 		case 0x48: PH(A); break;
 		case 0x08: PH(P); break;
 		case 0x68: PL(A); break;
 		case 0x28: PL(P); break;
-		// Others
 		case 0xEA: /* NOP */ cycles += 2; break;
+		// TODO: Implement BRK
 		// Unofficial
 		/* 1-byte NOPs */
 		case 0x80: PC++; cycles += 2; break;
@@ -219,7 +213,6 @@ void CPU::execute()
 		case 0x7C:
 		case 0xDC:
 		case 0xFC: PC += 2; cycles += 5; break;
-		// TODO: Implement BRK
 		default:
 			std::cerr << "Unhandled / invalid opcode: " << std::hex
 				  << static_cast<int>(bus.read(initial_pc))
@@ -383,14 +376,6 @@ void CPU::set_NZ(uint8_t value)
 	P.N = value >> 7;
 }
 
-void CPU::update_cycles(uint8_t operand, NES::AddressingMode mode)
-{
-	switch (operand)
-	{
-	
-	}
-}
-
 // Branch instructions
 
 void CPU::branch_rel()
@@ -402,60 +387,28 @@ void CPU::branch_rel()
 	PC += op;
 }
 
-void CPU::BPL()
-{
-	cycles += 2;
-	if (!P.N) branch_rel();
-	else PC++;
+#define branch_rel_if(expr) \
+{ \
+	cycles += 2; \
+	if (expr) branch_rel(); \
+	else PC++; \
 }
 
-void CPU::BMI()
-{
-	cycles += 2;
-	if (P.N) branch_rel();
-	else PC++;
-}
+void CPU::BPL() branch_rel_if(!P.N)
 
-void CPU::BVC()
-{
-	cycles += 2;
-	if (!P.V) branch_rel();
-	else PC++;
-}
+void CPU::BMI() branch_rel_if(P.N)
 
-void CPU::BVS()
-{
-	cycles += 2;
-	if (P.V) branch_rel();
-	else PC++;
-}
+void CPU::BVC() branch_rel_if(!P.V)
 
-void CPU::BCC()
-{
-	if (!P.C) branch_rel();
-	else PC++;
-}
+void CPU::BVS() branch_rel_if(P.V)
 
-void CPU::BCS()
-{
-	cycles += 2;
-	if (P.C) branch_rel();
-	else PC++;
-}
+void CPU::BCC() branch_rel_if(!P.C)
 
-void CPU::BNE()
-{
-	cycles += 2;
-	if (!P.Z) branch_rel();
-	else PC++;
-}
+void CPU::BCS() branch_rel_if(P.C)
 
-void CPU::BEQ()
-{
-	cycles += 2;
-	if (P.Z) branch_rel();
-	else PC++;
-}
+void CPU::BNE() branch_rel_if(!P.Z)
+
+void CPU::BEQ() branch_rel_if(P.Z)
 
 // Control transfer
 
@@ -464,7 +417,9 @@ void CPU::JMP(AddressingMode mode)
 	switch (mode)
 	{
 		case abs:
-			PC = bus.read16(PC); break;
+			PC = bus.read16(PC);
+			cycles += 3;
+			break;
 		case ind:
 			// Vector beginning on a last byte of a page will take
 			// the high byte of the address from the beginning of
@@ -480,6 +435,7 @@ void CPU::JMP(AddressingMode mode)
 				? (uint16_t)(l_addr - l_addr % 0x100)
 				: (uint16_t)(l_addr + 1);
 			PC = (uint16_t)(bus.read(h_addr)) << 8 | bus.read(l_addr);
+			cycles += 5;
 			break;
 		default:
 			std::cerr << "Invalid addressing mode for JMP: " << mode
@@ -495,6 +451,7 @@ void CPU::JSR()
 	PH((uint8_t)(return_addr >> 8));
 	PH((uint8_t)return_addr);
 	JMP(abs);
+	cycles += 6;
 }
 
 void CPU::RTS()
@@ -503,6 +460,7 @@ void CPU::RTS()
 	PL(l_addr);
 	PL(h_addr);
 	PC = (h_addr << 8 | l_addr) + (uint8_t)0x1;
+	cycles += 6;
 }
 
 void CPU::RTI()
@@ -512,6 +470,7 @@ void CPU::RTI()
 	PL(l_addr);
 	PL(h_addr);
 	PC = (h_addr << 8 | l_addr);
+	cycles += 6;
 }
 
 // Arithmetic / logical

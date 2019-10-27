@@ -176,6 +176,8 @@ void Mapper::MMC1::set_reg(int reg_number)
 		case reg_prg_bank:
 			set_prg_bank_reg(shift_reg);
 			break;
+		default:
+			break;
 	}
 }
 
@@ -188,7 +190,7 @@ void Mapper::MMC1::set_main_ctrl_reg(uint8_t value)
 		case 1:
 		case 2:
 		case 3:
-			break;
+		default: break;
 	}
 	prg_bank_swap = PRGBankSwap((value >> 2) & 0b1);
 	prg_bank_sz = PRGBankSize((value >> 3) & 0b1);
