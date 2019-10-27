@@ -783,6 +783,7 @@ void CPU::ST(uint8_t reg, AddressingMode mode)
 	{
 		case zp: 	cycles += 3; break;
 		case zp_x: 	cycles += 4; break;
+		case zp_y: 	cycles += 4; break;
 		case abs: 	cycles += 4; break;
 		case abs_x: 	cycles += 5; break;
 		case abs_y: 	cycles += 5; break;
