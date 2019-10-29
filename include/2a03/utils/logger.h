@@ -23,6 +23,10 @@ namespace NES
 						
 		/// Logs a line with CPU state.
 		void log();
+		
+		/// Dumps the accumulated log to a file.
+		void save();
+		
 	protected:
 		NES::CPU &cpu;		///< CPU whose state is logged.
 		NES::MemoryBus &bus;	///< Bus whose devices are logged.

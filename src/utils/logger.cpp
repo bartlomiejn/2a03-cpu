@@ -2,6 +2,7 @@
 #include <sstream>
 #include <iomanip>
 #include <iostream>
+#include <fstream>
 #include <2a03/utils/logger.h>
 
 using namespace NES;
@@ -142,6 +143,14 @@ void CPULogger::log()
 	// Push to cout if requested.
 	if (is_cout_each_line_enabled)
 		cout << line << endl;
+}
+
+void CPULogger::save()
+{
+	std::ofstream fstream;
+	fstream.open("latest.log");
+	for (auto str : logs) fstream << str << std::endl;
+	fstream.close();
 }
 
 std::string CPULogger::decode(uint8_t opcode)

@@ -62,6 +62,8 @@ void run_nestest()
 	
 	std::cout << "Terminating." << std::endl;
 	
+	logger.save();
+	
 	delete mapper;
 }
 
