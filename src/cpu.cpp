@@ -486,8 +486,11 @@ void CPU::JSR()
 void CPU::RTS()
 {
 	uint8_t l_addr, h_addr;
-	PL(l_addr);
-	PL(h_addr);
+	
+	S++;
+	l_addr = bus.read((uint16_t)(0x100 + S));
+	S++;
+	h_addr = bus.read((uint16_t)(0x100 + S));
 	PC = (h_addr << 8 | l_addr) + (uint8_t)0x1;
 	cycles += 6;
 }
@@ -495,9 +498,12 @@ void CPU::RTS()
 void CPU::RTI()
 {
 	uint8_t l_addr, h_addr;
-	PL(P.status);
-	PL(l_addr);
-	PL(h_addr);
+	S++;
+	P.status = bus.read((uint16_t)(0x100 + S));
+	S++;
+	l_addr = bus.read((uint16_t)(0x100 + S));
+	S++;
+	h_addr = bus.read((uint16_t)(0x100 + S));
 	PC = (h_addr << 8 | l_addr);
 	cycles += 6;
 }
