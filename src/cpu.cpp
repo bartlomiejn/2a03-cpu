@@ -475,8 +475,10 @@ void CPU::JSR()
 {
 	// JSR return address should be the last byte of the 3-byte JSR instr.
 	auto return_addr = (uint16_t)(PC + 1);
-	PH((uint8_t)(return_addr >> 8));
-	PH((uint8_t)return_addr);
+	bus.write((uint16_t)(0x100 + S), (uint8_t)(return_addr >> 8));
+	S--;
+	bus.write((uint16_t)(0x100 + S), (uint8_t)return_addr);
+	S--;
 	PC = bus.read16(PC);
 	cycles += 6;
 }
