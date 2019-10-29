@@ -576,8 +576,8 @@ void CPU::BIT(AddressingMode mode)
 {
 	uint8_t operand = get_operand(mode);
 	P.Z = (A & operand) == 0;
-	P.V = (bool)(operand >> 6);
-	P.N = (bool)(operand >> 7);
+	P.V = (bool)((operand >> 6) & 1);
+	P.N = (bool)((operand >> 7) & 1);
 	if (mode == zp)
 		cycles += 3;
 	else if (mode == abs)
