@@ -1,12 +1,10 @@
 # 2a03
 
-NES emulator written in C++. 
- 
-Currently: The CPU is implemented and works 100% correctly for official opcodes. 
+NES emulator written in C++.  
 
 To build: `make binary`
 
-To run: `make run`. It will load the `nestest.nes` ROM and run about 6k instructions until it encounters the unimplemented unofficial ones.
+To run: `make run`
 
 To debug: `make debug CXX_DEBUG={Default: gdb}` 
 
@@ -15,11 +13,11 @@ To debug: `make debug CXX_DEBUG={Default: gdb}`
 ### v0.2
 
 In progress:
+- Official opcode correctness
 - Cycle counting correctness
 - PPU
 
 Done:
-- Official opcode correctness
 - Cycle counting
 
 ### v0.1

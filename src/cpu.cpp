@@ -2,6 +2,9 @@
 #include <iostream>
 #include <cstring>
 
+// Known issues
+/// TODO: nestest.log C81B BEQ
+
 using namespace NES;
 
 CPU::CPU(NES::MemoryBus &bus) : bus(bus) {}
