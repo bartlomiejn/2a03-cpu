@@ -410,7 +410,7 @@ void CPU::do_ADC(uint8_t operand)
 void CPU::set_NZ(uint8_t value)
 {
 	P.Z = value == 0;
-	P.N = value >> 7;
+	P.N = (bool)((value >> 7) & 1);
 }
 
 // Branch instructions
@@ -849,7 +849,7 @@ void CPU::IN(uint8_t &reg)
 
 void CPU::PH(uint8_t value)
 {
-	bus.write((uint16_t)(0x100 + S), value);
+	bus.write((uint16_t)(0x100 + S), (uint8_t)(value | 0x10));
 	S--;
 	cycles += 3;
 }
@@ -864,11 +864,13 @@ void CPU::PL(uint8_t &reg_to)
 	S++;
 	uint8_t operand = bus.read((uint16_t)(0x100 + S));
 	reg_to = operand;
-	set_NZ(operand);
+	if (&reg_to != &P.status) set_NZ(operand);
 	cycles += 4;
 }
 
 void CPU::PL(StatusRegister &p)
 {
-	PL(p.status);
+	S++;
+	p.status = bus.read((uint16_t)(0x100 + S));;
+	cycles += 4;
 }
