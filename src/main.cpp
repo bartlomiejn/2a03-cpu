@@ -28,7 +28,6 @@ void run_nestest()
 	std::string test_file = "../test/nestest/nestest.nes";
 	
 	std::cout << "Loading " << test_file << "." << std::endl;
-	std::cout.flush();
 	
 	Cartridge cartridge = load(test_file);
 	
@@ -36,7 +35,6 @@ void run_nestest()
 	bus.mapper = mapper;
 	
 	std::cout << "Powering up." << std::endl;
-	std::cout.flush();
 	
 	cpu.power();
 	
@@ -44,7 +42,6 @@ void run_nestest()
 	cpu.cycles = 7;
 	
 	std::cout << "Entering runloop." << std::endl;
-	std::cout.flush();
 	
 	while (true)
 	{

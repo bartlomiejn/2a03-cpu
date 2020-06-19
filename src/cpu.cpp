@@ -220,7 +220,6 @@ void CPU::execute()
 			std::cerr << "Unhandled / invalid opcode: " << std::hex
 				  << static_cast<int>(bus.read(initial_pc))
 				  << std::endl;
-			std::cerr.flush();
 			throw InvalidOpcode();
 	}
 	if (NMI)
@@ -326,7 +325,6 @@ uint16_t CPU::operand_addr(AddressingMode mode)
 		default:
 			std::cerr << "Invalid addressing mode: "
 				<< std::hex << int(mode) << std::endl;
-			std::cerr.flush();
 	}
 	return addr;
 }
@@ -383,7 +381,6 @@ void CPU::do_ADC(uint8_t operand)
 		// in a 6502.
 		std::cerr << "ADC/SBC op with decimal mode is unavailable."
 			  << std::endl;
-		std::cerr.flush();
 		return;
 	}
 	
@@ -470,7 +467,6 @@ void CPU::JMP(AddressingMode mode)
 		default:
 			std::cerr << "Invalid addressing mode for JMP: " << mode
 				<< std::endl;
-			std::cerr.flush();
 	}
 }
 
@@ -849,14 +845,16 @@ void CPU::IN(uint8_t &reg)
 
 void CPU::PH(uint8_t value)
 {
-	bus.write((uint16_t)(0x100 + S), (uint8_t)(value | 0x10));
+	bus.write((uint16_t)(0x100 + S), value);
 	S--;
 	cycles += 3;
 }
 
 void CPU::PH(StatusRegister &p)
 {
-	PH(p.status);
+	bus.write((uint16_t)(0x100 + S), (uint8_t)(p.status | 0x10));
+	S--;
+	cycles += 3;
 }
 
 void CPU::PL(uint8_t &reg_to)
@@ -871,6 +869,6 @@ void CPU::PL(uint8_t &reg_to)
 void CPU::PL(StatusRegister &p)
 {
 	S++;
-	p.status = bus.read((uint16_t)(0x100 + S));;
+	p.status = bus.read((uint16_t)(0x100 + S));
 	cycles += 4;
 }

@@ -27,7 +27,6 @@ uint8_t MemoryBus::read(uint16_t addr)
 			// TODO: Implement PPU, access with (addr % 8)
 			std::cerr << "PPU register access at $" << std::hex
 				  << (int)addr << "." << std::endl;
-			std::cerr.flush();
 			return 0xFF;
 			
 		// APU registers
@@ -35,14 +34,12 @@ uint8_t MemoryBus::read(uint16_t addr)
 			// TODO: Implement APU
 			std::cerr << "APU register access at $" << std::hex
 				  << (int)addr << "." << std::endl;
-			std::cerr.flush();
 			return 0xFF;
 			
 		// CPU test mode APU/IO functionality (disabled)
 		case 0x4018 ... 0x401F:
 			std::cerr << "CPU test mode memory access at $"
 				<< std::hex << (int)addr << "." << std::endl;
-			std::cerr.flush();
 			return 0x0;
 			
 		// Cartridge space
@@ -55,7 +52,6 @@ uint8_t MemoryBus::read(uint16_t addr)
 		default:
 			std::cerr << "Unhandled memory access: $" << std::hex
 				  << (int)addr << std::endl;
-			std::cerr.flush();
 			return 0x0;
 	}
 }
@@ -87,7 +83,6 @@ void MemoryBus::write(uint16_t addr, uint8_t val)
 			std::cerr << "Unhandled write to $" << std::hex
 				<< (int)addr << " with value: " << std::hex
 				<< (int)val << "." << std::endl;
-			std::cerr.flush();
 			break;
 	}
 }
