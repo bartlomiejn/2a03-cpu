@@ -1,7 +1,11 @@
 #ifndef INC_2A03_LOGGER_H
 #define INC_2A03_LOGGER_H
 
+#include <string>
 #include <vector>
+#include <iostream>
+#include <optional>
+#include <functional>
 #include <2a03/cpu.h>
 #include <2a03/bus.h>
 
@@ -16,11 +20,12 @@ namespace NES
 		/// \param bus BUS instance to get opcode/operand data from.
 		/// Should be the same instance as the one used by the CPU.
 		CPULogger(NES::CPU &cpu, NES::MemoryBus &bus);
-		
-		bool is_cout_each_line_enabled; ///< Set to true to enable
-						///< output to cout for each
-						///< line.
-						
+
+        /// If set writes every line on each log() call to this stream
+        std::optional<std::reference_wrapper<std::ostream>> instr_ostream;  
+        /// If set specifies the output log filename
+        std::optional<std::string> log_filename;
+
 		/// Logs a line with CPU state.
 		void log();
 		
@@ -32,6 +37,7 @@ namespace NES
 		NES::MemoryBus &bus;	///< Bus whose devices are logged.
 		std::vector<std::string> logs; 	///< Contains logs of CPU state
 						///< on each `log` call.
+
 	private:
 		/// Decodes an opcode into a readable string form.
 		std::string decode(uint8_t opcode);

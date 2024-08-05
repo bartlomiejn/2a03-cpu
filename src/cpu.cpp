@@ -334,7 +334,7 @@ uint16_t CPU::operand_addr(AddressingMode mode)
 uint8_t CPU::rot_l(uint8_t value)
 {
 	bool last_C = P.C;
-	P.C = value >> (sizeof(value) * 8 - 1);
+	P.C = bool(uint8_t(value >> (sizeof(value) * 8 - 1)));
 	uint8_t output = value << 1 | last_C;
 	set_NZ(output);
 	return output;
@@ -343,7 +343,7 @@ uint8_t CPU::rot_l(uint8_t value)
 uint8_t CPU::rot_r(uint8_t value)
 {
 	bool last_C = P.C;
-	P.C = value << (sizeof(value) * 8 - 1);
+	P.C = bool(uint8_t(value << (sizeof(value) * 8 - 1)));
 	uint8_t output = value >> 1 | last_C;
 	set_NZ(output);
 	return output;
@@ -351,8 +351,7 @@ uint8_t CPU::rot_r(uint8_t value)
 
 uint8_t CPU::shift_l(uint8_t value)
 {
-	bool last_C = P.C;
-	P.C = value >> (sizeof(value) * 8 - 1);
+	P.C = bool(uint8_t(value >> (sizeof(value) * 8 - 1)));
 	uint8_t output = (uint8_t)(value << 1);
 	set_NZ(output);
 	return output;
@@ -360,8 +359,7 @@ uint8_t CPU::shift_l(uint8_t value)
 
 uint8_t CPU::shift_r(uint8_t value)
 {
-	bool last_C = P.C;
-	P.C = value << (sizeof(value) * 8 - 1);
+	P.C = bool(uint8_t(value << (sizeof(value) * 8 - 1)));
 	uint8_t output = (uint8_t)(value >> 1);
 	set_NZ(output);
 	return output;

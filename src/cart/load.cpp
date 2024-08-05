@@ -80,7 +80,7 @@ Cartridge NES::iNESv1::load(std::string &filename)
 	// If trainer is available, copy trainer memory first
 	if (header.flags_6.has_trainer)
 	{
-		for (int i = 0; i < trainer_sz; i++)
+		for (uint i = 0; i < trainer_sz; i++)
 		{
 			cart.trainer[i] = static_cast<uint8_t>(*fstr_iter);
 			fstr_iter++;
@@ -88,14 +88,14 @@ Cartridge NES::iNESv1::load(std::string &filename)
 	}
 	
 	// Copy PRG ROM
-	for (int i = 0; i < prg_rom_sz; i++)
+	for (uint i = 0; i < prg_rom_sz; i++)
 	{
 		cart.prg_rom[i] = static_cast<uint8_t>(*fstr_iter);
 		fstr_iter++;
 	}
 	
 	// Copy CHR ROM
-	for (int i = 0; i < chr_rom_sz; i++)
+	for (uint i = 0; i < chr_rom_sz; i++)
 	{
 		cart.chr_rom[i] = static_cast<uint8_t>(*fstr_iter);
 		fstr_iter++;

@@ -1,15 +1,15 @@
 cmake_minimum_required(VERSION 3.12)
 project(2a03)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 # Project options
 option(2A03_INCLUDE_TESTS "Include tests in the output." FALSE)
 
 # Disable optimizations for GCC debug builds
 if(CMAKE_COMPILER_IS_GNUCC)
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -Werror -Wall")
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -Werror -Wall")
 endif(CMAKE_COMPILER_IS_GNUCC)
 
 set(SOURCES

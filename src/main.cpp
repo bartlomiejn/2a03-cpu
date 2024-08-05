@@ -1,5 +1,8 @@
 #include <iostream>
 #include <string>
+#include <unistd.h>
+#include <chrono>
+#include <ctime>
 #include <2a03/cpu.h>
 #include <2a03/cart/load.h>
 #include <2a03/cart/mapper.h>
@@ -14,8 +17,15 @@ namespace NES
 	};
 }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wmissing-noreturn"
+std::string gen_timepid_logname() {
+    auto now = std::chrono::system_clock::now();
+    std::time_t now_time = std::chrono::system_clock::to_time_t(now);
+    std::tm lt = *std::localtime(&now_time);
+    pid_t pid = getpid();
+    std::stringstream time_s;
+    time_s << std::put_time(&lt, "%Y-%m-%d_%H:%M:%S");
+    return std::format("{}_{}.log", time_s.str(), pid);
+}
 
 void run_nestest()
 {
@@ -24,7 +34,9 @@ void run_nestest()
 	NES::MemoryBus bus;
 	NES::CPU cpu(bus);
 	NES::CPULogger logger(cpu, bus);
-	
+    logger.instr_ostream = std::cerr;
+    logger.log_filename = gen_timepid_logname();
+
 	std::string test_file = "../test/nestest/nestest.nes";
 	
 	std::cout << "Loading " << test_file << "." << std::endl;
@@ -63,8 +75,6 @@ void run_nestest()
 	
 	delete mapper;
 }
-
-#pragma clang diagnostic pop
 
 int main()
 {

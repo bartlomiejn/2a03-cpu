@@ -1,7 +1,6 @@
-#include <string>
 #include <sstream>
 #include <iomanip>
-#include <iostream>
+#include <limits>
 #include <fstream>
 #include <2a03/utils/logger.h>
 
@@ -13,11 +12,9 @@ static const std::string target_pat = "{{TARGET}}";
 CPULogger::CPULogger(CPU &cpu, MemoryBus &bus) :
 	cpu(cpu),
 	bus(bus),
-	logs(),
-	is_cout_each_line_enabled(true)
+	logs()
 {}
 
-// TODO: (REFACTOR) This is a massive mess.
 void CPULogger::log()
 {
 	using namespace std;
@@ -138,19 +135,27 @@ void CPULogger::log()
 		[](char c) -> char { return (char)toupper(c); });
 	
 	// Push to log storage.
+    // TODO: Add doing partial writes as the size of this can quickly get out
+    // of hand
 	logs.push_back(line);
 	
-	// Push to cout if requested.
-	if (is_cout_each_line_enabled)
-		cout << line << endl;
+	// Write line to output stream if set
+	if (instr_ostream)
+		instr_ostream.value().get() << line << endl;
 }
 
 void CPULogger::save()
 {
 	std::ofstream fstream;
-	fstream.open("latest.log");
-	for (auto str : logs) fstream << str << std::endl;
-	fstream.close();
+   
+    if (log_filename)
+	    fstream.open(log_filename.value());
+    else
+        fstream.open("latest.log");
+	
+    for (auto str : logs) fstream << str << std::endl;
+	
+    fstream.close();
 }
 
 std::string CPULogger::decode(uint8_t opcode)
@@ -605,6 +610,7 @@ uint16_t CPULogger::target_value(NES::AddressingMode addr_mode)
 				 : (uint16_t)(l_addr + 1);
 			return (uint16_t)(bus.read(h_addr)) << 8 | bus.read(l_addr);
 		default:
-			break;
+            // TODO: Are there other cases to be handled here?
+            return std::numeric_limits<uint16_t>::max();
 	}
 }
