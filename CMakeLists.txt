@@ -23,4 +23,8 @@ set(SOURCES
 
 include_directories(include)
 
+# Copy nestest rom and log to build dir
+configure_file(test/nestest/nestest.log nestest.log COPYONLY)
+configure_file(test/nestest/nestest.nes nestest.nes COPYONLY)
+
 add_executable(2a03 ${SOURCES})
