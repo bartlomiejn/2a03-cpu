@@ -28,9 +28,11 @@ namespace NES
             bool in_whitespace = false;
 
             for (char ch : line) {
-                if (std::isspace(ch) && !in_whitespace) {
-                    result += ' ';
-                    in_whitespace = true;
+                if (std::isspace(ch)) {
+                    if (!in_whitespace) {
+                        result += ' ';
+                        in_whitespace = true;
+                    }
                 } else {
                     result += ch;
                     in_whitespace = false;
@@ -65,6 +67,9 @@ namespace NES
 
                 std::cout << "Ours:        " << trimmed_log << std::endl;
                 std::cout << "nestest.log: " << trimmed_nestest << std::endl;
+
+                std::cout << "Ours:        " << line_log << std::endl;
+                std::cout << "nestest.log: " << line_nestest << std::endl;
 
                 if (trimmed_log != trimmed_nestest) {
                     std::cout << "DIFF AT LINE " << linenum << " FAILED" 

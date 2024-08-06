@@ -19,7 +19,7 @@ run: binary
 	cd $(OUT_DIR) && ./2a03
 
 debug: binary
-	$(CXX_DEBUG) $(OUT_DIR)/2a03
+	cd $(OUT_DIR) && $(CXX_DEBUG) 2a03
 
 clean:
 	rm -rf $(OUT_DIR)

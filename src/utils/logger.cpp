@@ -535,7 +535,7 @@ std::string CPULogger::templ_for_mode(AddressingMode addr_mode)
 	switch (addr_mode)
 	{
 		case abs:
-			return "$" + operand_pat + " = " + target_pat;
+			return "$" + operand_pat;
 		case abs_x:
 			return "$" + operand_pat + ",X";
 		case abs_y:
@@ -543,7 +543,7 @@ std::string CPULogger::templ_for_mode(AddressingMode addr_mode)
 		case imm:
 			return "#$" + operand_pat;
 		case zp:
-			return "$" + operand_pat;
+			return "$" + operand_pat + " = " + target_pat;
 		case zp_x:
 			return "$" + operand_pat + ",X";
 		case zp_y:
@@ -586,10 +586,10 @@ uint8_t CPULogger::target_len(NES::AddressingMode addr_mode)
 {
 	switch (addr_mode)
 	{
-		case abs:
-			return 1;
 		case ind:
 			return 2;
+        case zp:
+            return 1;
 		default:
 			return 0;
 	}
@@ -609,6 +609,10 @@ uint16_t CPULogger::target_value(NES::AddressingMode addr_mode)
 				 ? (uint16_t)(l_addr - l_addr % 0x100)
 				 : (uint16_t)(l_addr + 1);
 			return (uint16_t)(bus.read(h_addr)) << 8 | bus.read(l_addr);
+        case zp:
+            uint8_t zp_addr;
+            zp_addr = bus.read((uint16_t)(cpu.PC + 1));
+            return (uint16_t)bus.read(zp_addr);
 		default:
             // TODO: Are there other cases to be handled here?
             return std::numeric_limits<uint16_t>::max();
