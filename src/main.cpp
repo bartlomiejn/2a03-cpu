@@ -11,7 +11,6 @@
 #include <regex>
 #include <cassert>
 
-
 namespace NES
 {
 	enum TestState
@@ -151,6 +150,8 @@ void run_nestest()
 
     // Run nestest.log diff test without PPU state
     NES::Test::diff_nestest_noppu(logfile);
+
+    std::cout << "Finished execution." << std::endl;
 }
 
 int main()

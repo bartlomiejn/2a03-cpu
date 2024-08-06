@@ -867,6 +867,12 @@ void CPU::PL(uint8_t &reg_to)
 void CPU::PL(StatusRegister &p)
 {
 	S++;
-	p.status = bus.read((uint16_t)(0x100 + S));
+    uint8_t newp = bus.read((uint16_t)(0x100 + S));
+    p.N = bool(newp & 0x80);
+    p.V = bool(newp & 0x40);
+    p.D = bool(newp & 0x8);
+    p.I = bool(newp & 0x4);
+    p.Z = bool(newp & 0x2);
+    p.C = bool(newp & 0x1);
 	cycles += 4;
 }
