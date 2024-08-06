@@ -8,7 +8,7 @@
 #include <2a03/cart/load.h>
 #include <2a03/cart/mapper.h>
 #include <2a03/utils/logger.h>
-
+#include <regex>
 #include <cassert>
 
 
@@ -42,9 +42,15 @@ namespace NES
             return result;
         }
 
-        void diff_nestest(std::string &logname)
+        std::string trim_ppu(std::string &line) 
         {
-            std::cout << "Running diff_nestest" << std::endl;
+            std::regex pat(R"(PPU:\s*\d+,\s*\d+)");
+            return std::regex_replace(line, pat, "");
+        }
+
+        void diff_nestest_noppu(std::string &logname)
+        {
+            std::cout << "Running diff_nestest_noppu" << std::endl;
 
             std::string nestest_logname = "nestest.log";
             
@@ -62,16 +68,15 @@ namespace NES
             while (std::getline(ifs_nestest, line_nestest)
                    && std::getline(ifs_log, line_log)) {
     
-                std::string trimmed_log = trim_whitespace(line_log);
-                std::string trimmed_nestest = trim_whitespace(line_nestest);  
+                std::string noppu_log = trim_ppu(line_log);
+                std::string noppu_nestest = trim_ppu(line_nestest);
 
-                std::cout << "Ours:        " << trimmed_log << std::endl;
-                std::cout << "nestest.log: " << trimmed_nestest << std::endl;
-
-                std::cout << "Ours:        " << line_log << std::endl;
-                std::cout << "nestest.log: " << line_nestest << std::endl;
+                std::string trimmed_log = trim_whitespace(noppu_log);
+                std::string trimmed_nestest = trim_whitespace(noppu_nestest);  
 
                 if (trimmed_log != trimmed_nestest) {
+                    std::cout << "Ours:        " << trimmed_log << std::endl;
+                    std::cout << "nestest.log: " << trimmed_nestest << std::endl;
                     std::cout << "DIFF AT LINE " << linenum << " FAILED" 
                               << std::endl;
                     return;
@@ -144,7 +149,8 @@ void run_nestest()
 
     std::cout << "Saved log to: " << logfile << std::endl;
 
-    NES::Test::diff_nestest(logfile);
+    // Run nestest.log diff test without PPU state
+    NES::Test::diff_nestest_noppu(logfile);
 }
 
 int main()

@@ -10,6 +10,7 @@ namespace NES
 	/// Addressing mode for an operation.
 	enum AddressingMode
 	{
+        rel,        ///< Relative (branch instructions)
 		abs,		///< Absolute.
 		abs_x,		///< Absolute indexed with X.
 		abs_y,		///< Absolute indexed with Y.

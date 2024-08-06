@@ -85,10 +85,12 @@ void CPULogger::log()
 		}
 		
 		// Replace template with the operand in little endian.
-		op_templ.replace(
-			op_templ.find(operand_pat),
-			operand_pat.length(),
-			ss.str());
+        size_t pos = op_templ.find(operand_pat);
+        if (pos != std::string::npos)
+            op_templ.replace(
+                pos,
+                operand_pat.length(),
+                ss.str());
 		
 		ss.str(string());
 		
@@ -125,6 +127,7 @@ void CPULogger::log()
 	ss << "P:" << setfill('0') << setw(2) << hex << (int)cpu.P.status
 		<< " ";
 	ss << "SP:" << setfill('0') << setw(2) << hex << (int)cpu.S << " ";
+    // TODO: PPU counters once PPU is implemented
 	ss << "PPU:  0,  0" << " ";
 	ss << "CYC:" << dec << (int)cpu.cycles;
 	line += string(ss.str());
@@ -360,16 +363,14 @@ std::optional<AddressingMode> CPULogger::addr_mode_for_op(uint8_t opcode)
 {
 	switch (opcode) {
 		// De facto mode is relative for each conditional branch opcode.
-		// TODO: Nestest.log prints relative out as the branch address
-		// TODO: rather than offset.
-		case 0x10: return { AddressingMode::imm };
-		case 0x30: return { AddressingMode::imm };
-		case 0x50: return { AddressingMode::imm };
-		case 0x70: return { AddressingMode::imm };
-		case 0x90: return { AddressingMode::imm };
-		case 0xB0: return { AddressingMode::imm };
-		case 0xD0: return { AddressingMode::imm };
-		case 0xF0: return { AddressingMode::imm };
+		case 0x10: return { AddressingMode::rel };
+		case 0x30: return { AddressingMode::rel };
+		case 0x50: return { AddressingMode::rel };
+		case 0x70: return { AddressingMode::rel };
+		case 0x90: return { AddressingMode::rel };
+		case 0xB0: return { AddressingMode::rel };
+		case 0xD0: return { AddressingMode::rel };
+		case 0xF0: return { AddressingMode::rel };
 		case 0x4C: return { AddressingMode::abs };
 		case 0x6C: return { AddressingMode::ind };
 		case 0x20: return { AddressingMode::abs };
@@ -534,13 +535,15 @@ std::string CPULogger::templ_for_mode(AddressingMode addr_mode)
 {
 	switch (addr_mode)
 	{
+        case rel:
+            return "$" + target_pat;
 		case abs:
 			return "$" + operand_pat;
 		case abs_x:
 			return "$" + operand_pat + ",X";
 		case abs_y:
 			return "$" + operand_pat + ",Y";
-		case imm:
+		case imm: // imd
 			return "#$" + operand_pat;
 		case zp:
 			return "$" + operand_pat + " = " + target_pat;
@@ -548,9 +551,9 @@ std::string CPULogger::templ_for_mode(AddressingMode addr_mode)
 			return "$" + operand_pat + ",X";
 		case zp_y:
 			return "$" + operand_pat + ",Y";
-		case idx_ind_x:
+		case idx_ind_x: // ndx
 			return "($" + operand_pat + ",X)";
-		case ind_idx_y:
+		case ind_idx_y: // ndy
 			return "($" + operand_pat + "),Y";
 		case ind:
 			return "($" + operand_pat + ") = " + target_pat;
@@ -569,6 +572,7 @@ uint8_t CPULogger::operand_len(NES::AddressingMode addr_mode)
 		case abs_y:
 		case ind:
 			return 2;
+        case rel:
 		case zp:
 		case zp_x:
 		case zp_y:
@@ -586,6 +590,7 @@ uint8_t CPULogger::target_len(NES::AddressingMode addr_mode)
 {
 	switch (addr_mode)
 	{
+        case rel:
 		case ind:
 			return 2;
         case zp:
@@ -599,10 +604,11 @@ uint16_t CPULogger::target_value(NES::AddressingMode addr_mode)
 {
 	switch (addr_mode)
 	{
+        case rel:
+            return (uint16_t)cpu.PC + bus.read(cpu.PC + 1) + 2; // 2 is opcode len
 		case abs:
 			return (uint16_t)bus.read(bus.read16((uint16_t)(cpu.PC + 1)));
 		case ind:
-			// TODO: (REFACTOR) This is directly copied from CPU::JMP()
 			uint16_t h_addr, l_addr;
 			l_addr = bus.read16((uint16_t)(cpu.PC + 1));
 			h_addr = (l_addr % 0x100 == 0xFF)
@@ -614,7 +620,6 @@ uint16_t CPULogger::target_value(NES::AddressingMode addr_mode)
             zp_addr = bus.read((uint16_t)(cpu.PC + 1));
             return (uint16_t)bus.read(zp_addr);
 		default:
-            // TODO: Are there other cases to be handled here?
             return std::numeric_limits<uint16_t>::max();
 	}
 }
