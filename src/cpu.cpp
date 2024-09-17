@@ -198,18 +198,29 @@ void CPU::execute()
 		// TODO: Implement BRK
 		// Unofficial
 		/* 1-byte NOPs */
-		case 0x80: PC++; cycles += 2; break;
+        case 0x1A:
+        case 0x3A:
+        case 0x5A:
+        case 0x7A:
+        case 0xDA:
+        case 0xFA: PC++; cycles += 2; break;
+        /* 2-byte NOPs */
+		case 0x80: 
+        case 0x82:
+        case 0x89:
+        case 0xC2:
+        case 0xE2: PC += 2; cycles += 2; break;
 		case 0x04:
 		case 0x44:
-		case 0x64: PC++; cycles += 3; break;
+		case 0x64: PC += 2; cycles += 3; break;
 		case 0x14:
 		case 0x34:
 		case 0x54:
 		case 0x74:
 		case 0xD4:
-		case 0xF4: PC++; cycles += 4; break;
-		/* 2-byte NOPs */
-		case 0x0C: PC += 2; cycles += 4; break;
+		case 0xF4: PC += 2; cycles += 4; break;
+		/* 3-byte NOPs */
+		case 0x0C: PC += 3; cycles += 4; break;
 		case 0x1C:
 		case 0x3C:
 		case 0x5C:
