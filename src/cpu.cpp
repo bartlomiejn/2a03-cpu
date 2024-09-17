@@ -619,8 +619,7 @@ void CPU::CP(uint8_t &reg, AddressingMode mode)
 
 void CPU::DEC(AddressingMode mode)
 {
-	// TODO: Is below being uint8_t instead of uint16_t a bug?
-	uint8_t op_addr = operand_addr(mode);
+	uint16_t op_addr = operand_addr(mode);
 	uint8_t result = bus.read(op_addr) - 1;
 	bus.write(op_addr, result);
 	set_NZ(result);
