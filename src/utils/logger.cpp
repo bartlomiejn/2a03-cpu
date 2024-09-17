@@ -330,6 +330,10 @@ std::string CPULogger::decode(uint8_t opcode)
         case 0x68: return "PLA";
         case 0x28: return "PLP";
         case 0xEA: return "NOP";
+        case 0xE6: return "INC"; 
+        case 0xF6: return "INC";
+        case 0xEE: return "INC";
+        case 0xFE: return "INC";
                    // Unofficial
         case 0x80:
         case 0x04:
@@ -529,8 +533,12 @@ std::optional<AddressingMode> CPULogger::addr_mode_for_op(uint8_t opcode)
         case 0x68: return std::nullopt;
         case 0x28: return std::nullopt;
         case 0xEA: return std::nullopt;
-                   // Unofficial
-        case 0x80: return { AddressingMode ::imm };
+        case 0xE6: return { AddressingMode::zp }; 
+        case 0xF6: return { AddressingMode::zp_x };
+        case 0xEE: return { AddressingMode::abs };
+        case 0xFE: return { AddressingMode::abs_x };
+        // Unofficial
+        case 0x80: return { AddressingMode::imm };
         case 0x04:
         case 0x44:
         case 0x64: return { AddressingMode::zp };
@@ -558,12 +566,9 @@ std::string CPULogger::templ_for_mode(AddressingMode addr_mode, uint8_t opcode)
         case rel:
             return "$" + target_pat;
         case abs:
-            if (opcode == 0x8E || opcode == 0xAE || opcode == 0xAD 
-                    || opcode == 0x8D) {
-                return "$" + operand_pat + " = " + target_pat;
-            } else {
-                return "$" + operand_pat;
-            }
+            return opcode == 0x4C || opcode == 0x20 
+                ? "$" + operand_pat
+                : "$" + operand_pat + " = " + target_pat;
         case abs_x:
             return "$" + operand_pat + ",X";
         case abs_y:
@@ -622,12 +627,7 @@ uint8_t CPULogger::target_len(NES::AddressingMode addr_mode, uint8_t opcode)
         case zp:
             return 1;
         case abs:
-            if (opcode == 0x8E || opcode == 0xAE || opcode == 0xAD 
-                    || opcode == 0x8D) {
-                return 1;
-            } else { 
-                return 0;
-            }
+            return opcode == 0x4C || opcode == 0x20 ? 0 : 1;
         case idx_ind_x:
             return 1;
         default:
