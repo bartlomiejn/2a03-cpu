@@ -538,7 +538,7 @@ std::string CPULogger::templ_for_mode(AddressingMode addr_mode, uint8_t opcode)
         case rel:
             return "$" + target_pat;
 		case abs:
-            if (opcode == 0x8E) {
+            if (opcode == 0x8E || opcode == 0xAE || opcode == 0xAD) {
 			    return "$" + operand_pat + " = " + target_pat;
             } else {
                 return "$" + operand_pat;
@@ -600,7 +600,7 @@ uint8_t CPULogger::target_len(NES::AddressingMode addr_mode, uint8_t opcode)
         case zp:
             return 1;
         case abs:
-            if (opcode == 0x8E) {
+            if (opcode == 0x8E || opcode == 0xAE || opcode == 0xAD) {
                 return 1;
             } else { 
                 return 0;

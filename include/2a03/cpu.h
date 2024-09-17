@@ -35,18 +35,18 @@ namespace NES
 	/// 2A03 status register bitfield union representation.
 	bitfield_union(StatusRegister, uint8_t status,
 		bool C : 1; 	///< Carry. Set if the result value is greater
-				///< than 0xFF.
+				        ///< than 0xFF.
 		bool Z : 1; 	///< Zero. Set if result value is 0.
 		bool I : 1; 	///< Interrupt disable
 		bool D : 1; 	///< Decimal mode
 		uint8_t B : 2; 	///< Has no effect on CPU, but certain
-				///< instructions set it.
+				        ///< instructions set it.
 		bool V : 1;	///< Overflow. Used in signed arithmetic ops.
-				///< Set if the result value is outside of
-				///< [-128, 127] range, which is a two
-				///< complements overflow.
-		bool N : 1; 	///< Negative. Set using the 7-th bit of a
-				///< result value.
+				    ///< Set if the result value is outside of
+				    ///< [-128, 127] range, which is a two
+				    ///< complements overflow.
+		bool N : 1; ///< Negative. Set using the 7-th bit of a
+				    ///< result value.
 	);
 	
 	/// Ricoh 2A03 CPU emulator. CPU state is invalid until `power` is

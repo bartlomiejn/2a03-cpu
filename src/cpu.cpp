@@ -345,7 +345,7 @@ uint16_t CPU::operand_addr(AddressingMode mode)
 uint8_t CPU::rot_l(uint8_t value)
 {
 	bool last_C = P.C;
-	P.C = bool(uint8_t(value >> (sizeof(value) * 8 - 1)));
+	P.C = bool(value >> 7);
 	uint8_t output = value << 1 | last_C;
 	set_NZ(output);
 	return output;
@@ -354,8 +354,8 @@ uint8_t CPU::rot_l(uint8_t value)
 uint8_t CPU::rot_r(uint8_t value)
 {
 	bool last_C = P.C;
-	P.C = bool(uint8_t(value << (sizeof(value) * 8 - 1)));
-	uint8_t output = value >> 1 | last_C;
+	P.C = bool(value & 1);
+	uint8_t output = last_C << 7 | value >> 1;
 	set_NZ(output);
 	return output;
 }
@@ -412,7 +412,7 @@ void CPU::do_ADC(uint8_t operand)
 void CPU::set_NZ(uint8_t value)
 {
 	P.Z = value == 0;
-	P.N = (bool)((value >> 7) & 1);
+	P.N = (bool)(value >> 7);
 }
 
 // Branch instructions
@@ -503,8 +503,14 @@ void CPU::RTI()
 {
 	uint8_t l_addr, h_addr;
 	S++;
-	P.status = bus.read((uint16_t)(0x100 + S));
-	S++;
+    uint8_t newp = bus.read((uint16_t)(0x100 + S));
+    P.N = bool(newp & 0x80);
+    P.V = bool(newp & 0x40);
+    P.D = bool(newp & 0x8);
+    P.I = bool(newp & 0x4);
+    P.Z = bool(newp & 0x2);
+    P.C = bool(newp & 0x1);
+    S++;
 	l_addr = bus.read((uint16_t)(0x100 + S));
 	S++;
 	h_addr = bus.read((uint16_t)(0x100 + S));
@@ -817,7 +823,7 @@ void CPU::INC(AddressingMode mode)
 		case zp: 	cycles += 5; break;
 		case zp_x: 	cycles += 6; break;
 		case abs: 	cycles += 6; break;
-		case abs_x: 	cycles += 7; break;
+		case abs_x: cycles += 7; break;
 		default: 	std::cerr << "Invalid addressing mode for INC."
 					  << std::endl;
 	}
@@ -828,8 +834,11 @@ void CPU::INC(AddressingMode mode)
 void CPU::T(uint8_t &reg_from, uint8_t &reg_to)
 {
 	reg_to = reg_from;
-	set_NZ(reg_from);
 	cycles += 2;
+    if (std::addressof(reg_from) == std::addressof(X) 
+        && std::addressof(reg_to) == std::addressof(S))
+        return;
+    set_NZ(reg_from);
 }
 
 void CPU::DE(uint8_t &reg)
