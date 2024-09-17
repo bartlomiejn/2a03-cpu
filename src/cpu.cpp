@@ -382,21 +382,19 @@ void CPU::do_ADC(uint8_t operand)
 	// https://stackoverflow.com/questions/29193303/6502-emulation-proper-way-to-implement-adc-and-sbc
 	// Overflow on signed arithmetic:
 	// http://www.6502.org/tutorials/vflag.html
-	if (P.D)
-	{
+	//if (P.D)
+	//{
 		// In decimal mode treat operands as binary-coded decimals.
 		// Decimal mode is not available on 2A03. Since this is a NES
 		// emulator, we don't support decimal mode, which is available
 		// in a 6502.
-		std::cerr << "ADC/SBC op with decimal mode is unavailable."
-			  << std::endl;
-		return;
-	}
-	
-	uint16_t sum = A + operand + P.C;
-	
+		//std::cerr << "ADC/SBC op with decimal mode is unavailable."
+		//	  << std::endl;
+		//return;
+	//}
+	uint16_t sum = A + operand + P.C;	
 	P.C = sum > 0xFF;
-	
+
 	// Two-complements overflow happens when the result value is outside of
 	// the [-128, 127] range. This is equivalent to when two operands with
 	// the same sign are added and the result has a different sign.
@@ -407,9 +405,7 @@ void CPU::do_ADC(uint8_t operand)
 	//			significant position and cast to bool so we
 	//			we don't have a type-related warning.
 	P.V = (bool)((~(A ^ operand) & (A ^ sum) & 0x80) >> 7);
-	
 	A = (uint8_t)sum;
-	
 	set_NZ(A);
 }
 

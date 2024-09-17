@@ -74,7 +74,7 @@ void CPULogger::log()
 	if (addr_mode.has_value() && op_len > 0)
 	{
 		// Get template for the mode.
-		op_templ = templ_for_mode(addr_mode.value());
+		op_templ = templ_for_mode(addr_mode.value(), opcode);
 		
 		// Revert endianness.
 		for (int i = op_len; i > 0; i--)
@@ -94,7 +94,7 @@ void CPULogger::log()
 		
 		ss.str(string());
 		
-		tgt_len = target_len(addr_mode.value());
+		tgt_len = target_len(addr_mode.value(), opcode);
 		if (tgt_len > 0)
 		{
 			uint16_t val = target_value(addr_mode.value());
@@ -531,14 +531,18 @@ std::optional<AddressingMode> CPULogger::addr_mode_for_op(uint8_t opcode)
 	}
 }
 
-std::string CPULogger::templ_for_mode(AddressingMode addr_mode)
+std::string CPULogger::templ_for_mode(AddressingMode addr_mode, uint8_t opcode)
 {
 	switch (addr_mode)
 	{
         case rel:
             return "$" + target_pat;
 		case abs:
-			return "$" + operand_pat;
+            if (opcode == 0x8E) {
+			    return "$" + operand_pat + " = " + target_pat;
+            } else {
+                return "$" + operand_pat;
+            }
 		case abs_x:
 			return "$" + operand_pat + ",X";
 		case abs_y:
@@ -586,7 +590,7 @@ uint8_t CPULogger::operand_len(NES::AddressingMode addr_mode)
 	}
 }
 
-uint8_t CPULogger::target_len(NES::AddressingMode addr_mode)
+uint8_t CPULogger::target_len(NES::AddressingMode addr_mode, uint8_t opcode)
 {
 	switch (addr_mode)
 	{
@@ -595,6 +599,12 @@ uint8_t CPULogger::target_len(NES::AddressingMode addr_mode)
 			return 2;
         case zp:
             return 1;
+        case abs:
+            if (opcode == 0x8E) {
+                return 1;
+            } else { 
+                return 0;
+            }
 		default:
 			return 0;
 	}

@@ -52,14 +52,15 @@ namespace NES
 		/// \return Templated string for provided mode with optional
 		/// operand marked as `{{OPERAND}}` and optional target marked
 		/// as `{{TARGET}}`.
-		std::string templ_for_mode(NES::AddressingMode addr_mode);
+		std::string templ_for_mode(NES::AddressingMode addr_mode, 
+            uint8_t opcode);
 		
 		/// Returns the operand length in bytes for provided mode.
 		uint8_t operand_len(NES::AddressingMode addr_mode);
 		
 		/// If there is a target for a specified mode, returns
 		/// the amount of bytes to be printed.
-		uint8_t target_len(NES::AddressingMode addr_mode);
+		uint8_t target_len(NES::AddressingMode addr_mode, uint8_t opcode);
 		
 		/// Retrieve target value for specified addressing mode.
 		uint16_t target_value(NES::AddressingMode addr_mode);
