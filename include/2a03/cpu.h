@@ -327,6 +327,11 @@ namespace NES
 		/// Pull value to status register.
 		/// \param p P register to pull the value to.
 		void PL(StatusRegister &p);
+
+        // Illegal opcodes
+
+        // NOP with variable cycle count
+        void NOP_absx();
 	};
 	
 	class InvalidOpcode {};

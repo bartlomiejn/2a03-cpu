@@ -27,7 +27,7 @@ namespace NES
         std::optional<std::string> log_filename;
 
 		/// Logs a line with CPU state.
-		void log();
+		std::string log();
 		
 		/// Dumps the accumulated log to a file.
 		void save();

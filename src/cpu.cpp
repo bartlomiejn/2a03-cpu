@@ -221,12 +221,13 @@ void CPU::execute()
         case 0xF4: PC++; cycles += 4; break;
         /* 3-byte NOPs */
         case 0x0C: PC += 2; cycles += 4; break;
+        /* Variable cycle count */
         case 0x1C:
         case 0x3C:
         case 0x5C:
         case 0x7C:
         case 0xDC:
-        case 0xFC: PC += 2; cycles += 5; break;
+        case 0xFC: NOP_absx(); break;
         default:
            std::cerr << "Unhandled / invalid opcode: " << std::hex
                << static_cast<int>(bus.read(initial_pc))
@@ -237,6 +238,12 @@ void CPU::execute()
         interrupt(i_nmi);
     if (IRQ && !P.I)
         interrupt(i_irq);
+}
+
+void CPU::NOP_absx() 
+{
+    get_operand(abs_x); 
+    cycles += 4; 
 }
 
 void CPU::interrupt(NES::Interrupt type)

@@ -17,7 +17,7 @@ CPULogger::CPULogger(CPU &cpu, MemoryBus &bus) :
     logs()
 {}
 
-void CPULogger::log()
+std::string CPULogger::log()
 {
     using namespace std;
 
@@ -199,6 +199,8 @@ void CPULogger::log()
     // Write line to output stream if set
     if (instr_ostream)
         instr_ostream.value().get() << line << endl;
+    
+    return line;
 }
 
 void CPULogger::save()

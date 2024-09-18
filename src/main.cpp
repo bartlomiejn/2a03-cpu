@@ -163,27 +163,60 @@ void run_nestest(bool log_to_cerr)
 
     std::cout << "Entering runloop." << std::endl;
 
+    char in = 0x0;
+    unsigned int line = 0;
+    std::string nestest_log = "nestest.log";
+    std::string line_nestest;
+    std::string line_ours;
+    std::ifstream ifs(nestest_log);
+    assert(ifs.is_open());
+
     while (true)
-    {
-        logger.log();
+    {  
+        using namespace NES::Test;
+
+        line++;
+        std::getline(ifs, line_nestest);
+        line_ours = logger.log();
+        
+        std::string noppu_ours = trim_ppu(line_ours);
+        std::string noppu_nestest = trim_ppu(line_nestest);
+        std::string trimmed_ours = trim(noppu_ours);
+        std::string trimmed_nestest = trim(noppu_nestest);
+
+        if (trimmed_ours != trimmed_nestest) {
+            std::cerr << "Ours:    " << trimmed_ours << std::endl;
+            std::cerr << "Nestest: " << trimmed_nestest << std::endl;
+            std::cerr << "Line " << line << std::endl;
+            std::cerr << "Continue with y, stop with n" << std::endl;
+            in = 0x0;
+            while (in != 'y' && in != 'n') {
+                std::cin.get(in);
+            }
+            if (in == 'n') {
+                break;
+            }
+        }
 
         try { cpu.execute(); }
         catch (NES::InvalidOpcode err) { break; }
 
         if (bus.read(0x02) != 0x0) // Some sort of error occured:
         {
-            char in = 0x0;
             std::cerr << "Nestest failure code: " << std::hex
                 << bus.read(0x02) << "." << std::endl;
-            std::cerr << "Continue with y, stop with n" << std::endl;
+            std::cerr << "Continue with y, stop with n" << std::endl; 
+            in = 0x0;
             while (in != 'y' && in != 'n') {
-                std::cin >> in;
+                std::cin.get(in);
             }
             if (in == 'n') {
                 break;
             }
         }
     }
+
+    ifs.close();
 
     std::cout << "Terminating." << std::endl;
 
