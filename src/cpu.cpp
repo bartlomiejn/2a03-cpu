@@ -236,6 +236,20 @@ void CPU::execute()
         case 0x3B: RLA(abs_y); break; 
         case 0x23: RLA(idx_ind_x); break;
         case 0x33: RLA(ind_idx_y); break;
+        case 0x47: SRE(zp); break;
+        case 0x57: SRE(zp_x); break; 
+        case 0x4F: SRE(abs); break;
+        case 0x5F: SRE(abs_x); break;
+        case 0x5B: SRE(abs_y); break; 
+        case 0x43: SRE(idx_ind_x); break;
+        case 0x53: SRE(ind_idx_y); break;
+        case 0x67: RRA(zp); break;
+        case 0x77: RRA(zp_x); break; 
+        case 0x6F: RRA(abs); break;
+        case 0x7F: RRA(abs_x); break;
+        case 0x7B: RRA(abs_y); break; 
+        case 0x63: RRA(idx_ind_x); break;
+        case 0x73: RRA(ind_idx_y); break;
         /* 1-byte NOPs */
         case 0x1A:
         case 0x3A:
@@ -403,7 +417,7 @@ uint16_t CPU::operand_addr(AddressingMode mode)
 uint8_t CPU::rot_l(uint8_t value)
 {
     bool last_C = P.C;
-    P.C = bool(value >> 7);
+    P.C = bool(value & 0x80);
     uint8_t output = value << 1 | last_C;
     set_NZ(output);
     return output;
@@ -420,7 +434,7 @@ uint8_t CPU::rot_r(uint8_t value)
 
 uint8_t CPU::shift_l(uint8_t value)
 {
-    P.C = bool(uint8_t(value >> (sizeof(value) * 8 - 1)));
+    P.C = bool(value & 0x80);
     uint8_t output = (uint8_t)(value << 1);
     set_NZ(output);
     return output;
@@ -428,7 +442,7 @@ uint8_t CPU::shift_l(uint8_t value)
 
 uint8_t CPU::shift_r(uint8_t value)
 {
-    P.C = bool(uint8_t(value << (sizeof(value) * 8 - 1)));
+    P.C = bool(uint8_t(value << 7));
     uint8_t output = (uint8_t)(value >> 1);
     set_NZ(output);
     return output;
@@ -503,7 +517,7 @@ void CPU::BCS() branch_rel_if(P.C)
 void CPU::BNE() branch_rel_if(!P.Z)
 void CPU::BEQ() branch_rel_if(P.Z)
 
-    // Control transfer
+// Control transfer
 
 void CPU::JMP(AddressingMode mode)
 {
@@ -721,12 +735,12 @@ void CPU::EOR(AddressingMode mode)
     cycles += 2; \
 }
 
-    void CPU::CLC() set_status_flag(C, false)
-    void CPU::SEC() set_status_flag(C, true)
-    void CPU::CLI() set_status_flag(I, false)
-    void CPU::SEI() set_status_flag(I, true)
-    void CPU::CLV() set_status_flag(V, false)
-    void CPU::CLD() set_status_flag(D, false)
+void CPU::CLC() set_status_flag(C, false)
+void CPU::SEC() set_status_flag(C, true)
+void CPU::CLI() set_status_flag(I, false)
+void CPU::SEI() set_status_flag(I, true)
+void CPU::CLV() set_status_flag(V, false)
+void CPU::CLD() set_status_flag(D, false)
 void CPU::SED() set_status_flag(D, true)
 
 void CPU::LSR_A()
@@ -738,13 +752,15 @@ void CPU::LSR_A()
 void CPU::LSR(AddressingMode mode)
 {
     uint16_t addr = operand_addr(mode);
-    bus.write(addr, shift_r(bus.read(addr)));
+    uint8_t result = shift_r(bus.read(addr));
+    bus.write(addr, result);
+
     switch (mode)
     {
         case zp: 	cycles += 5; break;
         case zp_x: 	cycles += 6; break;
         case abs: 	cycles += 6; break;
-        case abs_x: 	cycles += 7; break;
+        case abs_x: cycles += 7; break;
         default: 	std::cerr << "Invalid addressing mode for LSR."
                     << std::endl;
     }
@@ -1089,14 +1105,63 @@ void CPU::RLA(AddressingMode mode)
 
     switch (mode)
     {
-        case zp: 	cycles += 5; break;
-        case zp_x:  cycles += 6; break;
-        case abs: 	cycles += 6; break;
+        case zp: 	    cycles += 5; break;
+        case zp_x:      cycles += 6; break;
+        case abs: 	    cycles += 6; break;
         case abs_x: 	cycles += 7; break;
         case abs_y: 	cycles += 7; break;
         case idx_ind_x: cycles += 8; break;
         case ind_idx_y: cycles += 8; break;
-        default: 	std::cerr << "Invalid addressing mode for SLO/ASO."
-                    << std::endl;
+        default: 	    std::cerr << "Invalid addressing mode for SLO/ASO."
+                        << std::endl;
+    }
+}
+
+void CPU::SRE(AddressingMode mode)
+{
+    // LSR 
+    uint16_t addr = operand_addr(mode);
+    uint8_t result = shift_r(bus.read(addr));
+    bus.write(addr, result);
+
+    // EOR
+    A ^= result;
+    set_NZ(A);
+
+    switch (mode)
+    {
+        case zp: 	    cycles += 5; break;
+        case zp_x:      cycles += 6; break;
+        case abs: 	    cycles += 6; break;
+        case abs_x: 	cycles += 7; break;
+        case abs_y: 	cycles += 7; break;
+        case idx_ind_x: cycles += 8; break;
+        case ind_idx_y: cycles += 8; break;
+        default: 	    std::cerr << "Invalid addressing mode for SRE."
+                        << std::endl;
+    }
+}
+
+void CPU::RRA(AddressingMode mode)
+{
+    // ROR 
+    uint16_t addr = operand_addr(mode);
+    uint8_t result = rot_r(bus.read(addr));
+    bus.write(addr, result);
+
+    // ADC
+    do_ADC(result);
+
+    switch (mode)
+    {
+        case zp: 	    cycles += 5; break;
+        case zp_x:      cycles += 6; break;
+        case abs: 	    cycles += 6; break;
+        case abs_x: 	cycles += 7; break;
+        case abs_y: 	cycles += 7; break;
+        case idx_ind_x: cycles += 8; break;
+        case ind_idx_y: cycles += 8; break;
+        default: 	    std::cerr << "Invalid addressing mode for RRA."
+                        << std::endl;
     }
 }

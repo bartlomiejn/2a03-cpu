@@ -58,13 +58,13 @@ namespace NES
 		/// \param bus Memory bus to use.
 		explicit CPU(MemoryBus &bus);
 		
-		uint8_t A; 		///< Accumulator
+		uint8_t A; 		    ///< Accumulator
 		uint8_t X, Y; 		///< Index registers
 		uint16_t PC;		///< Program counter
-		uint8_t S;		///< Stack pointer
+		uint8_t S;		    ///< Stack pointer
 		StatusRegister P;	///< Status register
-		bool IRQ;		///< Interrupt line. Setting to true will trigger an IRQ after next instruction completes.
-		bool NMI;		///< Non-maskable interrupt line. Setting to true will trigger an IRQ after next instruction completes.
+		bool IRQ;		    ///< Interrupt line. Setting to true will trigger an IRQ after next instruction completes.
+		bool NMI;		    ///< Non-maskable interrupt line. Setting to true will trigger an IRQ after next instruction completes.
 		uint32_t cycles;	///< Cycle counter.
 		
 		/// Starts the CPU.
@@ -328,7 +328,7 @@ namespace NES
 		/// \param p P register to pull the value to.
 		void PL(StatusRegister &p);
 
-        // Illegal opcodes
+        // Unofficial "illegal" opcodes
 
         // NOP with variable cycle count
         void NOP_absx();
@@ -360,6 +360,15 @@ namespace NES
         // ROL + AND
         // M = C <- [76543210] <- 0, A AND MEM -> A
         void RLA(AddressingMode mode);
+
+        // LSR + EOR
+        // MEM = 0 -> [76543210] -> C, A EOR M -> A
+        void SRE(AddressingMode mode);
+
+        // ROR + ADC
+        // M = C -> [76543210] -> C, 
+        // A + M + C -> A, C
+        void RRA(AddressingMode mode);
 	};
 	
 	class InvalidOpcode {};

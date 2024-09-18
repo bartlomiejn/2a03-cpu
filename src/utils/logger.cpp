@@ -410,6 +410,20 @@ std::string CPULogger::decode(uint8_t opcode)
         case 0x3B: return "RLA";
         case 0x23: return "RLA";
         case 0x33: return "RLA";
+        case 0x47: return "SRE";
+        case 0x57: return "SRE";
+        case 0x4F: return "SRE";
+        case 0x5F: return "SRE";
+        case 0x5B: return "SRE";
+        case 0x43: return "SRE";
+        case 0x53: return "SRE";
+        case 0x67: return "RRA";  
+        case 0x77: return "RRA"; 
+        case 0x6F: return "RRA"; 
+        case 0x7F: return "RRA"; 
+        case 0x7B: return "RRA"; 
+        case 0x63: return "RRA"; 
+        case 0x73: return "RRA"; 
         case 0x1A:
         case 0x3A:
         case 0x5A:
@@ -493,6 +507,22 @@ bool CPULogger::is_opcode_legal(uint8_t opcode)
         case 0x3B: 
         case 0x23: 
         case 0x33: 
+        /* SRE */
+        case 0x47: 
+        case 0x57: 
+        case 0x4F: 
+        case 0x5F: 
+        case 0x5B: 
+        case 0x43: 
+        case 0x53: 
+        /* RRA */
+        case 0x67: 
+        case 0x77: 
+        case 0x6F: 
+        case 0x7F: 
+        case 0x7B: 
+        case 0x63: 
+        case 0x73: 
         /* 1-byte NOPs */
         case 0x1A:
         case 0x3A:
@@ -684,17 +714,21 @@ std::optional<AddressingMode> CPULogger::addr_mode_for_op(uint8_t opcode)
         case 0xEE: return { AddressingMode::abs };
         case 0xFE: return { AddressingMode::abs_x };
         // Unofficial
+        /* LAX */
         case 0xA7: return { AddressingMode::zp };
         case 0xB7: return { AddressingMode::zp_y };
         case 0xAF: return { AddressingMode::abs };
         case 0xBF: return { AddressingMode::abs_y };
         case 0xA3: return { AddressingMode::idx_ind_x };
         case 0xB3: return { AddressingMode::ind_idx_y };
+        /* SAX */
         case 0x87: return { AddressingMode::zp };
         case 0x97: return { AddressingMode::zp_y }; 
         case 0x8F: return { AddressingMode::abs };
-        case 0x83: return { AddressingMode::idx_ind_x }; 
+        case 0x83: return { AddressingMode::idx_ind_x };
+        /* USBC */
         case 0xEB: return { AddressingMode::imm };
+        /* DCP */
         case 0xC7: return { AddressingMode::zp };
         case 0xD7: return { AddressingMode::zp_x }; 
         case 0xCF: return { AddressingMode::abs };
@@ -702,6 +736,7 @@ std::optional<AddressingMode> CPULogger::addr_mode_for_op(uint8_t opcode)
         case 0xDB: return { AddressingMode::abs_y }; 
         case 0xC3: return { AddressingMode::idx_ind_x };
         case 0xD3: return { AddressingMode::ind_idx_y };
+        /* ISC */
         case 0xE7: return { AddressingMode::zp };
         case 0xF7: return { AddressingMode::zp_x }; 
         case 0xEF: return { AddressingMode::abs };
@@ -709,6 +744,7 @@ std::optional<AddressingMode> CPULogger::addr_mode_for_op(uint8_t opcode)
         case 0xFB: return { AddressingMode::abs_y }; 
         case 0xE3: return { AddressingMode::idx_ind_x };
         case 0xF3: return { AddressingMode::ind_idx_y };
+        /* SLO */
         case 0x07: return { AddressingMode::zp };
         case 0x17: return { AddressingMode::zp_x }; 
         case 0x0F: return { AddressingMode::abs };
@@ -716,6 +752,7 @@ std::optional<AddressingMode> CPULogger::addr_mode_for_op(uint8_t opcode)
         case 0x1B: return { AddressingMode::abs_y }; 
         case 0x03: return { AddressingMode::idx_ind_x };
         case 0x13: return { AddressingMode::ind_idx_y };
+        /* RLA */
         case 0x27: return { AddressingMode::zp };
         case 0x37: return { AddressingMode::zp_x }; 
         case 0x2F: return { AddressingMode::abs };
@@ -723,6 +760,23 @@ std::optional<AddressingMode> CPULogger::addr_mode_for_op(uint8_t opcode)
         case 0x3B: return { AddressingMode::abs_y }; 
         case 0x23: return { AddressingMode::idx_ind_x };
         case 0x33: return { AddressingMode::ind_idx_y };
+        /* SRE */
+        case 0x47: return { AddressingMode::zp };
+        case 0x57: return { AddressingMode::zp_x }; 
+        case 0x4F: return { AddressingMode::abs };
+        case 0x5F: return { AddressingMode::abs_x };
+        case 0x5B: return { AddressingMode::abs_y }; 
+        case 0x43: return { AddressingMode::idx_ind_x };
+        case 0x53: return { AddressingMode::ind_idx_y };
+        /* RRA */
+        case 0x67: return { AddressingMode::zp };
+        case 0x77: return { AddressingMode::zp_x }; 
+        case 0x6F: return { AddressingMode::abs };
+        case 0x7F: return { AddressingMode::abs_x };
+        case 0x7B: return { AddressingMode::abs_y }; 
+        case 0x63: return { AddressingMode::idx_ind_x };
+        case 0x73: return { AddressingMode::ind_idx_y };
+        /* NOP */
         case 0x1A:
         case 0x3A:
         case 0x5A:
@@ -865,9 +919,7 @@ uint16_t CPULogger::target_value(NES::AddressingMode addr_mode)
         case abs_y:
             uint16_t absaddr;
             absaddr = bus.read16(cpu.PC + 1);
-            absaddr += addr_mode == abs_x
-                ? cpu.X
-                : cpu.Y;
+            absaddr += addr_mode == abs_x ? cpu.X : cpu.Y;
             return(uint16_t)bus.read(absaddr);
         case ind:
             uint16_t h_addr, l_addr;
