@@ -96,7 +96,11 @@ namespace NES
 		/// \param mode Addressing mode to use.
 		/// \return Parameter for current instruction.
 		uint8_t get_operand(AddressingMode mode);
-		
+	
+        /// Does crossing the page boundary result in an additional cycle for
+        /// this opcode
+        bool idx_abs_crossing_cycle(uint8_t opcode); 
+
 		// Auxiliary functions
 		
 		/// Rotates left the value once. Carry is shifted into output

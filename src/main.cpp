@@ -21,12 +21,22 @@ namespace NES
 
     namespace Test
     {
-        std::string trim_whitespace(std::string &line)
+        std::string ltrim(const std::string& str) {
+            size_t start = str.find_first_not_of(" \t\n\r\f\v");
+            return (start == std::string::npos) ? "" : str.substr(start);
+        }
+
+        std::string rtrim(const std::string& str) {
+            size_t end = str.find_last_not_of(" \t\n\r\f\v");
+            return (end == std::string::npos) ? "" : str.substr(0, end + 1);
+        }
+
+        std::string trim(std::string &line)
         {
             std::string result;
             bool in_whitespace = false;
 
-            for (char ch : line) {
+            for (char ch : rtrim(ltrim(line))) {
                 if (std::isspace(ch)) {
                     if (!in_whitespace) {
                         result += ' ';
@@ -70,8 +80,8 @@ namespace NES
                 std::string noppu_log = trim_ppu(line_log);
                 std::string noppu_nestest = trim_ppu(line_nestest);
 
-                std::string trimmed_log = trim_whitespace(noppu_log);
-                std::string trimmed_nestest = trim_whitespace(noppu_nestest);  
+                std::string trimmed_log = trim(noppu_log);
+                std::string trimmed_nestest = trim(noppu_nestest);  
 
                 if (trimmed_log != trimmed_nestest) {
                     std::cout << "Ours:        " << trimmed_log << std::endl;

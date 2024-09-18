@@ -137,6 +137,15 @@ void CPULogger::log()
                     sum_pat.length(),
                     ss.str());
             ss.str(string());
+        } else if (addr_mode.value() == zp_x || addr_mode.value() == zp_y) { 
+            uint8_t sum = bus.read(cpu.PC + 1);
+            sum += addr_mode.value() == zp_x ? cpu.X : cpu.Y;
+            ss << setfill('0') << setw(2) << hex << (int)sum;
+            op_templ.replace(
+                    op_templ.find(sum_pat),
+                    sum_pat.length(),
+                    ss.str());
+            ss.str(string());
         }
 
         tgt_len = target_len(addr_mode.value(), opcode);
@@ -359,8 +368,19 @@ std::string CPULogger::decode(uint8_t opcode)
         case 0xF6: return "INC";
         case 0xEE: return "INC";
         case 0xFE: return "INC";
-                   // Unofficial
-        case 0x80:
+        // Unofficial
+        case 0x1A:
+        case 0x3A:
+        case 0x5A:
+        case 0x7A:
+        case 0xDA:
+        case 0xFA:
+        /* 2-byte NOPs */
+        case 0x80: 
+        case 0x82:
+        case 0x89:
+        case 0xC2:
+        case 0xE2:
         case 0x04:
         case 0x44:
         case 0x64:
@@ -370,6 +390,7 @@ std::string CPULogger::decode(uint8_t opcode)
         case 0x74:
         case 0xD4:
         case 0xF4:
+        /* 3-byte NOPs */
         case 0x0C:
         case 0x1C:
         case 0x3C:
@@ -385,7 +406,19 @@ bool CPULogger::is_opcode_legal(uint8_t opcode)
 {
     switch (opcode)
     {
-        case 0x80:
+        /* 1-byte NOPs */
+        case 0x1A:
+        case 0x3A:
+        case 0x5A:
+        case 0x7A:
+        case 0xDA:
+        case 0xFA:
+        /* 2-byte NOPs */
+        case 0x80: 
+        case 0x82:
+        case 0x89:
+        case 0xC2:
+        case 0xE2:
         case 0x04:
         case 0x44:
         case 0x64:
@@ -395,13 +428,14 @@ bool CPULogger::is_opcode_legal(uint8_t opcode)
         case 0x74:
         case 0xD4:
         case 0xF4:
+        /* 3-byte NOPs */
         case 0x0C:
         case 0x1C:
         case 0x3C:
         case 0x5C:
         case 0x7C:
         case 0xDC:
-        case 0xFC:
+        case 0xFC: 
             return false;
         default:
             return true;
@@ -563,7 +597,17 @@ std::optional<AddressingMode> CPULogger::addr_mode_for_op(uint8_t opcode)
         case 0xEE: return { AddressingMode::abs };
         case 0xFE: return { AddressingMode::abs_x };
         // Unofficial
-        case 0x80: return { AddressingMode::imm };
+        case 0x1A:
+        case 0x3A:
+        case 0x5A:
+        case 0x7A:
+        case 0xDA:
+        case 0xFA: return std::nullopt;
+        case 0x80:
+        case 0x82:
+        case 0x89:
+        case 0xC2:
+        case 0xE2: return { AddressingMode::imm };
         case 0x04:
         case 0x44:
         case 0x64: return { AddressingMode::zp };
@@ -573,7 +617,7 @@ std::optional<AddressingMode> CPULogger::addr_mode_for_op(uint8_t opcode)
         case 0x74:
         case 0xD4:
         case 0xF4: return { AddressingMode::zp_x };
-        case 0x0C: return { AddressingMode::imm };
+        case 0x0C: return { AddressingMode::abs };
         case 0x1C:
         case 0x3C:
         case 0x5C:
@@ -603,9 +647,9 @@ std::string CPULogger::templ_for_mode(AddressingMode addr_mode, uint8_t opcode)
         case zp:
             return "$" + operand_pat + " = " + target_pat;
         case zp_x:
-            return "$" + operand_pat + ",X";
+            return "$" + operand_pat + ",X @ " + sum_pat + " = " + target_pat;
         case zp_y:
-            return "$" + operand_pat + ",Y";
+            return "$" + operand_pat + ",Y @ " + sum_pat + " = " + target_pat;
         case idx_ind_x: // ndx
             return "($" + operand_pat + ",X) @ " + sum_pat + " = " 
                 + im_pat + " = " + target_pat;
@@ -651,6 +695,8 @@ uint8_t CPULogger::target_len(NES::AddressingMode addr_mode, uint8_t opcode)
         case ind:
             return 2;
         case zp:
+        case zp_x:
+        case zp_y:
         case idx_ind_x:
         case ind_idx_y:
             return 1;
@@ -669,7 +715,24 @@ uint16_t CPULogger::target_value(NES::AddressingMode addr_mode)
     switch (addr_mode)
     {
         case rel:
-            return (uint16_t)cpu.PC + bus.read(cpu.PC + 1) + 2; // 2 is opcode len
+            uint8_t rel_op;
+            uint8_t pc_l;
+            bool cross;
+            uint16_t target;
+
+            rel_op = bus.read(cpu.PC + 1);
+            pc_l = uint8_t((cpu.PC + 2) & 0xFF); 
+            cross = uint16_t(pc_l) + rel_op >= 0x100;
+            pc_l += rel_op;
+
+            target = ((cpu.PC + 2) & 0xFF00) | (uint16_t)pc_l;
+            if ((rel_op & 0x80) && !cross) {
+                target -= 0x100;
+            } else if (!(rel_op & 0x80) && cross) {
+                target += 0x100;
+            }
+
+            return target;
         case abs:
             return (uint16_t)bus.read(bus.read16((uint16_t)(cpu.PC + 1)));
         case abs_x:
@@ -688,8 +751,14 @@ uint16_t CPULogger::target_value(NES::AddressingMode addr_mode)
                 : (uint16_t)(l_addr + 1);
             return (uint16_t)(bus.read(h_addr)) << 8 | bus.read(l_addr);
         case zp:
+        case zp_x:
+        case zp_y:
             uint8_t zp_addr;
-            zp_addr = bus.read((uint16_t)(cpu.PC + 1));
+            zp_addr = bus.read(cpu.PC + 1);
+            if (addr_mode == zp_x)
+                zp_addr += cpu.X;
+            if (addr_mode == zp_y)
+                zp_addr += cpu.Y;
             return (uint16_t)bus.read(zp_addr);
         case idx_ind_x:
             uint16_t imx_addr;
