@@ -96,7 +96,7 @@ std::string CPULogger::log()
         ss.str(string());
 
         if (addr_mode.value() == idx_ind_x) {
-            uint8_t opsum = bus.read(cpu.PC + 1)+ cpu.X;
+            uint8_t opsum = bus.read(cpu.PC + 1) + cpu.X;
             ss << setfill('0') << setw(2) << hex << (int)opsum;
             op_templ.replace(
                     op_templ.find(sum_pat),
@@ -104,7 +104,7 @@ std::string CPULogger::log()
                     ss.str());
             ss.str(string());
 
-            uint16_t imval = bus.read16((bus.read(cpu.PC+1) + cpu.X) % 0x100, 
+            uint16_t imval = bus.read16((bus.read(cpu.PC + 1) + cpu.X) % 0x100, 
                     true);
             ss << setfill('0') << setw(4) << hex << imval;
                 op_templ.replace(
@@ -371,6 +371,24 @@ std::string CPULogger::decode(uint8_t opcode)
         case 0xEE: return "INC";
         case 0xFE: return "INC";
         // Unofficial
+        case 0xA7: return "LAX";
+        case 0xB7: return "LAX"; 
+        case 0xAF: return "LAX";
+        case 0xBF: return "LAX";
+        case 0xA3: return "LAX";
+        case 0xB3: return "LAX";
+        case 0x87: return "SAX";
+        case 0x97: return "SAX";
+        case 0x8F: return "SAX";
+        case 0x83: return "SAX";
+        case 0xEB: return "SBC";
+        case 0xC7: return "DCP";
+        case 0xD7: return "DCP";
+        case 0xCF: return "DCP";
+        case 0xDF: return "DCP";
+        case 0xDB: return "DCP";
+        case 0xC3: return "DCP";
+        case 0xD3: return "DCP";
         case 0x1A:
         case 0x3A:
         case 0x5A:
@@ -408,6 +426,28 @@ bool CPULogger::is_opcode_legal(uint8_t opcode)
 {
     switch (opcode)
     {
+        /* LAX */
+        case 0xA7: 
+        case 0xB7:  
+        case 0xAF: 
+        case 0xBF: 
+        case 0xA3: 
+        case 0xB3: 
+        /* SAX */
+        case 0x87: 
+        case 0x97: 
+        case 0x8F: 
+        case 0x83: 
+        /* USBC / *SBC */
+        case 0xEB:
+        /* DCP */
+        case 0xC7: 
+        case 0xD7: 
+        case 0xCF: 
+        case 0xDF: 
+        case 0xDB: 
+        case 0xC3: 
+        case 0xD3: 
         /* 1-byte NOPs */
         case 0x1A:
         case 0x3A:
@@ -599,6 +639,24 @@ std::optional<AddressingMode> CPULogger::addr_mode_for_op(uint8_t opcode)
         case 0xEE: return { AddressingMode::abs };
         case 0xFE: return { AddressingMode::abs_x };
         // Unofficial
+        case 0xA7: return { AddressingMode::zp };
+        case 0xB7: return { AddressingMode::zp_y };
+        case 0xAF: return { AddressingMode::abs };
+        case 0xBF: return { AddressingMode::abs_y };
+        case 0xA3: return { AddressingMode::idx_ind_x };
+        case 0xB3: return { AddressingMode::ind_idx_y };
+        case 0x87: return { AddressingMode::zp };
+        case 0x97: return { AddressingMode::zp_y }; 
+        case 0x8F: return { AddressingMode::abs };
+        case 0x83: return { AddressingMode::idx_ind_x }; 
+        case 0xEB: return { AddressingMode::imm };
+        case 0xC7: return { AddressingMode::zp };
+        case 0xD7: return { AddressingMode::zp_x }; 
+        case 0xCF: return { AddressingMode::abs };
+        case 0xDF: return { AddressingMode::abs_x };
+        case 0xDB: return { AddressingMode::abs_y }; 
+        case 0xC3: return { AddressingMode::idx_ind_x };
+        case 0xD3: return { AddressingMode::ind_idx_y };
         case 0x1A:
         case 0x3A:
         case 0x5A:

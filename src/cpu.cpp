@@ -197,6 +197,24 @@ void CPU::execute()
         case 0xEA: /* NOP */ cycles += 2; break;
         // TODO: Implement BRK
         // Unofficial
+        case 0xA7: LAX(zp); break;
+        case 0xB7: LAX(zp_y); break; 
+        case 0xAF: LAX(abs); break;
+        case 0xBF: LAX(abs_y); break;
+        case 0xA3: LAX(idx_ind_x); break; 
+        case 0xB3: LAX(ind_idx_y); break;
+        case 0x87: SAX(zp); break;
+        case 0x97: SAX(zp_y); break; 
+        case 0x8F: SAX(abs); break;
+        case 0x83: SAX(idx_ind_x); break;  
+        case 0xEB: USBC(); break;
+        case 0xC7: DCP(zp); break;
+        case 0xD7: DCP(zp_x); break; 
+        case 0xCF: DCP(abs); break;
+        case 0xDF: DCP(abs_x); break;
+        case 0xDB: DCP(abs_y); break; 
+        case 0xC3: DCP(idx_ind_x); break;
+        case 0xD3: DCP(ind_idx_y); break;
         /* 1-byte NOPs */
         case 0x1A:
         case 0x3A:
@@ -238,12 +256,6 @@ void CPU::execute()
         interrupt(i_nmi);
     if (IRQ && !P.I)
         interrupt(i_irq);
-}
-
-void CPU::NOP_absx() 
-{
-    get_operand(abs_x); 
-    cycles += 4; 
 }
 
 void CPU::interrupt(NES::Interrupt type)
@@ -300,6 +312,7 @@ bool CPU::idx_abs_crossing_cycle(uint8_t opcode)
     uint8_t incr_ops[] = {
         0x7D, 0x79, 0x3D, 0x39, 0xDD, 0xD9, 0x5D, 0x59, 0xBD, 0xB9, 0xBE, 0xBC,
         0x1D, 0x19, 0xFD, 0xF9, 0xBF, 0x1C, 0x3C, 0x5C, 0x7C, 0xDC, 0xFC, 0xC9,
+        0xBF, 0xB3, 0xBD, 0xB9, 0xB1,
     };
     size_t size = sizeof(incr_ops) / sizeof(uint8_t);
     return std::find(incr_ops, incr_ops + size, opcode) != (incr_ops + size);
@@ -350,9 +363,11 @@ uint16_t CPU::operand_addr(AddressingMode mode)
             PC++;
             break;
         case ind_idx_y:
+            opc = bus.read(PC - 1);
             addr = bus.read16(bus.read(PC), true) + Y;
             PC++;
-            if (!is_same_page(addr - Y, addr)) cycles++;
+            if (idx_abs_crossing_cycle(opc) && !is_same_page(addr - Y, addr)) 
+                cycles++;
             break;
         case ind:
         default:
@@ -434,7 +449,7 @@ void CPU::do_ADC(uint8_t operand)
 void CPU::set_NZ(uint8_t value)
 {
     P.Z = value == 0;
-    P.N = (bool)(value >> 7);
+    P.N = (bool)(value & 0x80);
 }
 
 // Branch instructions
@@ -804,6 +819,11 @@ void CPU::SBC(AddressingMode mode)
     }
 }
 
+void CPU::USBC()
+{
+    SBC(imm);
+}
+
 // Load / store
 
 void CPU::LD(uint8_t &reg, AddressingMode mode)
@@ -925,4 +945,69 @@ void CPU::PL(StatusRegister &p)
     p.Z = bool(newp & 0x2);
     p.C = bool(newp & 0x1);
     cycles += 4;
+}
+
+void CPU::NOP_absx() 
+{
+    get_operand(abs_x); 
+    cycles += 4; 
+}
+
+void CPU::LAX(AddressingMode mode) 
+{
+    uint8_t operand = get_operand(mode);
+    A = operand;
+    X = operand;
+    set_NZ(operand);
+    switch (mode)
+    {
+        case zp: 	cycles += 3; break;
+        case zp_y:  cycles += 4; break;
+        case abs: 	cycles += 4; break;
+        case abs_y: 	cycles += 4; break;
+        case idx_ind_x: cycles += 6; break;
+        case ind_idx_y: cycles += 5; break;
+        default: 	std::cerr << "Invalid addressing mode for LAX."
+                    << std::endl;
+    }
+}
+
+void CPU::SAX(AddressingMode mode)
+{
+    uint16_t op_addr = operand_addr(mode);
+    bus.write(op_addr, A & X);
+    switch (mode)
+    {
+        case zp: 	    cycles += 3; break;
+        case zp_y: 	    cycles += 4; break;
+        case abs: 	    cycles += 4; break;
+        case idx_ind_x: cycles += 6; break;
+        default: 	std::cerr << "Invalid addressing mode for SAX."
+                    << std::endl;
+    }
+}
+
+void CPU::DCP(AddressingMode mode) 
+{
+    uint16_t op_addr = operand_addr(mode);
+    uint8_t op = bus.read(op_addr);
+    uint8_t result = op - 1;
+    bus.write(op_addr, result);
+
+    P.Z = A == result;
+    P.C = A >= result;
+    P.N = bool((A - result) & 0x80);
+
+    switch (mode)
+    {
+        case zp: 	cycles += 5; break;
+        case zp_x:  cycles += 6; break;
+        case abs: 	cycles += 6; break;
+        case abs_x: 	cycles += 7; break;
+        case abs_y: 	cycles += 7; break;
+        case idx_ind_x: cycles += 8; break;
+        case ind_idx_y: cycles += 8; break;
+        default: 	std::cerr << "Invalid addressing mode for DCP."
+                    << std::endl;
+    }
 }

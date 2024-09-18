@@ -332,6 +332,19 @@ namespace NES
 
         // NOP with variable cycle count
         void NOP_absx();
+
+        // LDA + LDX == MEM -> A -> X
+        void LAX(AddressingMode mode);
+
+        // A AND X -> MEM
+        void SAX(AddressingMode mode);
+
+        // SBC + NOP, effectively same as SBC(imm)
+        void USBC();
+
+        // DEC + CMP == MEM - 1 -> MEM, A - MEM
+        // Decrement operand and compare result to A
+        void DCP(AddressingMode mode);
 	};
 	
 	class InvalidOpcode {};
