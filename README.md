@@ -2,27 +2,14 @@
 
 NES emulator written in C++.  
 
-To build: `make binary`
-
-To run: `make run`
-
-To debug: `make debug CXX_DEBUG={Default: gdb}` 
-
-## Feature list
-
-### v0.2
-
 In progress:
-- Official opcode correctness
-- Cycle counting correctness
 - PPU
 
 Done:
+- Official opcodes
+- Partial unofficial opcodes
+- nestest.nes correctness
 - Cycle counting
-
-### v0.1
-Release: `20.10.2019`
-- Instruction cycle
 - Addressing modes
 - Memory bus
 - Official opcodes
