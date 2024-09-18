@@ -12,9 +12,7 @@ Done:
 - Cycle counting
 - Addressing modes
 - Memory bus
-- Official opcodes
 - Interrupts
 - iNESv1 Cartridge model with loading
 - NROM, MMC1 mapper
-- Binary execution
 - Debug logger
