@@ -13,11 +13,11 @@
 
 namespace NES
 {
-	enum TestState
-	{
-		running = 0x80,
-		reset_required = 0x81
-	};
+    enum TestState
+    {
+        running = 0x80,
+        reset_required = 0x81
+    };
 
     namespace Test
     {
@@ -61,33 +61,58 @@ namespace NES
         {
             std::cout << "Running diff_nestest_noppu" << std::endl;
 
+            std::string linebuf[5] = { "" };
+            std::string linebuf_nestest[5] { "" };
+            unsigned int idx = 0;
+            unsigned int linenum = 1;
             std::string nestest_logname = "nestest.log";
-            
+
             std::ifstream ifs_log(logname);
             std::ifstream ifs_nestest(nestest_logname);
-           
+
             assert(ifs_log.is_open());
             assert(ifs_nestest.is_open());
- 
+
             std::string line_log;
             std::string line_nestest;
- 
-            int linenum = 1;
 
             while (std::getline(ifs_nestest, line_nestest)
-                   && std::getline(ifs_log, line_log)) {
-    
+                    && std::getline(ifs_log, line_log)) {
+
                 std::string noppu_log = trim_ppu(line_log);
                 std::string noppu_nestest = trim_ppu(line_nestest);
 
                 std::string trimmed_log = trim(noppu_log);
                 std::string trimmed_nestest = trim(noppu_nestest);  
 
+                // Ignore PPU state for this test
+                linebuf[idx] = noppu_log;
+                linebuf_nestest[idx] = noppu_nestest;
+                idx = (idx + 1) % 5;
+
                 if (trimmed_log != trimmed_nestest) {
-                    std::cout << "Ours:        " << trimmed_log << std::endl;
-                    std::cout << "nestest.log: " << trimmed_nestest << std::endl;
+                    unsigned int end = idx;
+                    std::cout << "Ours:" << std::endl;
+                    do {
+                        if (idx == (end - 1) % 5)
+                            std::cout << "> ";
+                        else
+                            std::cout << "  ";
+                        std::cout << linebuf[idx] << std::endl;
+                        idx = (idx + 1) % 5;
+                    } while (idx != end);
+
+                    std::cout << "nestest.log:" << std::endl;
+                    do {
+                        if (idx == (end - 1) % 5)
+                            std::cout << "> ";
+                        else
+                            std::cout << "  ";
+                        std::cout << linebuf_nestest[idx] << std::endl;
+                        idx = (idx + 1) % 5;
+                    } while (idx != end);
                     std::cout << "DIFF AT LINE " << linenum << " FAILED" 
-                              << std::endl;
+                        << std::endl;
                     return;
                 }
 
@@ -108,53 +133,61 @@ std::string gen_timepid_logname()
     return std::format("{}_{}.log", time_s.str(), pid);
 }
 
-void run_nestest()
+void run_nestest(bool log_to_cerr)
 {
-	using namespace NES::iNESv1;
-	
+    using namespace NES::iNESv1;
+
     std::string logfile = gen_timepid_logname();
 
-	NES::MemoryBus bus;
-	NES::CPU cpu(bus);
-	NES::CPULogger logger(cpu, bus);
-    logger.instr_ostream = std::cerr;
+    NES::MemoryBus bus;
+    NES::CPU cpu(bus);
+    NES::CPULogger logger(cpu, bus);
+    if (log_to_cerr)
+        logger.instr_ostream = std::cerr;
     logger.log_filename = logfile;
 
-	std::string test_file = "nestest.nes";
-	
-	std::cout << "Loading " << test_file << "." << std::endl;
-	
-	Cartridge cartridge = load(test_file);
-	
-	NES::iNESv1::Mapper::Base *mapper = Mapper::mapper(cartridge);
-	bus.mapper = mapper;
-	
-	std::cout << "Powering up." << std::endl;
-	
-	cpu.power();
-	
-	cpu.PC = 0xC000;
-	cpu.cycles = 7;
-	
-	std::cout << "Entering runloop." << std::endl;
-	
-	while (true)
-	{
-		logger.log();
-		
-		try { cpu.execute(); }
-		catch (NES::InvalidOpcode err) { break; }
-		
-		if (bus.read(0x02) != 0x0) // Some sort of error occured:
-		{
-			std::cerr << "Nestest failure code: " << std::hex
-				<< bus.read16(0x02) << "." << std::endl;
-		}
-	}
-	
-	std::cout << "Terminating." << std::endl;
-	
-	logger.save();
+    std::string test_file = "nestest.nes";
+
+    std::cout << "Loading " << test_file << "." << std::endl;
+
+    Cartridge cartridge = load(test_file);	
+    NES::iNESv1::Mapper::Base *mapper = Mapper::mapper(cartridge);
+    bus.mapper = mapper;
+
+    std::cout << "Powering up." << std::endl;
+
+    cpu.power();
+
+    cpu.PC = 0xC000;
+    cpu.cycles = 7;
+
+    std::cout << "Entering runloop." << std::endl;
+
+    while (true)
+    {
+        logger.log();
+
+        try { cpu.execute(); }
+        catch (NES::InvalidOpcode err) { break; }
+
+        if (bus.read(0x02) != 0x0) // Some sort of error occured:
+        {
+            char in = 0x0;
+            std::cerr << "Nestest failure code: " << std::hex
+                << bus.read(0x02) << "." << std::endl;
+            std::cerr << "Continue with y, stop with n" << std::endl;
+            while (in != 'y' && in != 'n') {
+                std::cin >> in;
+            }
+            if (in == 'n') {
+                break;
+            }
+        }
+    }
+
+    std::cout << "Terminating." << std::endl;
+
+    logger.save();
 
     std::cout << "Saved log to: " << logfile << std::endl;
 
@@ -164,8 +197,21 @@ void run_nestest()
     std::cout << "Finished execution." << std::endl;
 }
 
-int main()
+int main(int argc, char *argv[])
 {
-	run_nestest();
-	return 0;
+    int opt;
+    bool log_to_cerr = false;
+
+    while ((opt = getopt(argc, argv, "c")) != -1) {
+        switch (opt) {
+            case 'c':
+                log_to_cerr = true;
+                break;
+            default:
+                std::cerr << "Usage: " << argv[0] << " [-c]" << std::endl;
+                return -1;
+        }
+    }
+    run_nestest(log_to_cerr);
+    return 0;
 }

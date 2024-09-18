@@ -435,6 +435,7 @@ void CPU::set_NZ(uint8_t value)
 void CPU::branch_rel()
 {
     uint8_t op = get_operand(imm);
+    uint8_t pc_h = uint8_t((PC & 0xFF00) >> 8);
     uint8_t pc_l = uint8_t(PC & 0xFF);
     bool page_crossing = uint16_t(pc_l) + op >= 0x100;
     pc_l += op;
@@ -444,7 +445,7 @@ void CPU::branch_rel()
     } else if (!(op & 0x80) && page_crossing) {
         PC += 0x100;
     }
-    if (page_crossing) {
+    if (((PC & 0xFF00) >> 8) != pc_h) {
         cycles += 2;
     } else {
         cycles++;

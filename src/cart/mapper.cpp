@@ -10,8 +10,10 @@ Mapper::Base *Mapper::mapper(NES::iNESv1::Cartridge &cartridge)
 	switch (id)
 	{
 		case Mapper::type_NROM:
+            std::cerr << "Mapper type NROM" << std::endl;
 			return new NES::iNESv1::Mapper::NROM(cartridge);
 		case Mapper::type_MMC1:
+            std::cerr << "Mapper type MMC1" << std::endl;
 			return new NES::iNESv1::Mapper::MMC1(cartridge);
 		default:
 			std::cerr << "Unimplemented mapper type: " << std::hex
