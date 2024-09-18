@@ -229,6 +229,13 @@ void CPU::execute()
         case 0x1B: SLO(abs_y); break; 
         case 0x03: SLO(idx_ind_x); break;
         case 0x13: SLO(ind_idx_y); break;
+        case 0x27: RLA(zp); break;
+        case 0x37: RLA(zp_x); break; 
+        case 0x2F: RLA(abs); break;
+        case 0x3F: RLA(abs_x); break;
+        case 0x3B: RLA(abs_y); break; 
+        case 0x23: RLA(idx_ind_x); break;
+        case 0x33: RLA(ind_idx_y); break;
         /* 1-byte NOPs */
         case 0x1A:
         case 0x3A:
@@ -1053,6 +1060,31 @@ void CPU::SLO(AddressingMode mode)
     
     // ORA
     A |= result;
+    set_NZ(A);
+
+    switch (mode)
+    {
+        case zp: 	cycles += 5; break;
+        case zp_x:  cycles += 6; break;
+        case abs: 	cycles += 6; break;
+        case abs_x: 	cycles += 7; break;
+        case abs_y: 	cycles += 7; break;
+        case idx_ind_x: cycles += 8; break;
+        case ind_idx_y: cycles += 8; break;
+        default: 	std::cerr << "Invalid addressing mode for SLO/ASO."
+                    << std::endl;
+    }
+}
+
+void CPU::RLA(AddressingMode mode)
+{
+    // ROL
+    uint16_t addr = operand_addr(mode);
+    uint8_t result = rot_l(bus.read(addr));
+    bus.write(addr, result);
+
+    // AND
+    A &= result;
     set_NZ(A);
 
     switch (mode)

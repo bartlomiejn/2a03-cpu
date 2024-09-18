@@ -356,6 +356,10 @@ namespace NES
         // ASL + ORA
         // M = C <- [76543210] <- 0, A OR MEM -> A
         void SLO(AddressingMode mode);
+
+        // ROL + AND
+        // M = C <- [76543210] <- 0, A AND MEM -> A
+        void RLA(AddressingMode mode);
 	};
 	
 	class InvalidOpcode {};

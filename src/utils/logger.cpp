@@ -403,6 +403,13 @@ std::string CPULogger::decode(uint8_t opcode)
         case 0x1B: return "SLO";
         case 0x03: return "SLO";
         case 0x13: return "SLO";
+        case 0x27: return "RLA";
+        case 0x37: return "RLA";
+        case 0x2F: return "RLA";
+        case 0x3F: return "RLA";
+        case 0x3B: return "RLA";
+        case 0x23: return "RLA";
+        case 0x33: return "RLA";
         case 0x1A:
         case 0x3A:
         case 0x5A:
@@ -478,6 +485,14 @@ bool CPULogger::is_opcode_legal(uint8_t opcode)
         case 0x1B: 
         case 0x03: 
         case 0x13: 
+        /* RLA */
+        case 0x27: 
+        case 0x37: 
+        case 0x2F: 
+        case 0x3F: 
+        case 0x3B: 
+        case 0x23: 
+        case 0x33: 
         /* 1-byte NOPs */
         case 0x1A:
         case 0x3A:
@@ -701,6 +716,13 @@ std::optional<AddressingMode> CPULogger::addr_mode_for_op(uint8_t opcode)
         case 0x1B: return { AddressingMode::abs_y }; 
         case 0x03: return { AddressingMode::idx_ind_x };
         case 0x13: return { AddressingMode::ind_idx_y };
+        case 0x27: return { AddressingMode::zp };
+        case 0x37: return { AddressingMode::zp_x }; 
+        case 0x2F: return { AddressingMode::abs };
+        case 0x3F: return { AddressingMode::abs_x };
+        case 0x3B: return { AddressingMode::abs_y }; 
+        case 0x23: return { AddressingMode::idx_ind_x };
+        case 0x33: return { AddressingMode::ind_idx_y };
         case 0x1A:
         case 0x3A:
         case 0x5A:
