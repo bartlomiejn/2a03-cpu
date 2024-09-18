@@ -342,9 +342,20 @@ namespace NES
         // SBC + NOP, effectively same as SBC(imm)
         void USBC();
 
-        // DEC + CMP == MEM - 1 -> MEM, A - MEM
+        // DEC + CMP
+        // MEM - 1 -> MEM
+        // A - MEM
         // Decrement operand and compare result to A
         void DCP(AddressingMode mode);
+
+        // INC + SBC 
+        // MEM + 1 -> MEM
+        // A - MEM - C -> A
+        void ISC(AddressingMode mode);
+
+        // ASL + ORA
+        // M = C <- [76543210] <- 0, A OR MEM -> A
+        void SLO(AddressingMode mode);
 	};
 	
 	class InvalidOpcode {};

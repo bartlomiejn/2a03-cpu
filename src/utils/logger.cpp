@@ -389,6 +389,20 @@ std::string CPULogger::decode(uint8_t opcode)
         case 0xDB: return "DCP";
         case 0xC3: return "DCP";
         case 0xD3: return "DCP";
+        case 0xE7: return "ISB";
+        case 0xF7: return "ISB";
+        case 0xEF: return "ISB";
+        case 0xFF: return "ISB";
+        case 0xFB: return "ISB";
+        case 0xE3: return "ISB";
+        case 0xF3: return "ISB";
+        case 0x07: return "SLO";
+        case 0x17: return "SLO";
+        case 0x0F: return "SLO";
+        case 0x1F: return "SLO";
+        case 0x1B: return "SLO";
+        case 0x03: return "SLO";
+        case 0x13: return "SLO";
         case 0x1A:
         case 0x3A:
         case 0x5A:
@@ -448,6 +462,22 @@ bool CPULogger::is_opcode_legal(uint8_t opcode)
         case 0xDB: 
         case 0xC3: 
         case 0xD3: 
+        /* ISC / ISB / INS */
+        case 0xE7: 
+        case 0xF7: 
+        case 0xEF: 
+        case 0xFF: 
+        case 0xFB: 
+        case 0xE3: 
+        case 0xF3: 
+        /* SLO / ASO */
+        case 0x07: 
+        case 0x17: 
+        case 0x0F: 
+        case 0x1F: 
+        case 0x1B: 
+        case 0x03: 
+        case 0x13: 
         /* 1-byte NOPs */
         case 0x1A:
         case 0x3A:
@@ -657,6 +687,20 @@ std::optional<AddressingMode> CPULogger::addr_mode_for_op(uint8_t opcode)
         case 0xDB: return { AddressingMode::abs_y }; 
         case 0xC3: return { AddressingMode::idx_ind_x };
         case 0xD3: return { AddressingMode::ind_idx_y };
+        case 0xE7: return { AddressingMode::zp };
+        case 0xF7: return { AddressingMode::zp_x }; 
+        case 0xEF: return { AddressingMode::abs };
+        case 0xFF: return { AddressingMode::abs_x };
+        case 0xFB: return { AddressingMode::abs_y }; 
+        case 0xE3: return { AddressingMode::idx_ind_x };
+        case 0xF3: return { AddressingMode::ind_idx_y };
+        case 0x07: return { AddressingMode::zp };
+        case 0x17: return { AddressingMode::zp_x }; 
+        case 0x0F: return { AddressingMode::abs };
+        case 0x1F: return { AddressingMode::abs_x };
+        case 0x1B: return { AddressingMode::abs_y }; 
+        case 0x03: return { AddressingMode::idx_ind_x };
+        case 0x13: return { AddressingMode::ind_idx_y };
         case 0x1A:
         case 0x3A:
         case 0x5A:

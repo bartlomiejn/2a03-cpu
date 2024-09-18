@@ -214,7 +214,21 @@ void CPU::execute()
         case 0xDF: DCP(abs_x); break;
         case 0xDB: DCP(abs_y); break; 
         case 0xC3: DCP(idx_ind_x); break;
-        case 0xD3: DCP(ind_idx_y); break;
+        case 0xD3: DCP(ind_idx_y); break; 
+        case 0xE7: ISC(zp); break;
+        case 0xF7: ISC(zp_x); break; 
+        case 0xEF: ISC(abs); break;
+        case 0xFF: ISC(abs_x); break;
+        case 0xFB: ISC(abs_y); break; 
+        case 0xE3: ISC(idx_ind_x); break;
+        case 0xF3: ISC(ind_idx_y); break;
+        case 0x07: SLO(zp); break;
+        case 0x17: SLO(zp_x); break; 
+        case 0x0F: SLO(abs); break;
+        case 0x1F: SLO(abs_x); break;
+        case 0x1B: SLO(abs_y); break; 
+        case 0x03: SLO(idx_ind_x); break;
+        case 0x13: SLO(ind_idx_y); break;
         /* 1-byte NOPs */
         case 0x1A:
         case 0x3A:
@@ -419,16 +433,8 @@ void CPU::do_ADC(uint8_t operand)
     // https://stackoverflow.com/questions/29193303/6502-emulation-proper-way-to-implement-adc-and-sbc
     // Overflow on signed arithmetic:
     // http://www.6502.org/tutorials/vflag.html
-    //if (P.D)
-    //{
     // In decimal mode treat operands as binary-coded decimals.
-    // Decimal mode is not available on 2A03. Since this is a NES
-    // emulator, we don't support decimal mode, which is available
-    // in a 6502.
-    //std::cerr << "ADC/SBC op with decimal mode is unavailable."
-    //	  << std::endl;
-    //return;
-    //}
+    // TODO: Not sure if additional handling is needed for decimals? 
     uint16_t sum = A + operand + P.C;	
     P.C = sum > 0xFF;
 
@@ -1008,6 +1014,57 @@ void CPU::DCP(AddressingMode mode)
         case idx_ind_x: cycles += 8; break;
         case ind_idx_y: cycles += 8; break;
         default: 	std::cerr << "Invalid addressing mode for DCP."
+                    << std::endl;
+    }
+}
+
+void CPU::ISC(AddressingMode mode)
+{
+    // INC
+    uint16_t op_addr = operand_addr(mode);
+    uint8_t op = bus.read(op_addr);
+    uint8_t result = op + 1;
+    bus.write(op_addr, result);
+    set_NZ(result);
+
+    // SBC
+    do_ADC(~result);
+
+    switch (mode)
+    {
+        case zp: 	cycles += 5; break;
+        case zp_x:  cycles += 6; break;
+        case abs: 	cycles += 6; break;
+        case abs_x: 	cycles += 7; break;
+        case abs_y: 	cycles += 7; break;
+        case idx_ind_x: cycles += 8; break;
+        case ind_idx_y: cycles += 8; break;
+        default: 	std::cerr << "Invalid addressing mode for ISC (ISB, INS)."
+                    << std::endl;
+    }
+}
+
+void CPU::SLO(AddressingMode mode) 
+{
+    // ASL
+    uint16_t addr = operand_addr(mode);
+    uint8_t result = shift_l(bus.read(addr));
+    bus.write(addr, result);
+    
+    // ORA
+    A |= result;
+    set_NZ(A);
+
+    switch (mode)
+    {
+        case zp: 	cycles += 5; break;
+        case zp_x:  cycles += 6; break;
+        case abs: 	cycles += 6; break;
+        case abs_x: 	cycles += 7; break;
+        case abs_y: 	cycles += 7; break;
+        case idx_ind_x: cycles += 8; break;
+        case ind_idx_y: cycles += 8; break;
+        default: 	std::cerr << "Invalid addressing mode for SLO/ASO."
                     << std::endl;
     }
 }
