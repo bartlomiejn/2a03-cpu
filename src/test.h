@@ -3,21 +3,19 @@
 
 #include <cassert>
 #include <chrono>
+#include <csignal>
 #include <ctime>
 #include <fstream>
 #include <iostream>
 #include <regex>
 #include <string>
-#include <csignal>
 
 namespace NES {
 enum TestState { running = 0x80, reset_required = 0x81 };
 
 namespace Test {
 
-void handle_sigint(int signum) {
-    
-}
+void handle_sigint(int signum) {}
 
 std::string ltrim(const std::string &str) {
     size_t start = str.find_first_not_of(" \t\n\r\f\v");
@@ -193,8 +191,7 @@ void nestest(ExecutionEnvironment &ee) {
             }
         }
 
-        if (ee.stop)
-            break;
+        if (ee.stop) break;
     }
 
     ifs.close();
@@ -230,12 +227,11 @@ void ppu_tests(ExecutionEnvironment &ee) {
     while (true) {
         ee.logger.log();
         ee.step();
-        if (ee.cpu.PC == 0xE412) { // Failure
+        if (ee.cpu.PC == 0xE412) {  // Failure
             std::cout << "PC == E412. Terminating" << std::endl;
             break;
         }
-        if (ee.stop)
-            break;
+        if (ee.stop) break;
     }
 
     std::cout << "Finished execution. Saving log to file." << std::endl;

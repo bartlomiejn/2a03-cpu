@@ -14,7 +14,7 @@ class ExecutionEnvironment {
     NES::CPU &cpu;
     NES::CPULogger &logger;
     std::optional<NES::iNESv1::Cartridge> cartridge;
-    
+
     bool debug = false;
     bool stop = false;
 
@@ -45,7 +45,7 @@ class ExecutionEnvironment {
         if (debug) {
             char in = 0x0;
             std::cerr << "Stopped, next step (y/n)" << std::endl;
-            while (in != 'y' && in != 'n' ) {
+            while (in != 'y' && in != 'n') {
                 std::cin.get(in);
             }
             if (in == 'n') {

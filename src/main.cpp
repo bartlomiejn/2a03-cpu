@@ -41,11 +41,13 @@ struct Options {
                     run_ppu_tests = true;
                     break;
                 default:
-                    std::cerr << "Usage: " << argv[0] << " [-cdtp]" << std::endl;
+                    std::cerr << "Usage: " << argv[0] << " [-cdtp]"
+                              << std::endl;
                     std::cerr << "Where:" << std::endl;
                     std::cerr << "-c - Log CPU state for each step to stderr"
                               << std::endl;
-                    std::cerr << "-d - Step through each instruction" << std::endl;
+                    std::cerr << "-d - Step through each instruction"
+                              << std::endl;
                     std::cerr << "-t - Run nestest" << std::endl;
                     std::cerr << "-p - Run PPU tests" << std::endl;
                     throw std::runtime_error("Invalid usage");
