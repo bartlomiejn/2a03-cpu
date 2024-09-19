@@ -1,7 +1,7 @@
 #ifndef INC_2A03_MAPPER_H
 #define INC_2A03_MAPPER_H
 
-#include <2a03/cart/ines.h>
+#include <cart/ines.h>
 
 namespace NES {
 namespace iNESv1 {

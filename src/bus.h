@@ -1,7 +1,7 @@
 #ifndef INC_2A03_BUS_H
 #define INC_2A03_BUS_H
 
-#include <2a03/cart/mapper.h>
+#include <cart/mapper.h>
 
 #include <array>
 #include <cstdint>

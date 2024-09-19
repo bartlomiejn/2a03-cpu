@@ -1,11 +1,12 @@
 #ifndef INC_2A03_EE_H
 #define INC_2A03_EE_H
 
-#include <2a03/bus.h>
-#include <2a03/cart/load.h>
-#include <2a03/cart/mapper.h>
-#include <2a03/cpu.h>
-#include <2a03/ppu.h>
+#include <bus.h>
+#include <cart/load.h>
+#include <cart/mapper.h>
+#include <utils/logger.h>
+#include <cpu.h>
+#include <ppu.h>
 
 class ExecutionEnvironment {
    public:

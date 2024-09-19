@@ -25,7 +25,7 @@ set(SOURCES
         src/cart/mapper.cpp
         src/utils/logger.cpp)
 
-include_directories(include)
+include_directories(src)
 
 # Copy test ROMs to output dir
 configure_file(${NES_TEST_DIR}/nestest.log nestest.log COPYONLY)

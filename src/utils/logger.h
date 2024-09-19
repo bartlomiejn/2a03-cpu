@@ -1,8 +1,8 @@
 #ifndef INC_2A03_LOGGER_H
 #define INC_2A03_LOGGER_H
 
-#include <2a03/bus.h>
-#include <2a03/cpu.h>
+#include <bus.h>
+#include <cpu.h>
 
 #include <functional>
 #include <iostream>

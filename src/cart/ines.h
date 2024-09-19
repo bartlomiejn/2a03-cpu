@@ -1,7 +1,7 @@
 #ifndef INC_2A03_INES_H
 #define INC_2A03_INES_H
 
-#include <2a03/utils/bitfield.h>
+#include <utils/bitfield.h>
 
 #include <algorithm>
 #include <cstdint>

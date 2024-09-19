@@ -1,4 +1,4 @@
-#include <2a03/ppu.h>
+#include <ppu.h>
 
 using namespace NES;
 

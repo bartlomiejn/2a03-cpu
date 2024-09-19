@@ -1,7 +1,7 @@
 #ifndef INC_2A03_PPU_H
 #define INC_2A03_PPU_H
 
-#include <2a03/utils/bitfield.h>
+#include <utils/bitfield.h>
 
 #include <cstdint>
 

@@ -1,5 +1,5 @@
-#include <2a03/bus.h>
-#include <2a03/ppu.h>
+#include <bus.h>
+#include <ppu.h>
 
 #include <cstring>
 #include <iostream>

@@ -1,8 +1,8 @@
 #ifndef INC_2A03_CPU_H
 #define INC_2A03_CPU_H
 
-#include <2a03/bus.h>
-#include <2a03/utils/bitfield.h>
+#include <bus.h>
+#include <utils/bitfield.h>
 
 #include <cstdint>
 

@@ -1,9 +1,9 @@
-#include <2a03/cart/load.h>
-#include <2a03/cart/mapper.h>
-#include <2a03/cpu.h>
-#include <2a03/ee.h>
-#include <2a03/test.h>
-#include <2a03/utils/logger.h>
+#include <cart/load.h>
+#include <cart/mapper.h>
+#include <cpu.h>
+#include <ee.h>
+#include <test.h>
+#include <utils/logger.h>
 #include <unistd.h>
 
 #include <cassert>
