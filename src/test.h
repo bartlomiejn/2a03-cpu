@@ -8,11 +8,17 @@
 #include <iostream>
 #include <regex>
 #include <string>
+#include <csignal>
 
 namespace NES {
 enum TestState { running = 0x80, reset_required = 0x81 };
 
 namespace Test {
+
+void handle_sigint(int signum) {
+    
+}
+
 std::string ltrim(const std::string &str) {
     size_t start = str.find_first_not_of(" \t\n\r\f\v");
     return (start == std::string::npos) ? "" : str.substr(start);
@@ -186,6 +192,9 @@ void nestest(ExecutionEnvironment &ee) {
                 break;
             }
         }
+
+        if (ee.stop)
+            break;
     }
 
     ifs.close();
@@ -206,14 +215,14 @@ void nestest(ExecutionEnvironment &ee) {
 void ppu_tests(ExecutionEnvironment &ee) {
     using namespace NES::iNESv1;
 
-    std::string pallete_ram = "pallete_ram.nes";
-    ee.logger.log_filename = gen_logname("pallete_ram");
+    std::string palette_ram = "palette_ram.nes";
+    ee.logger.log_filename = gen_logname("palette_ram");
 
-    std::cout << "Running " << pallete_ram << std::endl;
+    std::cout << "Running " << palette_ram << std::endl;
     std::cout << "Saving logs to: " << ee.logger.log_filename.value()
               << std::endl;
 
-    ee.load_iNESv1(pallete_ram);
+    ee.load_iNESv1(palette_ram);
     ee.power(nullptr);
 
     std::cout << "Entering runloop." << std::endl;
@@ -221,6 +230,12 @@ void ppu_tests(ExecutionEnvironment &ee) {
     while (true) {
         ee.logger.log();
         ee.step();
+        if (ee.cpu.PC == 0xE412) { // Failure
+            std::cout << "PC == E412. Terminating" << std::endl;
+            break;
+        }
+        if (ee.stop)
+            break;
     }
 
     std::cout << "Finished execution. Saving log to file." << std::endl;

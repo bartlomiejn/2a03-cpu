@@ -3,8 +3,8 @@
 #include <cpu.h>
 #include <ee.h>
 #include <test.h>
-#include <utils/logger.h>
 #include <unistd.h>
+#include <utils/logger.h>
 
 #include <cassert>
 #include <chrono>
@@ -19,16 +19,20 @@
 
 struct Options {
     bool log_steps_to_cerr = false;
+    bool step_debug = false;
     bool run_nestest = false;
     bool run_ppu_tests = false;
 
     Options(int argc, char *argv[]) {
         int opt;
 
-        while ((opt = getopt(argc, argv, "ctp")) != -1) {
+        while ((opt = getopt(argc, argv, "cdtp")) != -1) {
             switch (opt) {
                 case 'c':
                     log_steps_to_cerr = true;
+                    break;
+                case 'd':
+                    step_debug = true;
                     break;
                 case 't':
                     run_nestest = true;
@@ -37,10 +41,11 @@ struct Options {
                     run_ppu_tests = true;
                     break;
                 default:
-                    std::cerr << "Usage: " << argv[0] << " [-ctp]" << std::endl;
+                    std::cerr << "Usage: " << argv[0] << " [-cdtp]" << std::endl;
                     std::cerr << "Where:" << std::endl;
                     std::cerr << "-c - Log CPU state for each step to stderr"
                               << std::endl;
+                    std::cerr << "-d - Step through each instruction" << std::endl;
                     std::cerr << "-t - Run nestest" << std::endl;
                     std::cerr << "-p - Run PPU tests" << std::endl;
                     throw std::runtime_error("Invalid usage");
@@ -56,6 +61,7 @@ int main(int argc, char *argv[]) {
     ExecutionEnvironment ee(bus, cpu, logger);
 
     Options opts(argc, argv);
+    ee.debug = opts.step_debug;
     if (opts.log_steps_to_cerr) logger.instr_ostream = std::cerr;
 
     if (opts.run_nestest) NES::Test::nestest(ee);

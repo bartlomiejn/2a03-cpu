@@ -4,15 +4,19 @@
 #include <bus.h>
 #include <cart/load.h>
 #include <cart/mapper.h>
-#include <utils/logger.h>
 #include <cpu.h>
 #include <ppu.h>
+#include <utils/logger.h>
 
 class ExecutionEnvironment {
    public:
     NES::MemoryBus &bus;
     NES::CPU &cpu;
     NES::CPULogger &logger;
+    std::optional<NES::iNESv1::Cartridge> cartridge;
+    
+    bool debug = false;
+    bool stop = false;
 
     std::function<void(void)> pre_step_hook;
     std::function<void(void)> post_step_hook;
@@ -24,20 +28,30 @@ class ExecutionEnvironment {
 
     void power(std::function<void(NES::CPU &)> setup_hook) {
         cpu.power();
-        setup_hook(cpu);
+        if (setup_hook) setup_hook(cpu);
     }
 
     void load_iNESv1(std::string rom) {
-        NES::iNESv1::Cartridge cartridge = NES::iNESv1::load(rom);
+        cartridge = NES::iNESv1::load(rom);
         NES::iNESv1::Mapper::Base *mapper =
-            NES::iNESv1::Mapper::mapper(cartridge);
+            NES::iNESv1::Mapper::mapper(cartridge.value());
         bus.mapper = mapper;
     }
 
     void step() {
-        pre_step_hook();
+        if (pre_step_hook) pre_step_hook();
         cpu.execute();
-        post_step_hook();
+        if (post_step_hook) post_step_hook();
+        if (debug) {
+            char in = 0x0;
+            std::cerr << "Stopped, next step (y/n)" << std::endl;
+            while (in != 'y' && in != 'n' ) {
+                std::cin.get(in);
+            }
+            if (in == 'n') {
+                stop = true;
+            }
+        }
     }
 };
 

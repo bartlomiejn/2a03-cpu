@@ -16,16 +16,16 @@ binary: $(OUT_DIR)
 	$(MAKE) 2a03 -C $(OUT_DIR)
 
 run_nestest: binary
-	cd $(OUT_DIR) && ./2a03 -ct
+	cd $(OUT_DIR) && $(CXX_DEBUG) -ex "run" --args ./2a03 -ct
 
 run_pputest: binary
-	cd $(OUT_DIR) && ./2a03 -cp
+	cd $(OUT_DIR) && $(CXX_DEBUG) -ex "run" --args ./2a03 -cp
 
 debug: binary
 	cd $(OUT_DIR) && $(CXX_DEBUG) 2a03
 
 lint:
-	find ./src ./include -name "*.cpp" -o -name "*.h" | xargs clang-format -i
+	find ./src -name "*.cpp" -o -name "*.h" | xargs clang-format -i
 
 clean:
 	rm -rf $(OUT_DIR)

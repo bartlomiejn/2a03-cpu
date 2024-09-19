@@ -25,6 +25,7 @@ uint8_t MemoryBus::read(uint16_t addr) {
             // TODO: Implement PPU, access with (addr % 8)
             std::cerr << "PPU register access at $" << std::hex << (int)addr
                       << "." << std::endl;
+            throw std::range_error("Unhandled PPU read");
             return 0xFF;
 
         // APU registers
@@ -32,16 +33,18 @@ uint8_t MemoryBus::read(uint16_t addr) {
             // TODO: Implement APU
             std::cerr << "APU register access at $" << std::hex << (int)addr
                       << "." << std::endl;
+            throw std::range_error("Unhandled APU read");
             return 0xFF;
 
         // CPU test mode APU/IO functionality (disabled)
         case 0x4018 ... 0x401F:
             std::cerr << "CPU test mode memory access at $" << std::hex
                       << (int)addr << "." << std::endl;
+            throw std::range_error("Unhandled CPU test mode read");
             return 0x0;
 
         // Cartridge space
-        case 0x6000 ... 0xFFFF:
+        case 0x4020 ... 0xFFFF:
             if (mapper)
                 return mapper->read(addr);
             else
@@ -50,6 +53,7 @@ uint8_t MemoryBus::read(uint16_t addr) {
         default:
             std::cerr << "Unhandled memory access: $" << std::hex << (int)addr
                       << std::endl;
+            throw std::range_error("Unhandled memory access");
             return 0x0;
     }
 }
@@ -68,7 +72,7 @@ void MemoryBus::write(uint16_t addr, uint8_t val) {
             ram[addr % 0x800] = val;
             break;
         // Cartridge space
-        case 0x6000 ... 0xFFFF:
+        case 0x4020 ... 0xFFFF:
             if (mapper)
                 mapper->write(addr, val);
             else
@@ -78,6 +82,7 @@ void MemoryBus::write(uint16_t addr, uint8_t val) {
             std::cerr << "Unhandled write to $" << std::hex << (int)addr
                       << " with value: " << std::hex << (int)val << "."
                       << std::endl;
+            throw std::range_error("Unhandled write");
             break;
     }
 }
