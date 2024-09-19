@@ -12,6 +12,10 @@ if(CMAKE_COMPILER_IS_GNUCC)
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -Werror -Wall")
 endif(CMAKE_COMPILER_IS_GNUCC)
 
+set(NES_TEST_DIR external/nestest)
+set(TEST_ROMS_DIR external/nes-test-roms)
+set(PPU_TESTS_DIR ${TEST_ROMS_DIR}/blargg_ppu_tests_2005.09.15b)
+
 set(SOURCES
         src/main.cpp
         src/cpu.cpp
@@ -23,8 +27,9 @@ set(SOURCES
 
 include_directories(include)
 
-# Copy nestest rom and log to build dir
-configure_file(test/nestest/nestest.log nestest.log COPYONLY)
-configure_file(test/nestest/nestest.nes nestest.nes COPYONLY)
+# Copy test ROMs to output dir
+configure_file(${NES_TEST_DIR}/nestest.log nestest.log COPYONLY)
+configure_file(${NES_TEST_DIR}/nestest.nes nestest.nes COPYONLY)
+configure_file(${PPU_TESTS_DIR}/palette_ram.nes palette_ram.nes COPYONLY)
 
 add_executable(2a03 ${SOURCES})

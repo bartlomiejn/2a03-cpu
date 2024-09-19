@@ -13,7 +13,7 @@ void CPU::power() {
     Y = 0x0;
     S = 0xFD;
     P.status = 0x24;
-
+    cycles = 0;
     IRQ = NMI = false;
 
     // TODO: Reenable once PPU is implemented
