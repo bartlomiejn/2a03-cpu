@@ -1,12 +1,13 @@
-#include <iostream>
+#include <2a03/ee.h>
+#include <unistd.h>
+
+#include <cassert>
+#include <chrono>
+#include <ctime>
 #include <fstream>
+#include <iostream>
 #include <regex>
 #include <string>
-#include <unistd.h>
-#include <cassert>
-#include <2a03/ee.h>
-#include <ctime>
-#include <chrono>
 
 namespace NES {
 enum TestState { running = 0x80, reset_required = 0x81 };
@@ -123,11 +124,15 @@ void nestest(ExecutionEnvironment &ee) {
     ee.logger.log_filename = gen_logname("nestest");
 
     std::cout << "Running " << nestest_rom << std::endl;
-    std::cout << "Saving logs to: " << ee.logger.log_filename.value() << std::endl;
+    std::cout << "Saving logs to: " << ee.logger.log_filename.value()
+              << std::endl;
     std::cout << "Setting up, PC=0xC000, cycles=7." << std::endl;
 
     ee.load_iNESv1(nestest_rom);
-    ee.power([](NES::CPU& cpu) { cpu.PC = 0xC000; cpu.cycles = 7; });
+    ee.power([](NES::CPU &cpu) {
+        cpu.PC = 0xC000;
+        cpu.cycles = 7;
+    });
 
     std::cout << "Entering runloop." << std::endl;
 
@@ -170,8 +175,8 @@ void nestest(ExecutionEnvironment &ee) {
 
         if (ee.bus.read(0x02) != 0x0)  // Some sort of error occured:
         {
-            std::cerr << "Nestest failure code: " << std::hex << ee.bus.read(0x02)
-                      << "." << std::endl;
+            std::cerr << "Nestest failure code: " << std::hex
+                      << ee.bus.read(0x02) << "." << std::endl;
             std::cerr << "Continue with y, stop with n" << std::endl;
             in = 0x0;
             while (in != 'y' && in != 'n') {
@@ -189,7 +194,8 @@ void nestest(ExecutionEnvironment &ee) {
 
     ee.logger.save();
 
-    std::cout << "Saved log to: " << ee.logger.log_filename.value() << std::endl;
+    std::cout << "Saved log to: " << ee.logger.log_filename.value()
+              << std::endl;
 
     // Run nestest.log diff test without PPU state
     NES::Test::test_nestest_noppu_diff(ee.logger.log_filename.value());
@@ -197,14 +203,15 @@ void nestest(ExecutionEnvironment &ee) {
     std::cout << "Finished execution." << std::endl;
 }
 
-void ppu_tests(ExecutionEnvironment& ee) {
+void ppu_tests(ExecutionEnvironment &ee) {
     using namespace NES::iNESv1;
 
     std::string pallete_ram = "pallete_ram.nes";
     ee.logger.log_filename = gen_logname("pallete_ram");
 
     std::cout << "Running " << pallete_ram << std::endl;
-    std::cout << "Saving logs to: " << ee.logger.log_filename.value() << std::endl;
+    std::cout << "Saving logs to: " << ee.logger.log_filename.value()
+              << std::endl;
 
     ee.load_iNESv1(pallete_ram);
     ee.power(nullptr);
