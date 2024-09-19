@@ -21,5 +21,8 @@ run: binary
 debug: binary
 	cd $(OUT_DIR) && $(CXX_DEBUG) 2a03
 
+lint:
+	find ./src ./include -name "*.cpp" -o -name "*.h" | xargs clang-format -i
+
 clean:
 	rm -rf $(OUT_DIR)
