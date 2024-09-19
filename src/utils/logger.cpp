@@ -14,6 +14,15 @@ static const std::string im_pat = "{{IM}}";
 
 CPULogger::CPULogger(CPU &cpu, MemoryBus &bus) : cpu(cpu), bus(bus), logs() {}
 
+uint16_t CPULogger::bus_read16(uint16_t addr, bool zp = false) {
+    // If we know this is a zero-page addr, wrap the most-significant bit
+    // around zero-page bounds
+    uint16_t h_addr = zp ? ((addr + 1) % 0x100) : (addr + 1);
+    uint8_t l_data = bus.read(addr);
+    uint8_t h_data = bus.read(h_addr);
+    return (h_data << 8) | l_data;
+}
+
 std::string CPULogger::log() {
     using namespace std;
 
@@ -88,12 +97,12 @@ std::string CPULogger::log() {
             ss.str(string());
 
             uint16_t imval =
-                bus.read16((bus.read(cpu.PC + 1) + cpu.X) % 0x100, true);
+                bus_read16((bus.read(cpu.PC + 1) + cpu.X) % 0x100, true);
             ss << setfill('0') << setw(4) << hex << imval;
             op_templ.replace(op_templ.find(im_pat), im_pat.length(), ss.str());
             ss.str(string());
         } else if (addr_mode.value() == ind_idx_y) {
-            uint16_t zpaddr = bus.read16(bus.read(cpu.PC + 1), true);
+            uint16_t zpaddr = bus_read16(bus.read(cpu.PC + 1), true);
             ss << setfill('0') << setw(4) << hex << (int)zpaddr;
             op_templ.replace(op_templ.find(sum_pat), sum_pat.length(),
                              ss.str());
@@ -104,7 +113,7 @@ std::string CPULogger::log() {
             op_templ.replace(op_templ.find(im_pat), im_pat.length(), ss.str());
             ss.str(string());
         } else if (addr_mode.value() == abs_x || addr_mode.value() == abs_y) {
-            uint16_t sum = bus.read16(cpu.PC + 1);
+            uint16_t sum = bus_read16(cpu.PC + 1);
             sum += addr_mode.value() == abs_x ? cpu.X : cpu.Y;
             ss << setfill('0') << setw(4) << hex << (int)sum;
             op_templ.replace(op_templ.find(sum_pat), sum_pat.length(),
@@ -1279,16 +1288,16 @@ uint16_t CPULogger::target_value(NES::AddressingMode addr_mode) {
 
             return target;
         case abs:
-            return (uint16_t)bus.read(bus.read16((uint16_t)(cpu.PC + 1)));
+            return (uint16_t)bus.read(bus_read16((uint16_t)(cpu.PC + 1)));
         case abs_x:
         case abs_y:
             uint16_t absaddr;
-            absaddr = bus.read16(cpu.PC + 1);
+            absaddr = bus_read16(cpu.PC + 1);
             absaddr += addr_mode == abs_x ? cpu.X : cpu.Y;
             return (uint16_t)bus.read(absaddr);
         case ind:
             uint16_t h_addr, l_addr;
-            l_addr = bus.read16((uint16_t)(cpu.PC + 1));
+            l_addr = bus_read16((uint16_t)(cpu.PC + 1));
             h_addr = (l_addr % 0x100 == 0xFF)
                          ? (uint16_t)(l_addr - l_addr % 0x100)
                          : (uint16_t)(l_addr + 1);
@@ -1303,11 +1312,11 @@ uint16_t CPULogger::target_value(NES::AddressingMode addr_mode) {
             return (uint16_t)bus.read(zp_addr);
         case idx_ind_x:
             uint16_t imx_addr;
-            imx_addr = bus.read16((bus.read(cpu.PC + 1) + cpu.X) % 0x100, true);
+            imx_addr = bus_read16((bus.read(cpu.PC + 1) + cpu.X) % 0x100, true);
             return (uint16_t)bus.read(imx_addr);
         case ind_idx_y:
             uint16_t imy_addr;
-            imy_addr = bus.read16(bus.read(cpu.PC + 1), true) + cpu.Y;
+            imy_addr = bus_read16(bus.read(cpu.PC + 1), true) + cpu.Y;
             return (uint16_t)bus.read(imy_addr);
         default:
             return std::numeric_limits<uint16_t>::max();

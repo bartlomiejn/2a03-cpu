@@ -1,5 +1,5 @@
 cmake-build-debug
 .idea
-test/*.nes
-output
+external/*.nes
 **/*.swp
+output

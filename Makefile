@@ -16,9 +16,15 @@ binary: $(OUT_DIR)
 	$(MAKE) 2a03 -C $(OUT_DIR)
 
 run_nestest: binary
+	cd $(OUT_DIR) && ./2a03 -ct
+
+debug_nestest: binary
 	cd $(OUT_DIR) && $(CXX_DEBUG) -ex "run" --args ./2a03 -ct
 
 run_pputest: binary
+	cd $(OUT_DIR) && ./2a03 -cp
+
+debug_pputest: binary
 	cd $(OUT_DIR) && $(CXX_DEBUG) -ex "run" --args ./2a03 -cp
 
 debug: binary
@@ -26,6 +32,9 @@ debug: binary
 
 lint:
 	find ./src -name "*.cpp" -o -name "*.h" | xargs clang-format -i
+
+loc:
+	find ./src -type f \( -name \*.cpp -o -name \*.h \) -exec wc -l {} +
 
 clean:
 	rm -rf $(OUT_DIR)

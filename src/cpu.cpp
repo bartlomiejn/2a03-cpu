@@ -5,7 +5,10 @@
 
 using namespace NES;
 
-CPU::CPU(NES::MemoryBus &bus) : bus(bus) {}
+CPU::CPU(NES::MemoryBus &bus) : bus(bus) {
+    bus.cpu_schedule_dma_oam =
+        std::bind(&CPU::schedule_dma_oam, this, std::placeholders::_1);
+}
 
 void CPU::power() {
     A = 0x0;
@@ -18,9 +21,9 @@ void CPU::power() {
 
     // TODO: Reenable once PPU is implemented
     while (false) {
-        for (uint16_t i = 0x4000; i <= 0x4013; i++) bus.write(i, 0x0);
-        bus.write(0x4015, 0x0);  // All channels disabled
-        bus.write(0x4017, 0x0);  // Frame IRQ enabled
+        for (uint16_t i = 0x4000; i <= 0x4013; i++) write(i, 0x0);
+        write(0x4015, 0x0);  // All channels disabled
+        write(0x4017, 0x0);  // Frame IRQ enabled
     }
 
     // TODO: Rest of power up logic
@@ -34,7 +37,7 @@ void CPU::reset() { interrupt(i_reset); }
 
 void CPU::execute() {
     uint16_t initial_pc = PC;
-    switch (bus.read(PC++)) {
+    switch (read(PC++)) {
         case 0x10:
             BPL();
             break;
@@ -695,7 +698,7 @@ void CPU::execute() {
             break;
         default:
             std::cerr << "Unhandled / invalid opcode: " << std::hex
-                      << static_cast<int>(bus.read(initial_pc)) << std::endl;
+                      << static_cast<int>(read(initial_pc)) << std::endl;
             throw InvalidOpcode();
     }
     if (NMI) interrupt(i_nmi);
@@ -709,10 +712,9 @@ void CPU::interrupt(NES::Interrupt type) {
         PH(P.status);
     } else {
         P.status |= 0x04;
-
-        // TODO: Reenable once the PPU is implemented
+        // TODO: Reenable once the APU is implemented
         while (false) {
-            bus.write(0x4015, 0x0);  // All channels disabled
+            write(0x4015, 0x0);  // All channels disabled
         }
     }
 
@@ -720,15 +722,15 @@ void CPU::interrupt(NES::Interrupt type) {
 
     switch (type) {
         case i_nmi:
-            PC = bus.read16(0xFFFA);
+            PC = read16(0xFFFA);
             break;
         case i_reset:
-            PC = bus.read16(0xFFFC);
+            PC = read16(0xFFFC);
             break;
         case i_irq:
         case i_brk:
         default:
-            PC = bus.read16(0xFFFE);
+            PC = read16(0xFFFE);
             break;
     }
 
@@ -738,8 +740,43 @@ void CPU::interrupt(NES::Interrupt type) {
         IRQ = false;
 }
 
+uint8_t CPU::read(uint16_t addr) {
+    switch (dma) {
+        case DMA_OAM:
+        case DMA_PCM:
+            handle_dma();
+        default:
+            return bus.read(addr);
+    }
+}
+
+uint16_t CPU::read16(uint16_t addr, bool zp) {
+    // If we know this is a zero-page addr, wrap the most-significant bit
+    // around zero-page bounds
+    uint16_t h_addr = zp ? ((addr + 1) % 0x100) : (addr + 1);
+    uint8_t l_data = read(addr);
+    uint8_t h_data = read(h_addr);
+    return (h_data << 8) | l_data;
+}
+
+void CPU::write(uint16_t addr, uint8_t val) { bus.write(addr, val); }
+
+void CPU::schedule_dma_oam(uint8_t page) {
+    dma = DMA_OAM;
+    dma_page = page;
+}
+
+void CPU::handle_dma() {
+    if (dma == DMA_PCM) {
+        throw std::runtime_error("PCM DMA unimplemented");
+    } else if (dma == DMA_OAM) {
+        // TODO: PCM DMA can interrupt OAM DMA
+        throw std::runtime_error("OAM DMA unimplemented");
+    }
+}
+
 uint8_t CPU::get_operand(AddressingMode mode) {
-    return bus.read(operand_addr(mode));
+    return read(operand_addr(mode));
 }
 
 bool CPU::is_same_page(uint16_t addr, uint16_t addr2) {
@@ -761,19 +798,19 @@ uint16_t CPU::operand_addr(AddressingMode mode) {
     uint16_t addr = 0x0;
     switch (mode) {
         case abs:
-            addr = bus.read16(PC);
+            addr = read16(PC);
             PC += 2;
             break;
         case abs_x:
-            opc = bus.read(PC - 1);
-            addr = bus.read16(PC) + X;
+            opc = read(PC - 1);
+            addr = read16(PC) + X;
             PC += 2;
             if (idx_abs_crossing_cycle(opc) && !is_same_page(addr - X, addr))
                 cycles++;
             break;
         case abs_y:
-            opc = bus.read(PC - 1);
-            addr = bus.read16(PC) + Y;
+            opc = read(PC - 1);
+            addr = read16(PC) + Y;
             PC += 2;
             if (idx_abs_crossing_cycle(opc) && !is_same_page(addr - Y, addr))
                 cycles++;
@@ -783,24 +820,24 @@ uint16_t CPU::operand_addr(AddressingMode mode) {
             PC++;
             break;
         case zp:
-            addr = bus.read(PC);
+            addr = read(PC);
             PC++;
             break;
         case zp_x:
-            addr = (bus.read(PC) + X) % 0x100;
+            addr = (read(PC) + X) % 0x100;
             PC++;
             break;
         case zp_y:
-            addr = (bus.read(PC) + Y) % 0x100;
+            addr = (read(PC) + Y) % 0x100;
             PC++;
             break;
         case idx_ind_x:
-            addr = bus.read16((bus.read(PC) + X) % 0x100, true);
+            addr = read16((read(PC) + X) % 0x100, true);
             PC++;
             break;
         case ind_idx_y:
-            opc = bus.read(PC - 1);
-            addr = bus.read16(bus.read(PC), true) + Y;
+            opc = read(PC - 1);
+            addr = read16(read(PC), true) + Y;
             PC++;
             if (idx_abs_crossing_cycle(opc) && !is_same_page(addr - Y, addr))
                 cycles++;
@@ -918,7 +955,7 @@ void CPU::BEQ() { branch_rel_if(P.Z) }
 void CPU::JMP(AddressingMode mode) {
     switch (mode) {
         case abs:
-            PC = bus.read16(PC);
+            PC = read16(PC);
             cycles += 3;
             break;
         case ind:
@@ -931,11 +968,11 @@ void CPU::JMP(AddressingMode mode) {
             // JMP ($30FF) will transfer control to $4080 rather
             // than $5080.
             uint16_t h_addr, l_addr;
-            l_addr = bus.read16(PC);
+            l_addr = read16(PC);
             h_addr = (l_addr % 0x100 == 0xFF)
                          ? (uint16_t)(l_addr - l_addr % 0x100)
                          : (uint16_t)(l_addr + 1);
-            PC = (uint16_t)(bus.read(h_addr)) << 8 | bus.read(l_addr);
+            PC = (uint16_t)(read(h_addr)) << 8 | read(l_addr);
             cycles += 5;
             break;
         default:
@@ -947,11 +984,11 @@ void CPU::JMP(AddressingMode mode) {
 void CPU::JSR() {
     // JSR return address should be the last byte of the 3-byte JSR instr.
     auto return_addr = (uint16_t)(PC + 1);
-    bus.write((uint16_t)(0x100 + S), (uint8_t)(return_addr >> 8));
+    write((uint16_t)(0x100 + S), (uint8_t)(return_addr >> 8));
     S--;
-    bus.write((uint16_t)(0x100 + S), (uint8_t)return_addr);
+    write((uint16_t)(0x100 + S), (uint8_t)return_addr);
     S--;
-    PC = bus.read16(PC);
+    PC = read16(PC);
     cycles += 6;
 }
 
@@ -959,9 +996,9 @@ void CPU::RTS() {
     uint8_t l_addr, h_addr;
 
     S++;
-    l_addr = bus.read((uint16_t)(0x100 + S));
+    l_addr = read((uint16_t)(0x100 + S));
     S++;
-    h_addr = bus.read((uint16_t)(0x100 + S));
+    h_addr = read((uint16_t)(0x100 + S));
     PC = (h_addr << 8 | l_addr) + (uint8_t)0x1;
     cycles += 6;
 }
@@ -969,7 +1006,7 @@ void CPU::RTS() {
 void CPU::RTI() {
     uint8_t l_addr, h_addr;
     S++;
-    uint8_t newp = bus.read((uint16_t)(0x100 + S));
+    uint8_t newp = read((uint16_t)(0x100 + S));
     P.N = bool(newp & 0x80);
     P.V = bool(newp & 0x40);
     P.D = bool(newp & 0x8);
@@ -977,9 +1014,9 @@ void CPU::RTI() {
     P.Z = bool(newp & 0x2);
     P.C = bool(newp & 0x1);
     S++;
-    l_addr = bus.read((uint16_t)(0x100 + S));
+    l_addr = read((uint16_t)(0x100 + S));
     S++;
-    h_addr = bus.read((uint16_t)(0x100 + S));
+    h_addr = read((uint16_t)(0x100 + S));
     PC = (h_addr << 8 | l_addr);
     cycles += 6;
 }
@@ -988,7 +1025,7 @@ void CPU::RTI() {
 
 void CPU::ADC(AddressingMode mode) {
     uint16_t op_addr = operand_addr(mode);
-    do_ADC(bus.read(op_addr));
+    do_ADC(read(op_addr));
     switch (mode) {
         case imm:
             cycles += 2;
@@ -1059,7 +1096,7 @@ void CPU::ASL_A() {
 
 void CPU::ASL(AddressingMode mode) {
     uint16_t addr = operand_addr(mode);
-    bus.write(addr, shift_l(bus.read(addr)));
+    write(addr, shift_l(read(addr)));
     switch (mode) {
         case zp:
             cycles += 5;
@@ -1128,8 +1165,8 @@ void CPU::CP(uint8_t &reg, AddressingMode mode) {
 
 void CPU::DEC(AddressingMode mode) {
     uint16_t op_addr = operand_addr(mode);
-    uint8_t result = bus.read(op_addr) - 1;
-    bus.write(op_addr, result);
+    uint8_t result = read(op_addr) - 1;
+    write(op_addr, result);
     set_NZ(result);
     switch (mode) {
         case zp:
@@ -1204,8 +1241,8 @@ void CPU::LSR_A() {
 
 void CPU::LSR(AddressingMode mode) {
     uint16_t addr = operand_addr(mode);
-    uint8_t result = shift_r(bus.read(addr));
-    bus.write(addr, result);
+    uint8_t result = shift_r(read(addr));
+    write(addr, result);
 
     switch (mode) {
         case zp:
@@ -1266,7 +1303,7 @@ void CPU::ROL_A() {
 
 void CPU::ROL(AddressingMode mode) {
     uint16_t addr = operand_addr(mode);
-    bus.write(addr, rot_l(bus.read(addr)));
+    write(addr, rot_l(read(addr)));
     switch (mode) {
         case zp:
             cycles += 5;
@@ -1292,7 +1329,7 @@ void CPU::ROR_A() {
 
 void CPU::ROR(AddressingMode mode) {
     uint16_t addr = operand_addr(mode);
-    bus.write(addr, rot_r(bus.read(addr)));
+    write(addr, rot_r(read(addr)));
     switch (mode) {
         case zp:
             cycles += 5;
@@ -1313,7 +1350,7 @@ void CPU::ROR(AddressingMode mode) {
 
 void CPU::SBC(AddressingMode mode) {
     uint16_t op_addr = operand_addr(mode);
-    do_ADC(~bus.read(op_addr));
+    do_ADC(~read(op_addr));
     switch (mode) {
         case imm:
             cycles += 2;
@@ -1387,7 +1424,7 @@ void CPU::LD(uint8_t &reg, AddressingMode mode) {
 
 void CPU::ST(uint8_t reg, AddressingMode mode) {
     uint16_t op_addr = operand_addr(mode);
-    bus.write(op_addr, reg);
+    write(op_addr, reg);
     switch (mode) {
         case zp:
             cycles += 3;
@@ -1418,8 +1455,8 @@ void CPU::ST(uint8_t reg, AddressingMode mode) {
 
 void CPU::INC(AddressingMode mode) {
     uint16_t addr = operand_addr(mode);
-    auto newval = (uint8_t)(bus.read(addr) + 1);
-    bus.write(addr, newval);
+    auto newval = (uint8_t)(read(addr) + 1);
+    write(addr, newval);
     set_NZ(newval);
     switch (mode) {
         case zp:
@@ -1465,20 +1502,20 @@ void CPU::IN(uint8_t &reg) {
 // Stack
 
 void CPU::PH(uint8_t value) {
-    bus.write((uint16_t)(0x100 + S), value);
+    write((uint16_t)(0x100 + S), value);
     S--;
     cycles += 3;
 }
 
 void CPU::PH(StatusRegister &p) {
-    bus.write((uint16_t)(0x100 + S), (uint8_t)(p.status | 0x10));
+    write((uint16_t)(0x100 + S), (uint8_t)(p.status | 0x10));
     S--;
     cycles += 3;
 }
 
 void CPU::PL(uint8_t &reg_to) {
     S++;
-    uint8_t operand = bus.read((uint16_t)(0x100 + S));
+    uint8_t operand = read((uint16_t)(0x100 + S));
     reg_to = operand;
     if (&reg_to != &P.status) set_NZ(operand);
     cycles += 4;
@@ -1486,7 +1523,7 @@ void CPU::PL(uint8_t &reg_to) {
 
 void CPU::PL(StatusRegister &p) {
     S++;
-    uint8_t newp = bus.read((uint16_t)(0x100 + S));
+    uint8_t newp = read((uint16_t)(0x100 + S));
     p.N = bool(newp & 0x80);
     p.V = bool(newp & 0x40);
     p.D = bool(newp & 0x8);
@@ -1532,7 +1569,7 @@ void CPU::LAX(AddressingMode mode) {
 
 void CPU::SAX(AddressingMode mode) {
     uint16_t op_addr = operand_addr(mode);
-    bus.write(op_addr, A & X);
+    write(op_addr, A & X);
     switch (mode) {
         case zp:
             cycles += 3;
@@ -1553,9 +1590,9 @@ void CPU::SAX(AddressingMode mode) {
 
 void CPU::DCP(AddressingMode mode) {
     uint16_t op_addr = operand_addr(mode);
-    uint8_t op = bus.read(op_addr);
+    uint8_t op = read(op_addr);
     uint8_t result = op - 1;
-    bus.write(op_addr, result);
+    write(op_addr, result);
 
     P.Z = A == result;
     P.C = A >= result;
@@ -1591,9 +1628,9 @@ void CPU::DCP(AddressingMode mode) {
 void CPU::ISC(AddressingMode mode) {
     // INC
     uint16_t op_addr = operand_addr(mode);
-    uint8_t op = bus.read(op_addr);
+    uint8_t op = read(op_addr);
     uint8_t result = op + 1;
-    bus.write(op_addr, result);
+    write(op_addr, result);
     set_NZ(result);
 
     // SBC
@@ -1630,8 +1667,8 @@ void CPU::ISC(AddressingMode mode) {
 void CPU::SLO(AddressingMode mode) {
     // ASL
     uint16_t addr = operand_addr(mode);
-    uint8_t result = shift_l(bus.read(addr));
-    bus.write(addr, result);
+    uint8_t result = shift_l(read(addr));
+    write(addr, result);
 
     // ORA
     A |= result;
@@ -1667,8 +1704,8 @@ void CPU::SLO(AddressingMode mode) {
 void CPU::RLA(AddressingMode mode) {
     // ROL
     uint16_t addr = operand_addr(mode);
-    uint8_t result = rot_l(bus.read(addr));
-    bus.write(addr, result);
+    uint8_t result = rot_l(read(addr));
+    write(addr, result);
 
     // AND
     A &= result;
@@ -1704,8 +1741,8 @@ void CPU::RLA(AddressingMode mode) {
 void CPU::SRE(AddressingMode mode) {
     // LSR
     uint16_t addr = operand_addr(mode);
-    uint8_t result = shift_r(bus.read(addr));
-    bus.write(addr, result);
+    uint8_t result = shift_r(read(addr));
+    write(addr, result);
 
     // EOR
     A ^= result;
@@ -1741,8 +1778,8 @@ void CPU::SRE(AddressingMode mode) {
 void CPU::RRA(AddressingMode mode) {
     // ROR
     uint16_t addr = operand_addr(mode);
-    uint8_t result = rot_r(bus.read(addr));
-    bus.write(addr, result);
+    uint8_t result = rot_r(read(addr));
+    write(addr, result);
 
     // ADC
     do_ADC(result);

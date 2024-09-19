@@ -148,11 +148,10 @@ void nestest(ExecutionEnvironment &ee) {
     std::ifstream ifs(nestest_log);
     assert(ifs.is_open());
 
-    while (true) {
+    ee.pre_step_hook = [&](auto &ee) {
         using namespace NES::Test;
 
         line_ours = ee.logger.log();
-
         line++;
         std::getline(ifs, line_nestest);
 
@@ -171,12 +170,11 @@ void nestest(ExecutionEnvironment &ee) {
                 std::cin.get(in);
             }
             if (in == 'n') {
-                break;
+                ee.stop = true;
             }
         }
-
-        ee.step();
-
+    };
+    ee.post_step_hook = [&](auto &ee) {
         if (ee.bus.read(0x02) != 0x0)  // Some sort of error occured:
         {
             std::cerr << "Nestest failure code: " << std::hex
@@ -187,26 +185,20 @@ void nestest(ExecutionEnvironment &ee) {
                 std::cin.get(in);
             }
             if (in == 'n') {
-                break;
+                ee.stop = true;
             }
         }
+    };
 
-        if (ee.stop) break;
-    }
+    ee.run();
 
     ifs.close();
-
-    std::cout << "Terminating." << std::endl;
-
+    std::cout << "Finished execution." << std::endl;
     ee.logger.save();
-
     std::cout << "Saved log to: " << ee.logger.log_filename.value()
               << std::endl;
 
-    // Run nestest.log diff test without PPU state
     NES::Test::test_nestest_noppu_diff(ee.logger.log_filename.value());
-
-    std::cout << "Finished execution." << std::endl;
 }
 
 void ppu_tests(ExecutionEnvironment &ee) {
@@ -221,19 +213,16 @@ void ppu_tests(ExecutionEnvironment &ee) {
 
     ee.load_iNESv1(palette_ram);
     ee.power(nullptr);
-
-    std::cout << "Entering runloop." << std::endl;
-
-    while (true) {
-        ee.logger.log();
-        ee.step();
+    ee.pre_step_hook = [](auto &ee) { ee.logger.log(); };
+    ee.post_step_hook = [](auto &ee) {
         if (ee.cpu.PC == 0xE412) {  // Failure
-            std::cout << "PC == E412. Terminating" << std::endl;
-            break;
+            std::cerr << "PC == E412. Terminating" << std::endl;
+            ee.stop = true;
         }
-        if (ee.stop) break;
-    }
+    };
 
+    std::cout << "Starting execution." << std::endl;
+    ee.run();
     std::cout << "Finished execution. Saving log to file." << std::endl;
     ee.logger.save();
 }

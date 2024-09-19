@@ -3,45 +3,59 @@
 
 #include <utils/bitfield.h>
 
+#include <array>
 #include <cstdint>
+#include <stdexcept>
 
 namespace NES {
+
 bitfield_union(
-    Register0, uint8_t value,
-    bool x_scroll_ntable : 1;  ///< X scroll nametable selection.
-    bool y_scroll_ntable : 1;  ///< Y scroll nametable selection.
-    bool incr_ppu_addr : 1;  ///< Increment PPU address by 1/32 (0/1) on access
-                             ///< to port 7.
-    bool obj_pat_table_sel : 1;    ///< Object pattern table selection.
-    bool playf_pat_table_sel : 1;  ///< Playfield pattern table selection.
-    bool scanline_obj : 1;         ///< 8/16 (0/1) scanline objects.
-    bool ext_bus_dir : 1;          ///< EXT bus direction in/out (0/1).
-    bool vbl_disable : 1;          ///< VBL disable (when 0).
+    PPUCTRL, uint8_t value,
+    uint8_t ntable_base_addr : 2;  ///< Base nametable addr 0=$2000, 1=$2400,
+                                   ///< 2=$2800, 3=$2C00
+    bool vram_addr_incr : 1;  ///< Increment VRAM addr per CPU r/w of PPUDATA
+    bool spr_pattern_tbl_addr : 1;  ///< 0: $0000 1: $1000, ignored in 8x16 mode
+    bool bg_pattern_tbl_addr : 1;   ///< 0: $0000 1: $1000
+    bool sprite_size : 1;  ///< 0: 8x8 pixels, 1: 8x16 pixels (see PPU OAM byte
+                           ///< 1)
+    bool ppu_master : 1;   ///< PPU master/slave select (0: read backdrop from,
+                           ///< 1: output color) on EXT pins
+    bool vbl_nmi : 1;      ///< Generate NMI at start of vertical blanking
+                           ///< interval (1: on).
+);
+
+bitfield_union(PPUMASK, uint8_t value,
+               bool grayscale : 1;         ///< 1: Grayscale 0: Color
+               bool bg_show_left_8px : 1;  ///< 1: Show background in leftmost 8
+                                           ///< pixels of the screen
+               bool spr_show_left_8px : 1;  ///< 1: Show sprites in leftmost 8
+                                            ///< pixels of the screen
+               bool bg_show : 1;            ///< 1: Show background
+               bool spr_show : 1;           ///< 1: Show sprites
+               bool r : 1;                  ///< Emphasize R
+               bool g : 1;                  ///< Emphasize G
+               bool b : 1;                  ///< Emphasize B
 );
 
 bitfield_union(
-    Register1, uint8_t value,
-    bool disable_comp_color : 1;  ///< Disable composite colorburst (when 1).
-    bool left_scr_col_playf_clip : 1;  ///< Y scroll nametable selection.
-    bool left_scr_col_obj_clip : 1;  ///< Increment PPU address by 1/32 (0/1) on
-                                     ///< access to port 7.
-    bool playf_display : 1;          ///< Enable playfield display (when 1).
-    bool obj_display : 1;            ///< Enable object display (when 1).
-    bool r : 1; bool g : 1; bool b : 1;);
-
-bitfield_union(
-    Register2, uint8_t value,
-    bool RESERVED : 5;
-    bool obj_on_scanline : 1;   ///< More than 8 objects on a single scanline
-                                ///< have been detected in the last frame.
-    bool obj_play_collide : 1;  ///< A primary object pixel has collided with a
-                                ///< playfield pixel in the last frame.
-    bool vblank : 1;            ///< VBlank flag.
+    PPUSTATUS, uint8_t value,
+    bool ppu_open_bus : 5;  ///< Returns stale PPU bus contents.
+    bool spr_overflow : 1;  ///< 1: When more than 8 sprites are in scanline
+    bool spr0_hit : 1;      ///< 1: When a nonzero pixel of sprite 0 overlaps a
+                            ///< nonzero bg pixel, used for raster timing
+    bool vblank : 1;        ///< 0: Not in vblank 1: in vblank
 );
 
-struct ObjectAttribute {
+bitfield_union(PPU_vramaddr, uint16_t value,
+               uint8_t scrollx : 5;   ///< Coarse X scroll
+               uint8_t scrolly : 5;   ///< Coarse Y scroll
+               uint8_t ns : 2;        ///< Nametable select
+               uint8_t scrollfy : 3;  ///< Fine Y scroll
+);
+
+struct OA {
     bitfield_union(
-        Byte2, uint8_t value,
+        Attribute, uint8_t value,
         bool pal_sel_l : 1;  ///< Palette select low bit.
         bool pal_sel_h : 1;  ///< Palette select high bit.
         bool RESERVED : 3; bool
@@ -53,35 +67,69 @@ struct ObjectAttribute {
                                  ///< object tile.
     );
 
-    uint8_t
-        coord;  ///< Scanline coordinate minus one of object's top pixel row.
-    uint8_t tile_idx;  ///< Tile index number. Bit 0 controls pattern table
-                       ///< selection when r0.5 == 1.
-    Byte2 b2;
-    uint8_t scan_pix_coord;  ///< Scanline pixel coordinate of most left-hand
-                             ///< side of object.
+    uint8_t y;       ///< Scanline Y (topmost) coordinate
+    uint8_t tile;    ///< Tile index number.
+    Attribute attr;  ///< Attribute
+    uint8_t x;       ///< Scanline X (left-side) coordinate
 };
 
-/// Ricoh 2C03 PPU emulator.
+static const int vram_sz = 0x3F1F;  ///< PPU VRAM size
+static const int oam_sz = 0xFF;     ///< PPU OAM size
+static const int ntsc_x = 341;      ///< NTSC pixel count (341 PPU clock cycles
+                                    ///< per scanline)
+static const int ntsc_y = 262;      ///< NTSC scanline count
+
+/// Ricoh 2C02/7 PPU emulator
 class PPU {
    public:
-    /// Creates a PPU instance.
+    std::array<uint8_t, vram_sz> vram;         ///< PPU VRAM
+    std::array<uint8_t, oam_sz> oam;           ///< PPU OAM
+    std::array<uint32_t, ntsc_x * ntsc_y> fb;  ///< Framebuffer
+
+    uint16_t scan_x = 0;  ///< Pixel
+    uint16_t scan_y = 0;  ///< Scanline
+
+    PPU_vramaddr v;  ///< 15-bit Current VRAM address
+    PPU_vramaddr t;  ///< 15-bit Temporary VRAM address / Top left onscreen tile
+    uint8_t x;       ///< 3-bit Fine X scroll
+    bool w;          ///< H/V? First or second write toggle
+
+    PPUCTRL ppuctrl;      ///< PPU control register, write access $2000
+    PPUMASK ppumask;      ///< PPU mask register, write access $2001
+    PPUSTATUS ppustatus;  ///< PPU status register, read access $2002
+
+    uint16_t oamaddr;  ///< 8-bit port at $2003, $2004 is OAMDATA
+
+    uint8_t ppuscrollx;  ///< PPU scrolling position register $2005,
+                         ///< write twice (x, y)
+    uint8_t ppuscrolly;  ///< PPU scrolling position register $2005,
+                         ///< write twice (x, y)
+    bool ppu_x = true;
+
+    uint16_t ppuaddr16 = 0x0;  // 8-bit port at $2006, $2007 is PPUDATA
+    bool ppu_h = true;
+
     PPU();
 
-    Register0 r0;
-    Register1 r1;
-    Register2 r2;
-    uint8_t r3;  ///< Internal object attribute memory index
-                 ///< pointer. (64 attributes, 32 bits each, byte
-                 ///< access). Stored value post-increments on
-                 ///< access to port 4.
-    uint8_t r4;  ///< Object attribute memory location indexed by
-                 ///< port 3, then increments port 3.
-    uint8_t r5;  ///< Scroll offset port.
-    uint8_t r6;  ///< PPU address port to access with port 7.
-    uint8_t r7;  ///< PPU memory read/write port.
-   private:
+    /// Writes value @ addr
+    void write(uint16_t addr, uint8_t value);
+
+    /// Reads value @ addr
+    uint8_t read(uint16_t addr);
+
+   protected:
+    /// Handle PPUSCROLL X/Y write
+    void write_ppuscroll(uint8_t value);
+
+    /// Handle OAMADDR write and OAMDATA MMIO
+    void write_oamaddr(uint8_t value);
+    void write_oamdata(uint8_t value);
+
+    /// Handle H/L PPUADDR write and PPUDATA MMIO
+    void write_ppuaddr(uint8_t value);
+    void write_ppudata(uint8_t value);
 };
+
 }  // namespace NES
 
 #endif  // INC_2A03_PPU_H

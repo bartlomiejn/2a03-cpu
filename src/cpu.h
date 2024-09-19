@@ -7,6 +7,7 @@
 #include <cstdint>
 
 namespace NES {
+
 /// Addressing mode for an operation.
 enum AddressingMode {
     rel,        ///< Relative (branch instructions)
@@ -46,9 +47,7 @@ bitfield_union(StatusRegister, uint8_t status,
 /// called.
 class CPU {
    public:
-    /// Creates a CPU instance with provided memory bus.
-    /// \param bus Memory bus to use.
-    explicit CPU(MemoryBus &bus);
+    MemoryBus &bus;
 
     uint8_t A;         ///< Accumulator
     uint8_t X, Y;      ///< Index registers
@@ -61,6 +60,8 @@ class CPU {
                ///< IRQ after next instruction completes.
     uint32_t cycles;  ///< Cycle counter.
 
+    CPU(MemoryBus &bus);
+
     /// Starts the CPU.
     void power();
 
@@ -70,13 +71,39 @@ class CPU {
     /// Executes the next instruction.
     void execute();
 
+    /// Schedules a DMA transfer
+    /// \value page Page to copy
+    void schedule_dma_oam(uint8_t page);
+
    protected:
-    MemoryBus &bus;  ///< Addressing bus
+    enum DMAState {
+        DMA_Clear,
+        DMA_OAM,
+        DMA_PCM,
+    };
+
+    DMAState dma = DMA_Clear;  ///< Is DMA scheduled/in progress
+    uint8_t dma_page = 0x0;    ///< Page to transfer
+
+    /// Handle DMA transfer
+    void handle_dma();
+
+    /// Attempt to read byte from bus at addr
+    uint8_t read(uint16_t addr);
+
+    /// Attempt to read 2 bytes from bus
+    /// \param addr Address to read from
+    /// \param zp If it's a zero-page addr, wrap the most significant byte
+    /// around zero-page
+    /// \return Read bytes
+    uint16_t read16(uint16_t addr, bool zp = false);
+
+    /// Attempt to write byte to bus at addr
+    void write(uint16_t addr, uint8_t value);
 
     /// Performs an interrupt routine
     void interrupt(Interrupt type);
 
-   private:
     // Addressing mode functions
     // http://www.obelisk.me.uk/6502/addressing.html
 

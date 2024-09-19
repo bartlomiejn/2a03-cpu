@@ -6,10 +6,25 @@
 
 using namespace NES;
 
-MemoryBus::MemoryBus() {
-    // Ram state is not consistent on a real machine.
+MemoryBus::MemoryBus(NES::PPU &_ppu, NES::OAMDMA &_oamdma)
+    : ppu(_ppu), oamdma(_oamdma) {
+    // Ram state is not consistent on a real machine
     std::fill(ram.begin(), ram.end(), 0x0);
+
+    // Setup OAMDMA handlers
+    oamdma.dma_schedule_cpu =
+        std::bind(&MemoryBus::dma_oam_handler, this, std::placeholders::_1);
+    oamdma.dma_read = std::bind(&MemoryBus::dma_oam_read_handler, this,
+                                std::placeholders::_1);
+    oamdma.dma_write = std::bind(&MemoryBus::dma_oam_write_handler, this,
+                                 std::placeholders::_1);
 }
+
+void MemoryBus::dma_oam_handler(uint8_t page) { cpu_schedule_dma_oam(page); }
+
+void MemoryBus::dma_oam_read_handler(uint16_t addr) {}
+
+void MemoryBus::dma_oam_write_handler(uint16_t addr) {}
 
 uint8_t MemoryBus::read(uint16_t addr) {
     switch (addr) {
@@ -22,26 +37,19 @@ uint8_t MemoryBus::read(uint16_t addr) {
 
         // PPU registers
         case 0x2000 ... 0x3FFF:
-            // TODO: Implement PPU, access with (addr % 8)
-            std::cerr << "PPU register access at $" << std::hex << (int)addr
-                      << "." << std::endl;
-            throw std::range_error("Unhandled PPU read");
-            return 0xFF;
+            return ppu.read(addr);
 
         // APU registers
         case 0x4000 ... 0x4017:
-            // TODO: Implement APU
             std::cerr << "APU register access at $" << std::hex << (int)addr
                       << "." << std::endl;
             throw std::range_error("Unhandled APU read");
-            return 0xFF;
 
         // CPU test mode APU/IO functionality (disabled)
         case 0x4018 ... 0x401F:
             std::cerr << "CPU test mode memory access at $" << std::hex
                       << (int)addr << "." << std::endl;
             throw std::range_error("Unhandled CPU test mode read");
-            return 0x0;
 
         // Cartridge space
         case 0x4020 ... 0xFFFF:
@@ -54,24 +62,20 @@ uint8_t MemoryBus::read(uint16_t addr) {
             std::cerr << "Unhandled memory access: $" << std::hex << (int)addr
                       << std::endl;
             throw std::range_error("Unhandled memory access");
-            return 0x0;
     }
-}
-
-uint16_t MemoryBus::read16(uint16_t addr, bool is_zp) {
-    // If we know this is a zero-page addr, wrap the most-significant bit
-    // around zero-page bounds
-    uint16_t h_addr = is_zp ? ((addr + 1) % 0x100) : (addr + 1);
-    return (read(h_addr) << 8) | read(addr);
 }
 
 void MemoryBus::write(uint16_t addr, uint8_t val) {
     switch (addr) {
-        // Internal RAM
         case 0x0000 ... 0x1FFF:
             ram[addr % 0x800] = val;
             break;
-        // Cartridge space
+        case 0x2000 ... 0x3FFF:
+            ppu.write(0x2000 + ((addr - 0x2000) % 8), val);
+            break;
+        case 0x4014:
+            oamdma.write_oamdma(val);
+            break;
         case 0x4020 ... 0xFFFF:
             if (mapper)
                 mapper->write(addr, val);
@@ -83,6 +87,5 @@ void MemoryBus::write(uint16_t addr, uint8_t val) {
                       << " with value: " << std::hex << (int)val << "."
                       << std::endl;
             throw std::range_error("Unhandled write");
-            break;
     }
 }

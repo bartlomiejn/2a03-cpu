@@ -20,6 +20,9 @@ class CPULogger {
     /// Should be the same instance as the one used by the CPU.
     CPULogger(NES::CPU &cpu, NES::MemoryBus &bus);
 
+    /// Two 8-bit reads on the bus with behaviour same as CPU
+    uint16_t bus_read16(uint16_t addr, bool zp);
+
     /// If set writes every line on each log() call to this stream
     std::optional<std::reference_wrapper<std::ostream>> instr_ostream;
     /// If set specifies the output log filename

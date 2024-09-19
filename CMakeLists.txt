@@ -3,6 +3,15 @@ project(2a03)
 
 set(CMAKE_CXX_STANDARD 20)
 
+find_package(SDL2 REQUIRED)
+if (SDL2_FOUND)
+    message(STATUS "Found SDL2")
+    message(STATUS "Libraries: ${SDL2_LIBRARIES}") 
+    message(STATUS "Include dirs: ${SDL2_INCLUDE_DIRS}")
+else()
+    message(FATAL_ERROR "SDL2 not found")
+endif()
+
 # Project options
 option(2A03_INCLUDE_TESTS "Include tests in the output." FALSE)
 
@@ -21,11 +30,13 @@ set(SOURCES
         src/cpu.cpp
         src/ppu.cpp
         src/bus.cpp
+        src/dma.cpp
         src/cart/load.cpp
         src/cart/mapper.cpp
         src/utils/logger.cpp)
 
 include_directories(src)
+include_directories(${SDL2_INCLUDE_DIRS})
 
 # Copy test ROMs to output dir
 configure_file(${NES_TEST_DIR}/nestest.log nestest.log COPYONLY)
@@ -33,3 +44,5 @@ configure_file(${NES_TEST_DIR}/nestest.nes nestest.nes COPYONLY)
 configure_file(${PPU_TESTS_DIR}/palette_ram.nes palette_ram.nes COPYONLY)
 
 add_executable(2a03 ${SOURCES})
+
+target_link_libraries(2a03 ${SDL2_LIBRARIES})
