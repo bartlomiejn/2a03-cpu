@@ -1,0 +1,3 @@
+[submodule "external/nes-test-roms"]
+	path = external/nes-test-roms
+	url = git@github.com:bartlomiejn/nes-test-roms.git
