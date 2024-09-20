@@ -20,12 +20,12 @@ bitfield_union(
     bool vram_addr_incr : 1;  ///< Increment VRAM addr per CPU r/w of PPUDATA
     bool spr_pattern_tbl_addr : 1;  ///< 0: $0000 1: $1000, ignored in 8x16 mode
     bool bg_pattern_tbl_addr : 1;   ///< 0: $0000 1: $1000
-    bool spr_size : 1;  ///< 0: 8x8 pixels, 1: 8x16 pixels (see PPU OAM byte
-                           ///< 1)
-    bool ppu_master : 1;   ///< PPU master/slave select (0: read backdrop from,
-                           ///< 1: output color) on EXT pins
-    bool vbl_nmi : 1;      ///< Generate NMI at start of vertical blanking
-                           ///< interval (1: on).
+    bool spr_size : 1;    ///< 0: 8x8 pixels, 1: 8x16 pixels (see PPU OAM byte
+                          ///< 1)
+    bool ppu_master : 1;  ///< PPU master/slave select (0: read backdrop from,
+                          ///< 1: output color) on EXT pins
+    bool vbl_nmi : 1;     ///< Generate NMI at start of vertical blanking
+                          ///< interval (1: on).
 );
 
 /// PPUMASK write register
@@ -62,19 +62,19 @@ bitfield_union(PPU_vramaddr, uint16_t value,
 
 /// Object attributes model for sprites
 struct OA {
-    bitfield_union(
-        Attributes, uint8_t value,
-        bool palette : 2;      ///< Palette select
-        bool RESERVED : 3;     ///< Reserved
-        bool obj_pri : 1;      ///< Object priority: 0: Higher than BG
-        bool flip_h : 1;       ///< Flip sprite pixels horizontally
-        bool flip_v : 1;       ///< Flip sprite pixels vertically
+    bitfield_union(Attributes, uint8_t value,
+                   bool palette : 2;   ///< Palette select
+                   bool RESERVED : 3;  ///< Reserved
+                   bool obj_pri : 1;   ///< Object priority: 0: Higher than BG
+                   bool flip_h : 1;    ///< Flip sprite pixels horizontally
+                   bool flip_v : 1;    ///< Flip sprite pixels vertically
     );
-    uint8_t y;       ///< Scanline Y (top-most) coordinate
-    uint8_t tile;    ///< Tile index number = PPUCTRL base + tile number.
-                     ///< With PPUCTRL bit 5 set (8x16), bit 0 selects the pattern table 
+    uint8_t y;     ///< Scanline Y (top-most) coordinate
+    uint8_t tile;  ///< Tile index number = PPUCTRL base + tile number.
+                   ///< With PPUCTRL bit 5 set (8x16), bit 0 selects the pattern
+                   ///< table
     Attributes attr;  ///< Attributes byte
-    uint8_t x;       ///< Scanline X (left-side) coordinate
+    uint8_t x;        ///< Scanline X (left-side) coordinate
 };
 
 /// CHR tile addressing struct
@@ -85,12 +85,12 @@ bitfield_union(CHRTile, uint8_t value,
                uint8_t y : 3;  ///< Row # or Y
 );
 
-static const int vram_sz = 0x3F20;  ///< PPU VRAM size
-static const int oam_sz = 0x100;    ///< PPU OAM size
-static const int oam_sec_sz = 0x20; ///< Secondary OAM memory size
-static const int ntsc_x = 341;      ///< NTSC pixel count (341 PPU clock cycles
-                                    ///< per scanline)
-static const int ntsc_y = 262;      ///< NTSC scanline count
+static const size_t vram_sz = 0x3F20;   ///< PPU VRAM size
+static const size_t oam_sz = 0x100;     ///< PPU OAM size
+static const size_t oam_sec_sz = 0x20;  ///< Secondary OAM memory size
+static const size_t ntsc_x = 341;  ///< NTSC pixel count (341 PPU clock cycles
+                                   ///< per scanline)
+static const size_t ntsc_y = 262;  ///< NTSC scanline count
 
 /// Ricoh 2C02 NTSC PPU emulator
 class PPU {
@@ -104,7 +104,7 @@ class PPU {
 
     std::array<uint8_t, vram_sz> vram;         ///< PPU VRAM
     std::array<uint8_t, oam_sz> oam;           ///< PPU OAM
-    std::array<uint8_t, oam_sec_sz> oam_sec;   ///< Secondary OAM 
+    std::array<uint8_t, oam_sec_sz> oam_sec;   ///< Secondary OAM
     std::array<uint32_t, ntsc_x * ntsc_y> fb;  ///< Framebuffer
 
     uint16_t scan_x = 0;  ///< Pixel
