@@ -25,7 +25,7 @@ Mapper::Base *Mapper::mapper(NES::iNESv1::Cartridge &cartridge) {
 
 Mapper::NROM::NROM(Cartridge &cartridge) : Mapper::Base(cartridge) {}
 
-uint8_t Mapper::NROM::read(uint16_t addr) {
+uint8_t Mapper::NROM::read_prg(uint16_t addr) {
     switch (addr) {
         case 0x6000 ... 0x7FFF:
             return cartridge.prg_ram[addr - 0x6000];
@@ -45,7 +45,7 @@ uint8_t Mapper::NROM::read(uint16_t addr) {
     }
 }
 
-void Mapper::NROM::write(uint16_t addr, uint8_t val) {
+void Mapper::NROM::write_prg(uint16_t addr, uint8_t val) {
     switch (addr) {
         case 0x6000 ... 0x7FFF:
             cartridge.prg_ram[addr - 0x6000] = val;
@@ -53,6 +53,14 @@ void Mapper::NROM::write(uint16_t addr, uint8_t val) {
         default:
             break;
     }
+}
+ 
+uint8_t Mapper::NROM::read_chr(uint16_t addr) { 
+    throw std::runtime_error("Read CHR unimplemented");
+} 
+
+void Mapper::NROM::write_chr(uint16_t addr, uint8_t val) {
+    throw std::runtime_error("Write CHR unimplemented"); 
 }
 
 // MMC1
@@ -71,7 +79,7 @@ static bool is_low_bank(uint16_t addr) {
     return addr >= 0x8000 && addr <= 0xBFFF;
 }
 
-uint8_t Mapper::MMC1::read(uint16_t addr) {
+uint8_t Mapper::MMC1::read_prg(uint16_t addr) {
     switch (addr) {
         case 0x6000 ... 0x7FFF:
             // TODO: PRG RAM bankswitching?
@@ -90,7 +98,7 @@ uint8_t Mapper::MMC1::read(uint16_t addr) {
     }
 }
 
-void Mapper::MMC1::write(uint16_t addr, uint8_t val) {
+void Mapper::MMC1::write_prg(uint16_t addr, uint8_t val) {
     switch (addr) {
         case 0x6000 ... 0x7FFF:
             cartridge.prg_ram[addr - 0x6000] = val;
@@ -107,6 +115,14 @@ void Mapper::MMC1::write(uint16_t addr, uint8_t val) {
                       << static_cast<int>(addr) << "." << std::endl;
             throw InvalidAddress();
     }
+}
+
+uint8_t Mapper::MMC1::read_chr(uint16_t addr) { 
+    throw std::runtime_error("Read CHR unimplemented");
+} 
+
+void Mapper::MMC1::write_chr(uint16_t addr, uint8_t val) {
+    throw std::runtime_error("Write CHR unimplemented");
 }
 
 void Mapper::MMC1::set_shift_reg(uint16_t addr, uint8_t val) {

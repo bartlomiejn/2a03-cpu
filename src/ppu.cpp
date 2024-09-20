@@ -16,9 +16,51 @@ void PPU::power() {
     ppuscrolly = 0x0;
     oamaddr = 0x0;
     // ppudata read buffer = $00
+    
+    scan_y = 0;     
+    scan_x = 0;
 }
 
-void PPU::step() {}
+uint8_t PPU::step() {
+    // NTSC
+    // If rendering off, each frame is 341*262 / 3 CPU clocks long
+    // Scanline (341 pixels) is 113+(2/3) CPU clocks long
+    // HBlank (85 pixels) is 28+(1/3) CPU clocks long
+    // Frame is 29780.5 CPU clocks long
+    // 3 PPU dots per 1 CPU cycle
+    // OAM DMA is 513 CPU cycles + 1 if starting on CPU get cycle
+    // https://www.nesdev.org/wiki/Cycle_reference_chart
+
+    // BG and Sprite pixel data
+    uint8_t bg_px = 0;
+    uint8_t spr_px = 0;
+    uint8_t out = 0;
+    // OA priority 
+    bool oa_prio = 0;
+
+    // Background mux
+    if (ppumask.bg_show) {
+
+    }
+    
+    // Sprite 0..7 
+    if (ppumask.spr_show) {
+
+    }
+
+    // Priority mux
+    if (!bg_px && !spr_px) out = 0x0; // EXT in, which we won't have 
+    else if (!bg_px) out = spr_px;
+    else if (bg_px && !spr_px) out = bg_px;
+    else out = oa_prio ? spr_px : bg_px;
+
+    // Increment scanline/pixel counter
+    if (scan_x == (ntsc_x - 1))
+        scan_y = (scan_y + 1) % ntsc_y;
+    scan_x = (scan_x + 1) % ntsc_x;
+
+    return out;
+}
 
 void PPU::write(uint16_t addr, uint8_t value) {
     switch (addr) {

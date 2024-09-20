@@ -54,7 +54,7 @@ uint8_t MemoryBus::read(uint16_t addr) {
         // Cartridge space
         case 0x4020 ... 0xFFFF:
             if (mapper)
-                return mapper->read(addr);
+                return mapper->read_prg(addr);
             else
                 throw MissingCartridge();
 
@@ -78,7 +78,7 @@ void MemoryBus::write(uint16_t addr, uint8_t val) {
             break;
         case 0x4020 ... 0xFFFF:
             if (mapper)
-                mapper->write(addr, val);
+                mapper->write_prg(addr, val);
             else
                 throw MissingCartridge();
             break;

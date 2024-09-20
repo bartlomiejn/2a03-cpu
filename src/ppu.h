@@ -9,6 +9,20 @@
 
 namespace NES {
 
+// PPU memory map
+//
+// Mapped by cartridge:
+// $0000-$0FFF - CHR (Pattern) table 0
+// $1000-$1FFF - CHR (Pattern) table 1
+// $2000-$23FF - Nametable 0
+// $2400-$27FF - Nametable 1
+// $2800-$2BFF - Nametable 2
+// $2C00-$2FFF - Nametable 3
+//
+// PPU internal:
+// $3F00-$3F1F - Palette RAM indices
+// Mirrored to $3FFF
+
 bitfield_union(
     PPUCTRL, uint8_t value,
     uint8_t ntable_base_addr : 2;  ///< Base nametable addr 0=$2000, 1=$2400,
@@ -58,8 +72,8 @@ struct OA {
         Attribute, uint8_t value,
         bool pal_sel_l : 1;  ///< Palette select low bit.
         bool pal_sel_h : 1;  ///< Palette select high bit.
-        bool RESERVED : 3; bool
-            obj_pri : 1;  ///< Object priority: > playfield / < playfield (0/1).
+        bool RESERVED : 3;  ///< Reserved
+        bool obj_pri : 1;  ///< Object priority: 0: Higher than BG
         bool bit_reverse : 1;  ///< Apply bit reversal to fetched object pattern
                                ///< table data.
         bool inv_scan_addr : 1;  ///< Invert the 3/4-bit (8/16 scanlines/object
@@ -110,6 +124,13 @@ class PPU {
     bool ppu_h = true;
 
     PPU();
+
+    /// Powers up the PPU
+    void power();
+
+    /// Steps through a PPU cycle
+    /// \return Pixel value for current scanline/pixel
+    uint8_t step();
 
     /// Writes value @ addr
     void write(uint16_t addr, uint8_t value);
