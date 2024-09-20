@@ -1,11 +1,13 @@
 #include <ppu.h>
+#include <cstring>
 
 // https://fceux.com/web/help/PPU.html
-
+// https://www.nesdev.org/wiki/PPU_programmer_reference
+//
 // PPU memory map
 //
 // Mapped by cartridge:
-// $0000-$0FFF - CHR (Pattern) table 0
+// $0000-$0FFF - CHR (Pattern) table 0 (16 bit 2 plane patterns)
 // $1000-$1FFF - CHR (Pattern) table 1
 // $2000-$23FF - Nametable 0
 // $2400-$27FF - Nametable 1
@@ -54,19 +56,52 @@ void PPU::execute(uint8_t cycles) {
     uint8_t spr_px = 0;
     uint8_t out = 0;
     // OA priority
+    // TODO: This is object specific, set it after sprite evaluation
     bool oa_prio = 0;
 
-    // Background mux
+    // Background pixel mux
     if (ppumask.bg_show) {
+        // 1. Fetch a nametable entry from $2000-$2FFF.
+        // 2. Fetch the corresponding attribute table entry from $23C0-$2FFF
+        //  and increment the current VRAM address within the same row.
+        // 3. Fetch the low-order byte of an 8x1 pixel sliver of pattern table 
+        //  from $0000-$0FF7 or $1000-$1FF7.
+        // 4. Fetch the high-order byte of this sliver from an address 8 bytes 
+        //  higher.
+        // 5. Turn the attribute data and the pattern table data into palette 
+        //  indices, and combine them with data from sprite data using priority
+
     }
 
-    // Sprite 0..7
+    // Sprite unit output
     if (ppumask.spr_show) {
+        // Sprite evaluation
+        OA *obj = nullptr;
+        size_t stride = sizeof(OA);
+        uint8_t tile_y = ppuctrl.spr_size ? 16 : 8;
+        uint8_t spr_num = 0;
+        for (int i = 0; i < (oam_sz / stride); i += 1) {
+            obj = (oam.data() + i*stride);
+            if (obj->y <= scan_y && (obj->y <= scan_y + tile_y)) {
+                uint8_t *oam_target = (oam_sec.data() + spr_num*stride);
+                // TODO: Sprite 0 hit condition
+                // Sprite 0 is in range 
+                // AND the first sprite output unit is outputting a non-zero pixel 
+                // AND the background drawing unit is outputting a non-zero pixel 
+                std::memcpy(oam_target, obj, stride);
+                spr_num++;
+                if (spr_num >= 8)
+                    break;
+            }
+        }
+
+        // Sprite unit priority, lower addr overlaps higher addr
+        
     }
 
     // Priority mux
     if (!bg_px && !spr_px)
-        out = 0x0;  // EXT in, which we won't have
+        out = 0x0;  // EXT in, which we won't have?
     else if (!bg_px)
         out = spr_px;
     else if (bg_px && !spr_px)
