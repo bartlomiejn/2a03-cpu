@@ -54,8 +54,8 @@ class CPU {
     uint16_t PC;       ///< Program counter
     uint8_t S;         ///< Stack pointer
     StatusRegister P;  ///< Status register
-    bool IRQ;  ///< Interrupt line. Setting to true will trigger an IRQ after
-               ///< next instruction completes.
+    bool IRQ;          ///< Interrupt line. Setting to true will trigger an
+                       ///< IRQ after next instruction completes.
     bool NMI;  ///< Non-maskable interrupt line. Setting to true will trigger an
                ///< IRQ after next instruction completes.
     uint32_t cycles;  ///< Cycle counter.
@@ -69,7 +69,8 @@ class CPU {
     void reset();
 
     /// Executes the next instruction.
-    void execute();
+    /// \return Cycles executed
+    uint8_t execute();
 
     /// Schedules a DMA transfer
     /// \value page Page to copy

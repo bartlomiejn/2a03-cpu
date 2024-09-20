@@ -37,7 +37,7 @@ uint8_t MemoryBus::read(uint16_t addr) {
 
         // PPU registers
         case 0x2000 ... 0x3FFF:
-            return ppu.read(addr);
+            return ppu.cpu_read(addr);
 
         // APU registers
         case 0x4000 ... 0x4017:
@@ -71,7 +71,7 @@ void MemoryBus::write(uint16_t addr, uint8_t val) {
             ram[addr % 0x800] = val;
             break;
         case 0x2000 ... 0x3FFF:
-            ppu.write(0x2000 + ((addr - 0x2000) % 8), val);
+            ppu.cpu_write(0x2000 + ((addr - 0x2000) % 8), val);
             break;
         case 0x4014:
             oamdma.write_oamdma(val);

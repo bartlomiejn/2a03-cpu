@@ -21,6 +21,7 @@ if(CMAKE_COMPILER_IS_GNUCC)
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -Werror -Wall")
 endif(CMAKE_COMPILER_IS_GNUCC)
 
+set(EXTERNAL_DIR external)
 set(NES_TEST_DIR external/nestest)
 set(TEST_ROMS_DIR external/nes-test-roms)
 set(PPU_TESTS_DIR ${TEST_ROMS_DIR}/blargg_ppu_tests_2005.09.15b)
@@ -42,6 +43,9 @@ include_directories(${SDL2_INCLUDE_DIRS})
 configure_file(${NES_TEST_DIR}/nestest.log nestest.log COPYONLY)
 configure_file(${NES_TEST_DIR}/nestest.nes nestest.nes COPYONLY)
 configure_file(${PPU_TESTS_DIR}/palette_ram.nes palette_ram.nes COPYONLY)
+
+# Copy palette file for PPU
+configure_file(${EXTERNAL_DIR}/DigitalPrimeFBX.pal DigitalPrimeFBX.pal COPYONLY)
 
 add_executable(2a03 ${SOURCES})
 

@@ -54,13 +54,13 @@ void Mapper::NROM::write_prg(uint16_t addr, uint8_t val) {
             break;
     }
 }
- 
-uint8_t Mapper::NROM::read_chr(uint16_t addr) { 
+
+uint8_t Mapper::NROM::read_chr(uint16_t addr) {
     throw std::runtime_error("Read CHR unimplemented");
-} 
+}
 
 void Mapper::NROM::write_chr(uint16_t addr, uint8_t val) {
-    throw std::runtime_error("Write CHR unimplemented"); 
+    throw std::runtime_error("Write CHR unimplemented");
 }
 
 // MMC1
@@ -117,9 +117,9 @@ void Mapper::MMC1::write_prg(uint16_t addr, uint8_t val) {
     }
 }
 
-uint8_t Mapper::MMC1::read_chr(uint16_t addr) { 
+uint8_t Mapper::MMC1::read_chr(uint16_t addr) {
     throw std::runtime_error("Read CHR unimplemented");
-} 
+}
 
 void Mapper::MMC1::write_chr(uint16_t addr, uint8_t val) {
     throw std::runtime_error("Write CHR unimplemented");

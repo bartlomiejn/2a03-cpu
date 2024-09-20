@@ -1,27 +1,16 @@
 #ifndef INC_2A03_PPU_H
 #define INC_2A03_PPU_H
 
+#include <cart/mapper.h>
+#include <palette.h>
 #include <utils/bitfield.h>
 
 #include <array>
 #include <cstdint>
+#include <functional>
 #include <stdexcept>
 
 namespace NES {
-
-// PPU memory map
-//
-// Mapped by cartridge:
-// $0000-$0FFF - CHR (Pattern) table 0
-// $1000-$1FFF - CHR (Pattern) table 1
-// $2000-$23FF - Nametable 0
-// $2400-$27FF - Nametable 1
-// $2800-$2BFF - Nametable 2
-// $2C00-$2FFF - Nametable 3
-//
-// PPU internal:
-// $3F00-$3F1F - Palette RAM indices
-// Mirrored to $3FFF
 
 bitfield_union(
     PPUCTRL, uint8_t value,
@@ -70,10 +59,10 @@ bitfield_union(PPU_vramaddr, uint16_t value,
 struct OA {
     bitfield_union(
         Attribute, uint8_t value,
-        bool pal_sel_l : 1;  ///< Palette select low bit.
-        bool pal_sel_h : 1;  ///< Palette select high bit.
-        bool RESERVED : 3;  ///< Reserved
-        bool obj_pri : 1;  ///< Object priority: 0: Higher than BG
+        bool pal_sel_l : 1;    ///< Palette select low bit.
+        bool pal_sel_h : 1;    ///< Palette select high bit.
+        bool RESERVED : 3;     ///< Reserved
+        bool obj_pri : 1;      ///< Object priority: 0: Higher than BG
         bool bit_reverse : 1;  ///< Apply bit reversal to fetched object pattern
                                ///< table data.
         bool inv_scan_addr : 1;  ///< Invert the 3/4-bit (8/16 scanlines/object
@@ -87,15 +76,34 @@ struct OA {
     uint8_t x;       ///< Scanline X (left-side) coordinate
 };
 
+struct CHR {
+    bitfield_union(Plane, uint8_t value,
+                   bool T : 1;     ///< Table selector 0 or 1
+                   uint8_t N : 8;  ///< Tile ID [0x0-0xFF]
+                   bool P : 1;     ///< Plane 0 or 1
+                   uint8_t y : 3;  ///< Row # or Y
+    );
+
+    Plane p0;  ///< Plane 0
+    Plane p1;  ///< Plane 1
+};
+
 static const int vram_sz = 0x3F1F;  ///< PPU VRAM size
 static const int oam_sz = 0xFF;     ///< PPU OAM size
 static const int ntsc_x = 341;      ///< NTSC pixel count (341 PPU clock cycles
                                     ///< per scanline)
 static const int ntsc_y = 262;      ///< NTSC scanline count
 
-/// Ricoh 2C02/7 PPU emulator
+/// Ricoh 2C02 NTSC PPU emulator
 class PPU {
    public:
+    iNESv1::Mapper::Base *mapper;  ///< Cartridge mapper
+    NES::Palette pal;              ///< Palette file
+
+    std::function<void(NES::Palette::Color)> draw_handler;  ///< Called every
+                                                            ///< cycle that
+                                                            ///< draws a pixel
+
     std::array<uint8_t, vram_sz> vram;         ///< PPU VRAM
     std::array<uint8_t, oam_sz> oam;           ///< PPU OAM
     std::array<uint32_t, ntsc_x * ntsc_y> fb;  ///< Framebuffer
@@ -123,20 +131,26 @@ class PPU {
     uint16_t ppuaddr16 = 0x0;  // 8-bit port at $2006, $2007 is PPUDATA
     bool ppu_h = true;
 
-    PPU();
+    PPU(NES::Palette _pal);
 
     /// Powers up the PPU
     void power();
 
-    /// Steps through a PPU cycle
-    /// \return Pixel value for current scanline/pixel
-    uint8_t step();
+    /// Executes the PPU logic.
+    /// \value cycles PPU cycles to execute
+    void execute(uint8_t cycles);
 
-    /// Writes value @ addr
-    void write(uint16_t addr, uint8_t value);
+    /// Write value @ addr to CHR memory
+    void chr_write(uint16_t addr, uint8_t value);
 
-    /// Reads value @ addr
-    uint8_t read(uint16_t addr);
+    /// Reads value @ addr from CHR memory
+    uint8_t chr_read(uint16_t addr);
+
+    /// Writes value @ addr from CPU
+    void cpu_write(uint16_t addr, uint8_t value);
+
+    /// Reads value @ addr from CPU
+    uint8_t cpu_read(uint16_t addr);
 
    protected:
     /// Handle PPUSCROLL X/Y write

@@ -4,6 +4,7 @@
 #include <cpu.h>
 #include <dma.h>
 #include <ee.h>
+#include <palette.h>
 #include <ppu.h>
 #include <test.h>
 #include <unistd.h>
@@ -108,8 +109,9 @@ void setup_window() {
 }
 
 int main(int argc, char *argv[]) {
+    NES::Palette pal("DigitalPrimeFBX.pal");
     NES::OAMDMA oamdma;
-    NES::PPU ppu;
+    NES::PPU ppu(pal);
     NES::MemoryBus bus(ppu, oamdma);
     NES::CPU cpu(bus);
     NES::CPULogger logger(cpu, bus);

@@ -8,6 +8,8 @@
 #include <ppu.h>
 #include <utils/logger.h>
 
+const int ntsc_cyc_ratio = 3;
+
 class ExecutionEnvironment {
    public:
     NES::MemoryBus &bus;
@@ -38,17 +40,21 @@ class ExecutionEnvironment {
         NES::iNESv1::Mapper::Base *mapper =
             NES::iNESv1::Mapper::mapper(cartridge.value());
         bus.mapper = mapper;
+        ppu.mapper = mapper;
     }
 
     void run() {
         while (!stop) {
             if (pre_step_hook) pre_step_hook(*this);
-            cpu.execute();
+
+            uint8_t cpu_cycs = cpu.execute();
+            ppu.execute(ntsc_cyc_ratio * cpu_cycs);
+
             if (post_step_hook) post_step_hook(*this);
 
             if (debug) {
                 char in = 0x0;
-                std::cerr << "Stopped, next step (y/n)" << std::endl;
+                std::cerr << "Stopped, next CPU step (y/n)" << std::endl;
                 while (in != 'y' && in != 'n') {
                     std::cin.get(in);
                 }

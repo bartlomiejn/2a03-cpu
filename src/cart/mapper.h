@@ -29,7 +29,7 @@ class Base {
 
     /// Writes a byte of memory to the provided address.
     virtual void write_prg(uint16_t addr, uint8_t val) = 0;
-    
+
     /// Reads a byte of CHR memory at the provided address.
     virtual uint8_t read_chr(uint16_t addr) = 0;
 
@@ -52,7 +52,7 @@ class NROM : public Mapper::Base {
 
     /// Writes a byte to PRG memory to the provided address.
     void write_prg(uint16_t addr, uint8_t val) final;
- 
+
     /// Reads a byte from CHR memory at the provided address.
     uint8_t read_chr(uint16_t addr) final;
 

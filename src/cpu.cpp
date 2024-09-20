@@ -1,7 +1,9 @@
 #include <cpu.h>
 
+#include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <limits>
 
 using namespace NES;
 
@@ -35,7 +37,8 @@ void CPU::power() {
 
 void CPU::reset() { interrupt(i_reset); }
 
-void CPU::execute() {
+uint8_t CPU::execute() {
+    uint8_t initial_cyc = cycles;
     uint16_t initial_pc = PC;
     switch (read(PC++)) {
         case 0x10:
@@ -701,8 +704,13 @@ void CPU::execute() {
                       << static_cast<int>(read(initial_pc)) << std::endl;
             throw InvalidOpcode();
     }
+
     if (NMI) interrupt(i_nmi);
     if (IRQ && !P.I) interrupt(i_irq);
+
+    return cycles > initial_cyc
+               ? cycles - initial_cyc
+               : std::numeric_limits<uint32_t>::max() - initial_cyc + cycles;
 }
 
 void CPU::interrupt(NES::Interrupt type) {
