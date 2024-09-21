@@ -80,7 +80,7 @@ void PPU::execute(uint8_t cycles) {
         size_t stride = sizeof(OA);
         uint8_t tile_y = ppuctrl.spr_size ? 16 : 8;
         uint8_t spr_num = 0;
-        for (size_t i = 0; i < (oam_sz / stride); i += 1) {
+        for (size_t i = 0; i < (oam_sz / stride); i++) {
             obj = (OA *)(oam.data() + i * stride);
             if (obj->y <= scan_y && (obj->y <= scan_y + tile_y)) {
                 uint8_t *oam_target = (oam_sec.data() + spr_num * stride);

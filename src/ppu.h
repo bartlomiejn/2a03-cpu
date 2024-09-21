@@ -53,7 +53,7 @@ bitfield_union(
 );
 
 /// Internal PPU VRAM register
-bitfield_union(PPU_vramaddr, uint16_t value,
+bitfield_union(PPUVramRegister, uint16_t value,
                uint8_t scrollx : 5;   ///< Coarse X scroll
                uint8_t scrolly : 5;   ///< Coarse Y scroll
                uint8_t ns : 2;        ///< Nametable select
@@ -95,26 +95,21 @@ static const size_t ntsc_y = 262;  ///< NTSC scanline count
 /// Ricoh 2C02 NTSC PPU emulator
 class PPU {
    public:
+    // CHR memory
     iNESv1::Mapper::Base *mapper;  ///< Cartridge mapper
-    NES::Palette pal;              ///< Palette file
-
-    std::function<void(NES::Palette::Color)> draw_handler;  ///< Called every
-                                                            ///< cycle that
-                                                            ///< draws a pixel
-
+    
+    // Internal memory
     std::array<uint8_t, vram_sz> vram;         ///< PPU VRAM
     std::array<uint8_t, oam_sz> oam;           ///< PPU OAM
     std::array<uint8_t, oam_sec_sz> oam_sec;   ///< Secondary OAM
-    std::array<uint32_t, ntsc_x * ntsc_y> fb;  ///< Framebuffer
 
-    uint16_t scan_x = 0;  ///< Pixel
-    uint16_t scan_y = 0;  ///< Scanline
+    // Internal PPU registers
+    PPUVramRegister v;  ///< 15-bit Current VRAM address
+    PPUVramRegister t;  ///< 15-bit Temporary VRAM address / Top left onscreen tile
+    uint8_t x;       ///< 3-bit Fine X scroll register
+    bool w;          ///< H/V? First or second write toggle register
 
-    PPU_vramaddr v;  ///< 15-bit Current VRAM address
-    PPU_vramaddr t;  ///< 15-bit Temporary VRAM address / Top left onscreen tile
-    uint8_t x;       ///< 3-bit Fine X scroll
-    bool w;          ///< H/V? First or second write toggle
-
+    // CPU memory mapped registers
     PPUCTRL ppuctrl;      ///< PPU control register, write access $2000
     PPUMASK ppumask;      ///< PPU mask register, write access $2001
     PPUSTATUS ppustatus;  ///< PPU status register, read access $2002
@@ -129,6 +124,17 @@ class PPU {
 
     uint16_t ppuaddr16 = 0x0;  // 8-bit port at $2006, $2007 is PPUDATA
     bool ppu_h = true;
+
+    // Output
+    NES::Palette pal;                           ///< Palette file
+    std::array<uint32_t, ntsc_x * ntsc_y> fb;   ///< Framebuffer
+
+    std::function<void(NES::Palette::Color)> draw_handler;  ///< Called every
+                                                            ///< cycle that
+                                                            ///< draws a pixel
+
+    uint16_t scan_x = 0;  ///< Pixel
+    uint16_t scan_y = 0;  ///< Scanline
 
     PPU(NES::Palette _pal);
 
