@@ -113,7 +113,7 @@ int main(int argc, char *argv[]) {
     NES::OAMDMA oamdma;
     NES::PPU ppu(pal);
     NES::MemoryBus bus(ppu, oamdma);
-    NES::CPU cpu(bus);
+    NES::CPU cpu(bus, ppu);
     NES::CPULogger logger(cpu, bus);
     ExecutionEnvironment ee(bus, cpu, ppu, oamdma, logger);
 

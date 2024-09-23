@@ -1,4 +1,5 @@
 #include <cpu.h>
+#include <ppu.h>
 
 #include <cstdlib>
 #include <cstring>
@@ -7,9 +8,12 @@
 
 using namespace NES;
 
-CPU::CPU(NES::MemoryBus &bus) : bus(bus) {
+CPU::CPU(NES::MemoryBus &bus, NES::PPU &ppu) : bus(bus) {
     bus.cpu_schedule_dma_oam =
         std::bind(&CPU::schedule_dma_oam, this, std::placeholders::_1);
+
+    // PPU /VBL line is connected directly to /NMI
+    ppu.nmi_vblank = std::bind(&CPU::schedule_nmi, this);
 }
 
 void CPU::power() {
@@ -772,6 +776,10 @@ void CPU::write(uint16_t addr, uint8_t val) { bus.write(addr, val); }
 void CPU::schedule_dma_oam(uint8_t page) {
     dma = DMA_OAM;
     dma_page = page;
+}
+
+void CPU::schedule_nmi() {
+    NMI = true;
 }
 
 void CPU::handle_dma() {

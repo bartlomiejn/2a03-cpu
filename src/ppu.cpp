@@ -39,7 +39,7 @@ void PPU::power() {
     scan_x = 0;
 }
 
-void PPU::execute(uint8_t cycles) {
+void PPU::render() {
     // NTSC
     // If rendering off, each frame is 341*262 / 3 CPU clocks long
     // Scanline (341 pixels) is 113+(2/3) CPU clocks long
@@ -71,6 +71,7 @@ void PPU::execute(uint8_t cycles) {
         //  higher.
         // 5. Turn the attribute data and the pattern table data into palette
         //  indices, and combine them with data from sprite data using priority
+
     }
 
     // Sprite unit output
@@ -100,7 +101,7 @@ void PPU::execute(uint8_t cycles) {
 
     // Priority mux
     if (!bg_px && !spr_px)
-        out = 0x0;  // EXT in, which we won't have?
+        out = 0x0;  // Backdrop color $3F00 EXT in 
     else if (!bg_px)
         out = spr_px;
     else if (bg_px && !spr_px)
@@ -108,12 +109,43 @@ void PPU::execute(uint8_t cycles) {
     else
         out = oa_prio ? spr_px : bg_px;
 
-    // Increment scanline/pixel counter
-    if (scan_x == (ntsc_x - 1)) scan_y = (scan_y + 1) % ntsc_y;
-    scan_x = (scan_x + 1) % ntsc_x;
-
+    // TODO: Actually render some output
     if (false)
         if (draw_handler) draw_handler(pal.get_rgb(out));
+}
+
+void PPU::execute(uint8_t cycles) {
+    while (cycles) {
+        switch (scan_y) {
+            case 0 ... 19:
+                // pull down VINT
+                // no accesses to PPU external memory
+                // /VBL issues zero level and is tied to 2a03 /NMI line
+                if (scan_x == 0) {
+                    // TODO: Theoretically vbl_nmi NAND vblank. Is this 
+                    // actually correct?
+                    if (!(ppuctrl.vbl_nmi && ppustatus.vblank)) 
+                        if (nmi_vblank)
+                            nmi_vblank();
+                }
+                cycles--;
+                break;
+            case 20 ... 260:
+                render();
+                cycles--;
+                break;
+            case 261:
+                if (scan_x == (ntsc_x - 1)) {
+                    ppustatus.vblank = true;
+                }
+                cycles--;
+                break;
+        }
+
+        // Increment scanline/pixel counter
+        if (scan_x == (ntsc_x - 1)) scan_y = (scan_y + 1) % ntsc_y;
+        scan_x = (scan_x + 1) % ntsc_x;
+    }
 }
 
 void PPU::chr_write(uint16_t addr, uint8_t value) {
@@ -158,6 +190,7 @@ void PPU::cpu_write(uint16_t addr, uint8_t value) {
 uint8_t PPU::cpu_read(uint16_t addr) {
     switch (addr) {
         case 0x2002:
+            // TODO: Reads from here should reset vblank flag bit 7
             return ppustatus.value;
         case 0x2004:
             // TODO: Reads while rendering should expose internal OAM accesses
@@ -199,6 +232,15 @@ void PPU::write_ppuaddr(uint8_t value) {
 }
 
 void PPU::write_ppudata(uint8_t value) {
+    // - Because the PPU cannot make a read from PPU memory immediately upon 
+    // request (via $2007), there is an internal buffer, which acts as a 1-stage 
+    // data pipeline. As a read is requested, the contents of the read buffer are 
+    // returned to the NES's CPU. After this, at the PPU's earliest convience 
+    // (according to PPU read cycle timings), the PPU will fetch the requested data 
+    // from the PPU memory, and throw it in the read buffer. Writes to PPU mem via 
+    // $2007 are pipelined as well, but I currently haven unknown to me if the PPU 
+    // uses this same buffer (this could be easily tested by writing somthing to 
+    // $2007, and seeing if the same value is returned immediately after reading).
     switch (ppuaddr16) {
         case 0x0 ... 0x3EFF:
             vram[ppuaddr16] = value;

@@ -15,28 +15,27 @@ namespace NES {
 /// PPUCTRL write register
 bitfield_union(
     PPUCTRL, uint8_t value,
-    uint8_t ntable_base_addr : 2;  ///< Base nametable addr 0=$2000, 1=$2400,
+    uint8_t nt_xy_select : 2;  ///< Base nametable addr 0=$2000, 1=$2400,
                                    ///< 2=$2800, 3=$2C00
     bool vram_addr_incr : 1;  ///< Increment VRAM addr per CPU r/w of PPUDATA
     bool spr_pattern_tbl_addr : 1;  ///< 0: $0000 1: $1000, ignored in 8x16 mode
     bool bg_pattern_tbl_addr : 1;   ///< 0: $0000 1: $1000
     bool spr_size : 1;    ///< 0: 8x8 pixels, 1: 8x16 pixels (see PPU OAM byte
                           ///< 1)
-    bool ppu_master : 1;  ///< PPU master/slave select (0: read backdrop from,
-                          ///< 1: output color) on EXT pins
+    bool ppu_master : 1;  ///< EXT bus direction 0: input, 1: output
     bool vbl_nmi : 1;     ///< Generate NMI at start of vertical blanking
                           ///< interval (1: on).
 );
 
 /// PPUMASK write register
 bitfield_union(PPUMASK, uint8_t value,
-               bool grayscale : 1;         ///< 1: Grayscale 0: Color
+               bool grayscale : 1;         ///< Disable colorburst: 1: Grayscale 0: Color
                bool bg_show_left_8px : 1;  ///< 1: Show background in leftmost 8
                                            ///< pixels of the screen
                bool spr_show_left_8px : 1;  ///< 1: Show sprites in leftmost 8
                                             ///< pixels of the screen
-               bool bg_show : 1;            ///< 1: Show background
-               bool spr_show : 1;           ///< 1: Show sprites
+               bool bg_show : 1;            ///< 1: Show background/playfield
+               bool spr_show : 1;           ///< 1: Show sprites/objects
                bool r : 1;                  ///< Emphasize R
                bool g : 1;                  ///< Emphasize G
                bool b : 1;                  ///< Emphasize B
@@ -132,6 +131,7 @@ class PPU {
     std::function<void(NES::Palette::Color)> draw_handler;  ///< Called every
                                                             ///< cycle that
                                                             ///< draws a pixel
+    std::function<void()> nmi_vblank; ///< Issues a VBlank NMI
 
     uint16_t scan_x = 0;  ///< Pixel
     uint16_t scan_y = 0;  ///< Scanline
@@ -144,6 +144,9 @@ class PPU {
     /// Executes the PPU logic.
     /// \value cycles PPU cycles to execute
     void execute(uint8_t cycles);
+
+    /// Rendering scanline logic
+    void render();
 
     /// Write value @ addr to CHR memory
     void chr_write(uint16_t addr, uint8_t value);

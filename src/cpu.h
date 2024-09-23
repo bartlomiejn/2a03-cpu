@@ -2,6 +2,7 @@
 #define INC_2A03_CPU_H
 
 #include <bus.h>
+#include <ppu.h>
 #include <utils/bitfield.h>
 
 #include <cstdint>
@@ -60,7 +61,7 @@ class CPU {
                ///< IRQ after next instruction completes.
     uint32_t cycles;  ///< Cycle counter.
 
-    CPU(MemoryBus &bus);
+    CPU(MemoryBus &bus, NES::PPU &ppu);
 
     /// Starts the CPU.
     void power();
@@ -75,6 +76,9 @@ class CPU {
     /// Schedules a DMA transfer
     /// \value page Page to copy
     void schedule_dma_oam(uint8_t page);
+
+    /// Schledules an NMI after the next instruction cycles finish
+    void schedule_nmi();
 
    protected:
     enum DMAState {
