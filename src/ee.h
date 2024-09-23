@@ -48,6 +48,8 @@ class ExecutionEnvironment {
             if (pre_step_hook) pre_step_hook(*this);
 
             uint8_t cpu_cycs = cpu.execute();
+            // TODO: Not sure if this is correct, as NMIs might get generated
+            // before a CPU full instruction cycle finishes?
             ppu.execute(ntsc_cyc_ratio * cpu_cycs);
 
             if (post_step_hook) post_step_hook(*this);
