@@ -52,6 +52,11 @@ bitfield_union(
     bool vblank : 1;        ///< 0: Not in vblank 1: in vblank
 );
 
+bitfield_union(
+    PPUInternalScrFineX, uint8_t value,
+    uint8_t fine_x : 3; ///< Fine X scroll
+);
+
 /// Internal PPU VRAM register
 bitfield_union(PPUInternalReg, uint16_t value,
                uint8_t sc_x : 5;       ///< Coarse X scroll
@@ -109,11 +114,12 @@ class PPU {
     std::array<uint8_t, oam_sec_sz> oam_sec;  ///< Secondary OAM
 
     // Internal PPU registers
-    PPUInternalReg v;  ///< 15-bit Current VRAM address
-    PPUInternalReg
-        t;      ///< 15-bit Temporary VRAM address / Top left onscreen tile
-    uint8_t x;  ///< 3-bit Fine X scroll register
-    bool w;     ///< H/V? First or second write toggle register
+    PPUInternalReg v;  ///< 15-bit Current VRAM addr
+    PPUInternalReg t;  ///< 15-bit Temporary VRAM addr / Top left onscreen tile
+    PPUInternalScrFineX x;  ///< 3-bit Fine X scroll register
+    bool w;     ///< 1-bit internal flip-flop 
+                ///< first or second write toggle register to PPUSCROLL and 
+                ///< PPUADDR
 
     // CPU memory mapped registers
     PPUCTRL ppuctrl;      ///< PPU control register, write access $2000
@@ -126,10 +132,8 @@ class PPU {
                          ///< write twice (x, y)
     uint8_t ppuscrolly;  ///< PPU scrolling position register $2005,
                          ///< write twice (x, y)
-    bool ppu_x = true;
 
     uint16_t ppuaddr16 = 0x0;  // 8-bit port at $2006, $2007 is PPUDATA
-    bool ppu_h = true;
 
     // Output
     NES::Palette pal;                                ///< Palette file

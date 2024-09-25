@@ -247,11 +247,11 @@ uint8_t PPU::cpu_read(uint16_t addr) {
 }
 
 void PPU::write_ppuscroll(uint8_t value) {
-    if (ppu_x)
+    if (!w)
         ppuscrollx = value;
     else
         ppuscrolly = value;
-    ppu_x = !ppu_x;
+    w = !w;
 }
 
 void PPU::write_oamaddr(uint8_t value) { oamaddr = value; }
@@ -259,11 +259,11 @@ void PPU::write_oamaddr(uint8_t value) { oamaddr = value; }
 void PPU::write_oamdata(uint8_t value) { oam[oamaddr++] = value; }
 
 void PPU::write_ppuaddr(uint8_t value) {
-    if (ppu_h)
+    if (!w)
         ppuaddr16 = ((uint16_t)value << 8) | (ppuaddr16 & 0xFF);
     else
         ppuaddr16 = (ppuaddr16 & 0xFF00) | value;
-    ppu_h = !ppu_h;
+    w = !w;
 }
 
 void PPU::write_ppudata(uint8_t value) {
