@@ -18,8 +18,8 @@ bitfield_union(
     uint8_t nt_xy_select : 2;  ///< Base nametable addr 0=$2000, 1=$2400,
                                ///< 2=$2800, 3=$2C00
     bool v_incr : 1;           ///< 1: Vertical v increment (+32 instead of +1)
-    bool spr_pattern_tbl_addr : 1;  ///< 0: $0000 1: $1000, ignored in 8x16 mode
-    bool bg_pattern_tbl_addr : 1;   ///< 0: $0000 1: $1000
+    bool spr_pt_addr : 1;  ///< 0: $0000 1: $1000, ignored in 8x16 mode
+    bool bg_pt_addr : 1;   ///< 0: $0000 1: $1000
     bool spr_size : 1;    ///< 0: 8x8 pixels, 1: 8x16 pixels (see PPU OAM byte
                           ///< 1)
     bool ppu_master : 1;  ///< EXT bus direction 0: input, 1: output
@@ -53,7 +53,7 @@ bitfield_union(
 );
 
 /// Internal PPU VRAM register
-union PPURegister {
+union PPUVramAddr {
     struct {
         uint8_t sc_x : 5;       ///< Coarse X scroll
         uint8_t sc_y : 5;       ///< Coarse Y scroll
@@ -118,14 +118,23 @@ class PPU {
     std::array<uint8_t, oam_sec_sz> oam_sec;  ///< Secondary OAM
 
     // Internal PPU registers
-    PPURegister v;  ///< 15-bit Current VRAM addr
-    PPURegister t;  ///< 15-bit Temporary VRAM addr / Top left onscreen tile
+    PPUVramAddr v;  ///< 15-bit Current VRAM addr
+    PPUVramAddr t;  ///< 15-bit Temporary VRAM addr / Top left onscreen tile
     struct {
         uint8_t fine : 3;
     } x;     ///< 3-bit Fine X scroll register
     bool w;  ///< 1-bit internal pointer flip-flop
              ///< first or second write toggle register to PPUSCROLL and
              ///< PPUADDR
+
+    struct {
+        uint16_t addr : 14;
+    } bus; // Internal buffer
+
+    uint8_t nt; // Tile idx for pattern lookup
+    uint8_t at; // Paltete info for a region of tiles (4x4 tiles = 32x32 px)
+    uint8_t spr_l;
+    uint8_t spr_h;
 
     // CPU memory mapped registers
     PPUCTRL ppuctrl;      ///< PPUCTRL, write access $2000
@@ -149,7 +158,7 @@ class PPU {
     std::function<void()> nmi_vblank;  ///< Issues a VBlank NMI
 
     uint16_t scan_x = 0;  ///< Pixel
-    uint16_t scan_y = 0;  ///< Scanline
+    uint16_t scan_y = 261;  ///< Scanline
 
     PPU(NES::Palette _pal);
 
