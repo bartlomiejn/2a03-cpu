@@ -17,7 +17,7 @@ bitfield_union(
     PPUCTRL, uint8_t value,
     uint8_t nt_xy_select : 2;  ///< Base nametable addr 0=$2000, 1=$2400,
                                ///< 2=$2800, 3=$2C00
-    bool vram_addr_incr : 1;   ///< Increment VRAM addr per CPU r/w of PPUDATA
+    bool v_incr : 1;           ///< 1: Vertical v increment (+32 instead of +1)
     bool spr_pattern_tbl_addr : 1;  ///< 0: $0000 1: $1000, ignored in 8x16 mode
     bool bg_pattern_tbl_addr : 1;   ///< 0: $0000 1: $1000
     bool spr_size : 1;    ///< 0: 8x8 pixels, 1: 8x16 pixels (see PPU OAM byte
@@ -52,19 +52,23 @@ bitfield_union(
     bool vblank : 1;        ///< 0: Not in vblank 1: in vblank
 );
 
-bitfield_union(
-    PPUInternalScrFineX, uint8_t value,
-    uint8_t fine_x : 3; ///< Fine X scroll
-);
-
 /// Internal PPU VRAM register
-bitfield_union(PPUInternalReg, uint16_t value,
-               uint8_t sc_x : 5;       ///< Coarse X scroll
-               uint8_t sc_y : 5;       ///< Coarse Y scroll
-               bool nt_h : 1;          ///< Nametable select horizontal
-               bool nt_v : 1;          ///< Nametable select vertical
-               uint8_t sc_fine_y : 3;  ///< Fine Y scroll
-);
+union PPURegister {
+    struct {
+        uint8_t sc_x : 5;       ///< Coarse X scroll
+        uint8_t sc_y : 5;       ///< Coarse Y scroll
+        bool nt_h : 1;          ///< Nametable select horizontal
+        bool nt_v : 1;          ///< Nametable select vertical
+        uint8_t sc_fine_y : 3;  ///< Fine Y scroll
+    };
+    struct {
+        uint8_t h : 6;  ///< 6-bit VRAM address high bits
+        uint8_t l : 8;  ///< 8-bit VRAM address low bits
+    };
+    struct {
+        uint16_t addr : 14;
+    };
+};
 
 /// Object attributes model for sprites
 struct OA {
@@ -114,26 +118,27 @@ class PPU {
     std::array<uint8_t, oam_sec_sz> oam_sec;  ///< Secondary OAM
 
     // Internal PPU registers
-    PPUInternalReg v;  ///< 15-bit Current VRAM addr
-    PPUInternalReg t;  ///< 15-bit Temporary VRAM addr / Top left onscreen tile
-    PPUInternalScrFineX x;  ///< 3-bit Fine X scroll register
-    bool w;     ///< 1-bit internal flip-flop 
-                ///< first or second write toggle register to PPUSCROLL and 
-                ///< PPUADDR
+    PPURegister v;  ///< 15-bit Current VRAM addr
+    PPURegister t;  ///< 15-bit Temporary VRAM addr / Top left onscreen tile
+    struct {
+        uint8_t fine : 3;
+    } x;     ///< 3-bit Fine X scroll register
+    bool w;  ///< 1-bit internal pointer flip-flop
+             ///< first or second write toggle register to PPUSCROLL and
+             ///< PPUADDR
 
     // CPU memory mapped registers
-    PPUCTRL ppuctrl;      ///< PPU control register, write access $2000
-    PPUMASK ppumask;      ///< PPU mask register, write access $2001
-    PPUSTATUS ppustatus;  ///< PPU status register, read access $2002
+    PPUCTRL ppuctrl;      ///< PPUCTRL, write access $2000
+    PPUMASK ppumask;      ///< PPUMASK, write access $2001
+    PPUSTATUS ppustatus;  ///< PPUSTATUS, read access $2002
+    // $2003 OAMADDR
+    // $2004 OAMDATA
+    // $2005 PPUSCROLL
+    // $2006 PPUADDR
+    // $2007 PPUDATA
 
-    uint16_t oamaddr;  ///< 8-bit port at $2003, $2004 is OAMDATA
-
-    uint8_t ppuscrollx;  ///< PPU scrolling position register $2005,
-                         ///< write twice (x, y)
-    uint8_t ppuscrolly;  ///< PPU scrolling position register $2005,
-                         ///< write twice (x, y)
-
-    uint16_t ppuaddr16 = 0x0;  // 8-bit port at $2006, $2007 is PPUDATA
+    uint16_t oamaddr;     ///< 8-bit OAM address register
+    uint8_t ppudata_buf;  ///< 8-bit PPUADDR read buffer
 
     // Output
     NES::Palette pal;                                ///< Palette file
@@ -141,7 +146,6 @@ class PPU {
 
     std::function<void(std::array<uint32_t, ntsc_fb_x * ntsc_fb_y> &)>
         frame_ready;
-
     std::function<void()> nmi_vblank;  ///< Issues a VBlank NMI
 
     uint16_t scan_x = 0;  ///< Pixel

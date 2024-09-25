@@ -21,23 +21,23 @@
 
 using namespace NES;
 
-void inc_hori(PPUInternalReg &r) {
+void inc_hori(PPURegister &r) {
     r.sc_x++;
     if (!r.sc_x) r.nt_h = !r.nt_h;
 }
 
-void inc_vert(PPUInternalReg &r) {
+void inc_vert(PPURegister &r) {
     r.sc_fine_y++;
     if (!r.sc_fine_y) r.sc_y++;
     if (!r.sc_y) r.nt_v = !r.nt_v;
 }
 
-void set_hori(PPUInternalReg &to, PPUInternalReg &from) {
+void set_hori(PPURegister &to, PPURegister &from) {
     to.sc_x = from.sc_x;
     to.nt_h = from.nt_h;
 }
 
-void set_vert(PPUInternalReg &to, PPUInternalReg &from) {
+void set_vert(PPURegister &to, PPURegister &from) {
     to.sc_y = from.sc_y;
     to.nt_v = from.nt_v;
     to.sc_fine_y = from.sc_fine_y;
@@ -46,17 +46,15 @@ void set_vert(PPUInternalReg &to, PPUInternalReg &from) {
 PPU::PPU(NES::Palette _pal) : pal(std::move(_pal)) {}
 
 void PPU::power() {
-    v.value = 0;
-    t.value = 0;
-    x = 0;
+    v.addr = 0;
+    t.addr = 0;
+    x.fine = 0;
     w = false;
     ppuctrl.value = 0x0;
     ppumask.value = 0x0;
     ppustatus.value = 0x0;
-    ppuscrollx = 0x0;
-    ppuscrolly = 0x0;
     oamaddr = 0x0;
-    // ppudata read buffer = $00
+    ppudata_buf = 0x0;
     scan_y = 0;
     scan_x = 0;
 }
@@ -225,20 +223,26 @@ void PPU::cpu_write(uint16_t addr, uint8_t value) {
 uint8_t PPU::cpu_read(uint16_t addr) {
     switch (addr) {
         case 0x2002:
+            w = (bool)0;
             // TODO: Reads from here should reset vblank flag bit 7
             return ppustatus.value;
         case 0x2004:
             // TODO: Reads while rendering should expose internal OAM accesses
             return oam[oamaddr];
         case 0x2007:
-            uint8_t ppuval;
-            if (ppuaddr16 >= 0x3F00) {
-                ppuval = vram[0x3F00 + ((ppuaddr16 - 0x3F00) % 0x20)];
+            uint8_t ppudata_out;
+            if (v.addr >= 0x3EFF) {
+                ppudata_out = vram[0x3F00 + ((v.addr - 0x3F00) % 0x20)];
             } else {
-                ppuval = vram[ppuaddr16];
+                ppudata_out = ppudata_buf;
+                ppudata_buf = vram[v.addr];
             }
-            if (ppuctrl.vram_addr_incr) ppuaddr16++;
-            return ppuval;
+            if (ppuctrl.v_incr) {
+                v.addr += 0x20;
+            } else {
+                v.addr++;
+            }
+            return ppudata_out;
         default:
             throw std::runtime_error("Invalid/unimplemented PPU write.");
             // TODO: Move OAMDMA $4014 here?
@@ -247,10 +251,13 @@ uint8_t PPU::cpu_read(uint16_t addr) {
 }
 
 void PPU::write_ppuscroll(uint8_t value) {
-    if (!w)
-        ppuscrollx = value;
-    else
-        ppuscrolly = value;
+    if (!w) {
+        t.sc_x = ((value & 0xF8) >> 3);
+        x.fine = (value & 0x7);
+    } else {
+        t.sc_y = ((value & 0xF8) >> 3);
+        t.sc_fine_y = (value & 0x7);
+    }
     w = !w;
 }
 
@@ -259,10 +266,10 @@ void PPU::write_oamaddr(uint8_t value) { oamaddr = value; }
 void PPU::write_oamdata(uint8_t value) { oam[oamaddr++] = value; }
 
 void PPU::write_ppuaddr(uint8_t value) {
-    if (!w)
-        ppuaddr16 = ((uint16_t)value << 8) | (ppuaddr16 & 0xFF);
+    if (!w)  // First write
+        t.h = value & 0x3F;
     else
-        ppuaddr16 = (ppuaddr16 & 0xFF00) | value;
+        t.l = value;
     w = !w;
 }
 
@@ -277,15 +284,20 @@ void PPU::write_ppudata(uint8_t value) {
     // unknown to me if the PPU uses this same buffer (this could be easily
     // tested by writing somthing to $2007, and seeing if the same value is
     // returned immediately after reading).
-    switch (ppuaddr16) {
+    switch (v.addr) {
         case 0x0 ... 0x3EFF:
-            vram[ppuaddr16] = value;
+            vram[v.addr] = value;
             break;
         case 0x3F00 ... 0x3FFF:
-            vram[0x3F00 + ((ppuaddr16 - 0x3F00) % 0x20)] = value;
+            vram[0x3F00 + ((v.addr - 0x3F00) % 0x20)] = value;
             break;
         default:
             throw std::runtime_error("Invalid VRAM address");
     }
-    if (ppuctrl.vram_addr_incr) ppuaddr16++;
+
+    if (ppuctrl.v_incr) {
+        v.addr += 0x20;
+    } else {
+        v.addr++;
+    }
 }
