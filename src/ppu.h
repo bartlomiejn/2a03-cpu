@@ -16,8 +16,8 @@ namespace NES {
 bitfield_union(
     PPUCTRL, uint8_t value,
     uint8_t nt_xy_select : 2;  ///< Base nametable addr 0=$2000, 1=$2400,
-                                   ///< 2=$2800, 3=$2C00
-    bool vram_addr_incr : 1;  ///< Increment VRAM addr per CPU r/w of PPUDATA
+                               ///< 2=$2800, 3=$2C00
+    bool vram_addr_incr : 1;   ///< Increment VRAM addr per CPU r/w of PPUDATA
     bool spr_pattern_tbl_addr : 1;  ///< 0: $0000 1: $1000, ignored in 8x16 mode
     bool bg_pattern_tbl_addr : 1;   ///< 0: $0000 1: $1000
     bool spr_size : 1;    ///< 0: 8x8 pixels, 1: 8x16 pixels (see PPU OAM byte
@@ -28,17 +28,18 @@ bitfield_union(
 );
 
 /// PPUMASK write register
-bitfield_union(PPUMASK, uint8_t value,
-               bool grayscale : 1;         ///< Disable colorburst: 1: Grayscale 0: Color
-               bool bg_show_left_8px : 1;  ///< 1: Show background in leftmost 8
-                                           ///< pixels of the screen
-               bool spr_show_left_8px : 1;  ///< 1: Show sprites in leftmost 8
-                                            ///< pixels of the screen
-               bool bg_show : 1;            ///< 1: Show background/playfield
-               bool spr_show : 1;           ///< 1: Show sprites/objects
-               bool r : 1;                  ///< Emphasize R
-               bool g : 1;                  ///< Emphasize G
-               bool b : 1;                  ///< Emphasize B
+bitfield_union(
+    PPUMASK, uint8_t value,
+    bool grayscale : 1;          ///< Disable colorburst: 1: Grayscale 0: Color
+    bool bg_show_left_8px : 1;   ///< 1: Show background in leftmost 8
+                                 ///< pixels of the screen
+    bool spr_show_left_8px : 1;  ///< 1: Show sprites in leftmost 8
+                                 ///< pixels of the screen
+    bool bg_show : 1;            ///< 1: Show background/playfield
+    bool spr_show : 1;           ///< 1: Show sprites/objects
+    bool r : 1;                  ///< Emphasize R
+    bool g : 1;                  ///< Emphasize G
+    bool b : 1;                  ///< Emphasize B
 );
 
 /// PPUSTATUS r/o register
@@ -52,11 +53,12 @@ bitfield_union(
 );
 
 /// Internal PPU VRAM register
-bitfield_union(PPUVramRegister, uint16_t value,
-               uint8_t scrollx : 5;   ///< Coarse X scroll
-               uint8_t scrolly : 5;   ///< Coarse Y scroll
-               uint8_t ns : 2;        ///< Nametable select
-               uint8_t scrollfy : 3;  ///< Fine Y scroll
+bitfield_union(PPUInternalReg, uint16_t value,
+               uint8_t sc_x : 5;       ///< Coarse X scroll
+               uint8_t sc_y : 5;       ///< Coarse Y scroll
+               bool nt_h : 1;          ///< Nametable select horizontal
+               bool nt_v : 1;          ///< Nametable select vertical
+               uint8_t sc_fine_y : 3;  ///< Fine Y scroll
 );
 
 /// Object attributes model for sprites
@@ -92,25 +94,26 @@ static const size_t ntsc_x = 341;  ///< NTSC pixel count (341 PPU clock cycles
                                    ///< per scanline)
 static const size_t ntsc_y = 262;  ///< NTSC scanline count
 
-static const size_t ntsc_fb_x = 256; ///< NTSC framebuffer X size
-static const size_t ntsc_fb_y = 240; ///< NTSC framebuffer Y size
+static const size_t ntsc_fb_x = 256;  ///< NTSC framebuffer X size
+static const size_t ntsc_fb_y = 240;  ///< NTSC framebuffer Y size
 
 /// Ricoh 2C02 NTSC PPU emulator
 class PPU {
    public:
     // CHR memory
     iNESv1::Mapper::Base *mapper;  ///< Cartridge mapper
-    
+
     // Internal memory
-    std::array<uint8_t, vram_sz> vram;         ///< PPU VRAM
-    std::array<uint8_t, oam_sz> oam;           ///< PPU OAM
-    std::array<uint8_t, oam_sec_sz> oam_sec;   ///< Secondary OAM
+    std::array<uint8_t, vram_sz> vram;        ///< PPU VRAM
+    std::array<uint8_t, oam_sz> oam;          ///< PPU OAM
+    std::array<uint8_t, oam_sec_sz> oam_sec;  ///< Secondary OAM
 
     // Internal PPU registers
-    PPUVramRegister v;  ///< 15-bit Current VRAM address
-    PPUVramRegister t;  ///< 15-bit Temporary VRAM address / Top left onscreen tile
-    uint8_t x;       ///< 3-bit Fine X scroll register
-    bool w;          ///< H/V? First or second write toggle register
+    PPUInternalReg v;  ///< 15-bit Current VRAM address
+    PPUInternalReg
+        t;      ///< 15-bit Temporary VRAM address / Top left onscreen tile
+    uint8_t x;  ///< 3-bit Fine X scroll register
+    bool w;     ///< H/V? First or second write toggle register
 
     // CPU memory mapped registers
     PPUCTRL ppuctrl;      ///< PPU control register, write access $2000
@@ -129,12 +132,13 @@ class PPU {
     bool ppu_h = true;
 
     // Output
-    NES::Palette pal;                               ///< Palette file
-    std::array<uint32_t, ntsc_fb_x*ntsc_fb_y> fb;   ///< Framebuffer
+    NES::Palette pal;                                ///< Palette file
+    std::array<uint32_t, ntsc_fb_x * ntsc_fb_y> fb;  ///< Framebuffer
 
-    std::function<void(std::array<uint32_t, ntsc_fb_x*ntsc_fb_y>&)> frame_ready;
+    std::function<void(std::array<uint32_t, ntsc_fb_x * ntsc_fb_y> &)>
+        frame_ready;
 
-    std::function<void()> nmi_vblank; ///< Issues a VBlank NMI
+    std::function<void()> nmi_vblank;  ///< Issues a VBlank NMI
 
     uint16_t scan_x = 0;  ///< Pixel
     uint16_t scan_y = 0;  ///< Scanline
@@ -150,6 +154,24 @@ class PPU {
 
     /// Rendering scanline logic
     void render();
+
+    /// Nametable fetch
+    void vram_fetch_nt();
+
+    /// Attribute table fetch
+    void vram_fetch_at();
+
+    /// Fetch pattern low bits
+    void vram_fetch_bg_l();
+
+    /// Fetch pattern high bits
+    void vram_fetch_bg_h();
+
+    /// Fetch sprite low bits
+    void vram_fetch_spr_l();
+
+    /// Fetch sprite high bits
+    void vram_fetch_spr_h();
 
     /// Write value @ addr to CHR memory
     void chr_write(uint16_t addr, uint8_t value);

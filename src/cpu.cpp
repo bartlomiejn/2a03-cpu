@@ -778,9 +778,7 @@ void CPU::schedule_dma_oam(uint8_t page) {
     dma_page = page;
 }
 
-void CPU::schedule_nmi() {
-    NMI = true;
-}
+void CPU::schedule_nmi() { NMI = true; }
 
 void CPU::handle_dma() {
     if (dma == DMA_PCM) {

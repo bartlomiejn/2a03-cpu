@@ -20,7 +20,7 @@ class Base {
    public:
     /// Initializes a Cartridge Mapper instance.
     /// \param cartridge Cartridge to use.
-    explicit Base(Cartridge &cartridge) : cartridge(cartridge){};
+    explicit Base(Cartridge &cartridge) : cartridge(cartridge) {};
 
     virtual ~Base() = default;
 

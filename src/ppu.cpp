@@ -21,6 +21,28 @@
 
 using namespace NES;
 
+void inc_hori(PPUInternalReg &r) {
+    r.sc_x++;
+    if (!r.sc_x) r.nt_h = !r.nt_h;
+}
+
+void inc_vert(PPUInternalReg &r) {
+    r.sc_fine_y++;
+    if (!r.sc_fine_y) r.sc_y++;
+    if (!r.sc_y) r.nt_v = !r.nt_v;
+}
+
+void set_hori(PPUInternalReg &to, PPUInternalReg &from) {
+    to.sc_x = from.sc_x;
+    to.nt_h = from.nt_h;
+}
+
+void set_vert(PPUInternalReg &to, PPUInternalReg &from) {
+    to.sc_y = from.sc_y;
+    to.nt_v = from.nt_v;
+    to.sc_fine_y = from.sc_fine_y;
+}
+
 PPU::PPU(NES::Palette _pal) : pal(std::move(_pal)) {}
 
 void PPU::power() {
@@ -39,6 +61,18 @@ void PPU::power() {
     scan_x = 0;
 }
 
+void PPU::vram_fetch_nt() {}
+
+void PPU::vram_fetch_at() {}
+
+void PPU::vram_fetch_bg_l() {}
+
+void PPU::vram_fetch_bg_h() {}
+
+void PPU::vram_fetch_spr_l() {}
+
+void PPU::vram_fetch_spr_h() {}
+
 void PPU::execute(uint8_t cycles) {
     while (cycles) {
         switch (scan_y) {
@@ -47,11 +81,10 @@ void PPU::execute(uint8_t cycles) {
                 // no accesses to PPU external memory
                 // /VBL issues zero level and is tied to 2a03 /NMI line
                 if (scan_x == 0) {
-                    // TODO: Theoretically vbl_nmi NAND vblank. Is this 
+                    // TODO: Theoretically vbl_nmi NAND vblank. Is this
                     // actually correct?
-                    if (!(ppuctrl.vbl_nmi && ppustatus.vblank)) 
-                        if (nmi_vblank)
-                            nmi_vblank();
+                    if (!(ppuctrl.vbl_nmi && ppustatus.vblank))
+                        if (nmi_vblank) nmi_vblank();
                 }
                 cycles--;
                 break;
@@ -109,7 +142,6 @@ void PPU::render() {
         //  higher.
         // 5. Turn the attribute data and the pattern table data into palette
         //  indices, and combine them with data from sprite data using priority
-
     }
 
     // Sprite unit output
@@ -139,15 +171,17 @@ void PPU::render() {
 
     // Priority mux
     if (!bg_px && !spr_px)
-        out = 0x0;  // Backdrop color $3F00 EXT in 
+        out = 0x0;  // Backdrop color $3F00 EXT in
     else if (!bg_px)
         out = spr_px;
     else if (bg_px && !spr_px)
         out = bg_px;
     else
         out = oa_prio ? spr_px : bg_px;
-}
 
+    if (out) {
+    }
+}
 
 void PPU::chr_write(uint16_t addr, uint8_t value) {
     throw std::runtime_error("PPU CHR write unimplemented");
@@ -233,15 +267,16 @@ void PPU::write_ppuaddr(uint8_t value) {
 }
 
 void PPU::write_ppudata(uint8_t value) {
-    // - Because the PPU cannot make a read from PPU memory immediately upon 
-    // request (via $2007), there is an internal buffer, which acts as a 1-stage 
-    // data pipeline. As a read is requested, the contents of the read buffer are 
-    // returned to the NES's CPU. After this, at the PPU's earliest convience 
-    // (according to PPU read cycle timings), the PPU will fetch the requested data 
-    // from the PPU memory, and throw it in the read buffer. Writes to PPU mem via 
-    // $2007 are pipelined as well, but I currently haven unknown to me if the PPU 
-    // uses this same buffer (this could be easily tested by writing somthing to 
-    // $2007, and seeing if the same value is returned immediately after reading).
+    // - Because the PPU cannot make a read from PPU memory immediately upon
+    // request (via $2007), there is an internal buffer, which acts as a 1-stage
+    // data pipeline. As a read is requested, the contents of the read buffer
+    // are returned to the NES's CPU. After this, at the PPU's earliest
+    // convience (according to PPU read cycle timings), the PPU will fetch the
+    // requested data from the PPU memory, and throw it in the read buffer.
+    // Writes to PPU mem via $2007 are pipelined as well, but I currently haven
+    // unknown to me if the PPU uses this same buffer (this could be easily
+    // tested by writing somthing to $2007, and seeing if the same value is
+    // returned immediately after reading).
     switch (ppuaddr16) {
         case 0x0 ... 0x3EFF:
             vram[ppuaddr16] = value;

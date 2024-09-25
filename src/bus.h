@@ -38,7 +38,7 @@ class MemoryBus {
     /// \param uint8_t Page to transfer
     std::function<void(uint8_t)> cpu_schedule_dma_oam;
 
-    /// Schedule NMI on the CPU, NMI will be handled at the end of the next 
+    /// Schedule NMI on the CPU, NMI will be handled at the end of the next
     /// instruction cycle
     std::function<void(void)> cpu_schedule_nmi;
 
