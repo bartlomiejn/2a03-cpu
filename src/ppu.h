@@ -87,9 +87,13 @@ bitfield_union(CHRTile, uint8_t value,
 static const size_t vram_sz = 0x3F20;   ///< PPU VRAM size
 static const size_t oam_sz = 0x100;     ///< PPU OAM size
 static const size_t oam_sec_sz = 0x20;  ///< Secondary OAM memory size
+
 static const size_t ntsc_x = 341;  ///< NTSC pixel count (341 PPU clock cycles
                                    ///< per scanline)
 static const size_t ntsc_y = 262;  ///< NTSC scanline count
+
+static const size_t ntsc_fb_x = 256; ///< NTSC framebuffer X size
+static const size_t ntsc_fb_y = 240; ///< NTSC framebuffer Y size
 
 /// Ricoh 2C02 NTSC PPU emulator
 class PPU {
@@ -125,12 +129,11 @@ class PPU {
     bool ppu_h = true;
 
     // Output
-    NES::Palette pal;                           ///< Palette file
-    std::array<uint32_t, ntsc_x * ntsc_y> fb;   ///< Framebuffer
+    NES::Palette pal;                               ///< Palette file
+    std::array<uint32_t, ntsc_fb_x*ntsc_fb_y> fb;   ///< Framebuffer
 
-    std::function<void(NES::Palette::Color)> draw_handler;  ///< Called every
-                                                            ///< cycle that
-                                                            ///< draws a pixel
+    std::function<void(std::array<uint32_t, ntsc_fb_x*ntsc_fb_y>&)> frame_ready;
+
     std::function<void()> nmi_vblank; ///< Issues a VBlank NMI
 
     uint16_t scan_x = 0;  ///< Pixel

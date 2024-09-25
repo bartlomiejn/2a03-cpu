@@ -39,6 +39,44 @@ void PPU::power() {
     scan_x = 0;
 }
 
+void PPU::execute(uint8_t cycles) {
+    while (cycles) {
+        switch (scan_y) {
+            case 0 ... 19:
+                // pull down VINT
+                // no accesses to PPU external memory
+                // /VBL issues zero level and is tied to 2a03 /NMI line
+                if (scan_x == 0) {
+                    // TODO: Theoretically vbl_nmi NAND vblank. Is this 
+                    // actually correct?
+                    if (!(ppuctrl.vbl_nmi && ppustatus.vblank)) 
+                        if (nmi_vblank)
+                            nmi_vblank();
+                }
+                cycles--;
+                break;
+            case 20 ... 260:
+                render();
+                cycles--;
+                break;
+            case 261:
+                if (scan_x == (ntsc_x - 1)) {
+                    ppustatus.vblank = true;
+                }
+                cycles--;
+                break;
+        }
+
+        // TODO: Actually render some output
+        if (false)
+            if (frame_ready) frame_ready(fb);
+
+        // Increment scanline/pixel counter
+        if (scan_x == (ntsc_x - 1)) scan_y = (scan_y + 1) % ntsc_y;
+        scan_x = (scan_x + 1) % ntsc_x;
+    }
+}
+
 void PPU::render() {
     // NTSC
     // If rendering off, each frame is 341*262 / 3 CPU clocks long
@@ -108,45 +146,8 @@ void PPU::render() {
         out = bg_px;
     else
         out = oa_prio ? spr_px : bg_px;
-
-    // TODO: Actually render some output
-    if (false)
-        if (draw_handler) draw_handler(pal.get_rgb(out));
 }
 
-void PPU::execute(uint8_t cycles) {
-    while (cycles) {
-        switch (scan_y) {
-            case 0 ... 19:
-                // pull down VINT
-                // no accesses to PPU external memory
-                // /VBL issues zero level and is tied to 2a03 /NMI line
-                if (scan_x == 0) {
-                    // TODO: Theoretically vbl_nmi NAND vblank. Is this 
-                    // actually correct?
-                    if (!(ppuctrl.vbl_nmi && ppustatus.vblank)) 
-                        if (nmi_vblank)
-                            nmi_vblank();
-                }
-                cycles--;
-                break;
-            case 20 ... 260:
-                render();
-                cycles--;
-                break;
-            case 261:
-                if (scan_x == (ntsc_x - 1)) {
-                    ppustatus.vblank = true;
-                }
-                cycles--;
-                break;
-        }
-
-        // Increment scanline/pixel counter
-        if (scan_x == (ntsc_x - 1)) scan_y = (scan_y + 1) % ntsc_y;
-        scan_x = (scan_x + 1) % ntsc_x;
-    }
-}
 
 void PPU::chr_write(uint16_t addr, uint8_t value) {
     throw std::runtime_error("PPU CHR write unimplemented");
