@@ -8,9 +8,9 @@
 
 // Detailed cycle counting
 // Example 1: LDA (Load Accumulator) Instruction
-// 
+//
 // Immediate Addressing Mode (LDA #$NN)
-// 
+//
 //     Cycles Required: 2
 //     Cycle Breakdown:
 //         Cycle 1:
@@ -18,9 +18,9 @@
 //         Cycle 2:
 //             Fetch immediate value (#$NN), increment PC.
 //             Load immediate value into the Accumulator.
-// 
+//
 // Zero Page Addressing Mode (LDA $NN)
-// 
+//
 //     Cycles Required: 3
 //     Cycle Breakdown:
 //         Cycle 1:
@@ -29,9 +29,9 @@
 //             Fetch zero-page address ($NN), increment PC.
 //         Cycle 3:
 //             Read value from zero-page address, load into Accumulator.
-// 
+//
 // Absolute Addressing Mode (LDA $NNNN)
-// 
+//
 //     Cycles Required: 4
 //     Cycle Breakdown:
 //         Cycle 1:
@@ -42,11 +42,11 @@
 //             Fetch high byte of address ($NN), increment PC.
 //         Cycle 4:
 //             Read value from the full address, load into Accumulator.
-// 
+//
 // Example 2: STA (Store Accumulator) Instruction
-// 
+//
 // Zero Page Addressing Mode (STA $NN)
-// 
+//
 //     Cycles Required: 3
 //     Cycle Breakdown:
 //         Cycle 1:
@@ -55,11 +55,11 @@
 //             Fetch zero-page address ($NN), increment PC.
 //         Cycle 3:
 //             Write Accumulator to zero-page address.
-// 
+//
 // Example 3: Branch Instructions (e.g., BEQ, BNE)
-// 
+//
 // Branch if Equal (BEQ $NN)
-// 
+//
 //     Cycles Required: 2 (not taken), 3 (taken), or 4 (taken and page crossed)
 //     Cycle Breakdown:
 //         Cycle 1:

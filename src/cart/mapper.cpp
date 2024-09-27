@@ -41,7 +41,7 @@ uint8_t Mapper::NROM::read_prg(uint16_t addr) {
         default:
             std::cout << "Invalid NROM Mapper memory access: $"
                       << static_cast<int>(addr) << std::endl;
-            return 0x0;
+            throw std::runtime_error("Invalid PRG memory access.");
     }
 }
 
@@ -51,15 +51,30 @@ void Mapper::NROM::write_prg(uint16_t addr, uint8_t val) {
             cartridge.prg_ram[addr - 0x6000] = val;
             break;
         default:
-            break;
+            throw std::runtime_error("Invalid PRG write addr");
     }
 }
 
-uint8_t Mapper::NROM::read_chr(uint16_t addr) {
-    throw std::runtime_error("Read CHR unimplemented");
+Mapper::NTMirror Mapper::NROM::mirroring() {
+    if (cartridge.header.flags_6.ignore_mctrl)
+        return Mapper::NTMirror::map_quad;
+    else if (cartridge.header.flags_6.mirror)
+        return Mapper::NTMirror::map_vert;
+    else
+        return Mapper::NTMirror::map_hori;
 }
 
-void Mapper::NROM::write_chr(uint16_t addr, uint8_t val) {
+uint8_t Mapper::NROM::read_ppu(uint16_t addr) {
+    switch (addr) {
+        case 0x0000 ... 0x1FFF:
+            return cartridge.chr_rom[addr];
+            break;
+        default:
+            throw std::runtime_error("Invalid CHR read addr");
+    }
+}
+
+void Mapper::NROM::write_ppu(uint16_t addr, uint8_t val) {
     throw std::runtime_error("Write CHR unimplemented");
 }
 
@@ -117,11 +132,11 @@ void Mapper::MMC1::write_prg(uint16_t addr, uint8_t val) {
     }
 }
 
-uint8_t Mapper::MMC1::read_chr(uint16_t addr) {
+uint8_t Mapper::MMC1::read_ppu(uint16_t addr) {
     throw std::runtime_error("Read CHR unimplemented");
 }
 
-void Mapper::MMC1::write_chr(uint16_t addr, uint8_t val) {
+void Mapper::MMC1::write_ppu(uint16_t addr, uint8_t val) {
     throw std::runtime_error("Write CHR unimplemented");
 }
 
@@ -230,4 +245,13 @@ uint8_t Mapper::MMC1::read_h_16k_prg_bank(uint16_t addr) {
         uint32_t abs_addr = prg_bank * prg_rom_page_sz + prg_offset;
         return cartridge.prg_rom[abs_addr];
     }
+}
+
+Mapper::NTMirror Mapper::MMC1::mirroring() {
+    if (cartridge.header.flags_6.ignore_mctrl)
+        return Mapper::NTMirror::map_quad;
+    else if (cartridge.header.flags_6.mirror)
+        return Mapper::NTMirror::map_vert;
+    else
+        return Mapper::NTMirror::map_hori;
 }

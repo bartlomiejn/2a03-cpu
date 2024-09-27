@@ -10,6 +10,8 @@ class Base;
 
 enum Type { type_NROM, type_MMC1 };
 
+enum NTMirror { map_hori, map_vert, map_single, map_quad };
+
 /// Returns an appropriate mapper type for the cartridge provided.
 /// \param for_cartridge Cartridge to generate a mapper for.
 /// \return Returns a concrete mapper instance based on the ID in the
@@ -18,26 +20,28 @@ Mapper::Base *mapper(NES::iNESv1::Cartridge &for_cartridge);
 
 class Base {
    public:
+    Cartridge &cartridge;  ///< Cartridge to map.
+
     /// Initializes a Cartridge Mapper instance.
     /// \param cartridge Cartridge to use.
     explicit Base(Cartridge &cartridge) : cartridge(cartridge) {};
 
     virtual ~Base() = default;
 
-    /// Reads a byte of memory at the provided address.
+    /// Reads a byte to CPU bus at the provided address.
     virtual uint8_t read_prg(uint16_t addr) = 0;
 
-    /// Writes a byte of memory to the provided address.
+    /// Writes a byte from CPU bus to the provided address.
     virtual void write_prg(uint16_t addr, uint8_t val) = 0;
 
-    /// Reads a byte of CHR memory at the provided address.
-    virtual uint8_t read_chr(uint16_t addr) = 0;
+    /// Gets the mirroring arrangement on a cart
+    virtual NTMirror mirroring() = 0;
 
-    /// Writes a byte of CHR memory at the provided address.
-    virtual void write_chr(uint16_t addr, uint8_t val) = 0;
+    /// Reads a byte to PPU bus at the provided address.
+    virtual uint8_t read_ppu(uint16_t addr) = 0;
 
-   protected:
-    Cartridge &cartridge;  ///< Cartridge to map.
+    /// Writes a byte from PPU bus at the provided address.
+    virtual void write_ppu(uint16_t addr, uint8_t val) = 0;
 };
 
 class NROM : public Mapper::Base {
@@ -47,17 +51,15 @@ class NROM : public Mapper::Base {
     /// \param cartridge Cartridge to use.
     explicit NROM(Cartridge &cartridge);
 
-    /// Reads a byte from PRG memory at the provided address.
     uint8_t read_prg(uint16_t addr) final;
 
-    /// Writes a byte to PRG memory to the provided address.
     void write_prg(uint16_t addr, uint8_t val) final;
 
-    /// Reads a byte from CHR memory at the provided address.
-    uint8_t read_chr(uint16_t addr) final;
+    NTMirror mirroring() final;
 
-    /// Writes a byte to CHR memory to the provided address.
-    void write_chr(uint16_t addr, uint8_t val);
+    uint8_t read_ppu(uint16_t addr) final;
+
+    void write_ppu(uint16_t addr, uint8_t val);
 };
 
 class MMC1 : public Mapper::Base {
@@ -77,17 +79,15 @@ class MMC1 : public Mapper::Base {
     /// \param cartridge Cartridge to use.
     explicit MMC1(Cartridge &cartridge);
 
-    /// Reads a byte of memory at the provided address.
     uint8_t read_prg(uint16_t addr) final;
 
-    /// Writes a byte of memory to the provided address.
     void write_prg(uint16_t addr, uint8_t val) final;
 
-    /// Reads a byte from CHR memory at the provided address.
-    uint8_t read_chr(uint16_t addr) final;
+    NTMirror mirroring() final;
 
-    /// Writes a byte to CHR memory to the provided address.
-    void write_chr(uint16_t addr, uint8_t val) final;
+    uint8_t read_ppu(uint16_t addr) final;
+
+    void write_ppu(uint16_t addr, uint8_t val) final;
 
    private:
     // Shift register contents

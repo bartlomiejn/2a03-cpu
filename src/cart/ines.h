@@ -49,7 +49,6 @@ struct Header {
           prg_ram_banks(prg_ram_sz),
           flags_9(flags_9) {};
 
-    // Bytes 0-3 are `NES<EOF>` in ASCII
     uint8_t prg_rom_banks;  ///< Byte 4: PRG ROM bank count in 16KB units.
     uint8_t chr_rom_banks;  ///< Byte 5: CHR ROM bank count in 8KB units.
     Byte6 flags_6;          ///< Byte 6: Flags.

@@ -2,23 +2,6 @@
 
 #include <cstring>
 
-// https://fceux.com/web/help/PPU.html
-// https://www.nesdev.org/wiki/PPU_programmer_reference
-//
-// PPU memory map
-//
-// Mapped by cartridge:
-// $0000-$0FFF - CHR (Pattern) table 0 (16 bit 2 plane patterns)
-// $1000-$1FFF - CHR (Pattern) table 1
-// $2000-$23FF - Nametable 0
-// $2400-$27FF - Nametable 1
-// $2800-$2BFF - Nametable 2
-// $2C00-$2FFF - Nametable 3
-//
-// PPU internal:
-// $3F00-$3F1F - Palette RAM indices
-// Mirrored to $3FFF
-
 using namespace NES;
 
 void inc_hori(PPUVramAddr &r) {
@@ -67,22 +50,24 @@ void PPU::power() {
 void PPU::execute(uint8_t cycles) {
     while (cycles) {
         switch (scan_y) {
-//             case 0 ... 19:
-//                 // pull down VINT
-//                 // no accesses to PPU external memory
-//                 // /VBL issues zero level and is tied to 2a03 /NMI line
-//                 if (scan_x == 0) {
-//                     // TODO: Theoretically vbl_nmi NAND vblank. Is this
-//                     // actually correct?
-//                     if (!(ppuctrl.vbl_nmi && ppustatus.vblank))
-//                         if (nmi_vblank) nmi_vblank();
-//                 }
-//                 cycles--;
-//                 break;
-//             case 20 ... 260:
-//                 render();
-//                 cycles--;
-//                 break;
+                //             case 0 ... 19:
+                //                 // pull down VINT
+                //                 // no accesses to PPU external memory
+                //                 // /VBL issues zero level and is tied to 2a03
+                //                 /NMI line if (scan_x == 0) {
+                //                     // TODO: Theoretically vbl_nmi NAND
+                //                     vblank. Is this
+                //                     // actually correct?
+                //                     if (!(ppuctrl.vbl_nmi &&
+                //                     ppustatus.vblank))
+                //                         if (nmi_vblank) nmi_vblank();
+                //                 }
+                //                 cycles--;
+                //                 break;
+                //             case 20 ... 260:
+                //                 render();
+                //                 cycles--;
+                //                 break;
             case 0 ... 239:
             case 261:
                 switch (scan_x) {
@@ -96,14 +81,14 @@ void PPU::execute(uint8_t cycles) {
                                 break;
                         }
                     case 1:
+                        if (scan_y == 241) {
+                            // TODO: Is this the right flag or the NMI one?
+                            ppustatus.vblank = true;
+                        }
                         if (scan_y == 261) {
                             // TODO: Clear vblank flag and spr0 overflow
                             ppustatus.vblank = false;
                             ppustatus.spr0_hit = false;
-                        }
-                        if (scan_y == 241) {
-                            // TODO: Is this the right flag or the NMI one?
-                            ppustatus.vblank = true;
                         }
                     // NT fetch
                     case 9:
@@ -137,10 +122,10 @@ void PPU::execute(uint8_t cycles) {
                     case 233:
                     case 241:
                     case 249:
-                    case 321: // Two tiles from next scanline
-                    case 329: // Two tiles from next scanline
-                    case 337: // TODO: Unused?
-                    case 339: // TODO: Unused?
+                    case 321:  // Two tiles from next scanline
+                    case 329:  // Two tiles from next scanline
+                    case 337:  // TODO: Unused?
+                    case 339:  // TODO: Unused?
                         bus.addr = 0x2000 | (v.addr & 0x0FFF);
                         break;
                     // NT read
@@ -176,10 +161,10 @@ void PPU::execute(uint8_t cycles) {
                     case 234:
                     case 242:
                     case 250:
-                    case 322: // Two tiles from next scanline
-                    case 330: // Two tiles from next scanline
-                    case 338: // TODO: Unused?
-                    case 340: // TODO: Unused?
+                    case 322:  // Two tiles from next scanline
+                    case 330:  // Two tiles from next scanline
+                    case 338:  // TODO: Unused?
+                    case 340:  // TODO: Unused?
                         nt = vram[bus.addr];
                         break;
                     // AT fetch
@@ -215,12 +200,11 @@ void PPU::execute(uint8_t cycles) {
                     case 235:
                     case 243:
                     case 251:
-                    case 323: // Two tiles from next scanline
-                    case 331: // Two tiles from next scanline
-                        bus.addr = 0x23C0 \
-                                   | (v.addr & 0x0C00) \
-                                   | ((v.addr >> 4) & 0x38) \
-                                   | ((v.addr >> 2) & 0x07);
+                    case 323:  // Two tiles from next scanline
+                    case 331:  // Two tiles from next scanline
+                        bus.addr = 0x23C0 | (v.addr & 0x0C00) |
+                                   ((v.addr >> 4) & 0x38) |
+                                   ((v.addr >> 2) & 0x07);
                         break;
                     // AT read
                     case 4:
@@ -255,8 +239,8 @@ void PPU::execute(uint8_t cycles) {
                     case 236:
                     case 244:
                     case 252:
-                    case 324: // Two tiles from next scanline
-                    case 332: // Two tiles from next scanline
+                    case 324:  // Two tiles from next scanline
+                    case 332:  // Two tiles from next scanline
                         at = vram[v.addr];
                         break;
                     // BG l fetch
@@ -292,10 +276,10 @@ void PPU::execute(uint8_t cycles) {
                     case 237:
                     case 245:
                     case 253:
-                    case 325: // Two tiles from next scanline
-                    case 333: // Two tiles from next scanline
-                        v.addr = (ppuctrl.spr_pt_addr ? 0x1000 : 0x0000) 
-                                 + nt * 16 + v.sc_fine_y; 
+                    case 325:  // Two tiles from next scanline
+                    case 333:  // Two tiles from next scanline
+                        v.addr = (ppuctrl.spr_pt_addr ? 0x1000 : 0x0000) +
+                                 nt * 16 + v.sc_fine_y;
                         break;
                     // BG l read
                     case 6:
@@ -330,9 +314,9 @@ void PPU::execute(uint8_t cycles) {
                     case 238:
                     case 246:
                     case 254:
-                    case 326: // Two tiles from next scanline
-                    case 334: // Two tiles from next scanline
-                        spr_l = vram[v.addr]; 
+                    case 326:  // Two tiles from next scanline
+                    case 334:  // Two tiles from next scanline
+                        spr_l = vram[v.addr];
                         break;
                     // BG h fetch
                     case 7:
@@ -367,10 +351,10 @@ void PPU::execute(uint8_t cycles) {
                     case 239:
                     case 247:
                     case 255:
-                    case 327: // Two tiles from next scanline
-                    case 335: // Two tiles from next scanline
-                        v.addr = (ppuctrl.spr_pt_addr ? 0x1000 : 0x0000) 
-                                 + nt * 16 + v.sc_fine_y + 8; 
+                    case 327:  // Two tiles from next scanline
+                    case 335:  // Two tiles from next scanline
+                        v.addr = (ppuctrl.spr_pt_addr ? 0x1000 : 0x0000) +
+                                 nt * 16 + v.sc_fine_y + 8;
                         break;
                     // BG h read
                     case 8:
@@ -405,8 +389,8 @@ void PPU::execute(uint8_t cycles) {
                     case 240:
                     case 248:
                     case 256:
-                    case 328: // Two tiles from next scanline
-                    case 336: // Two tiles from next scanline 
+                    case 328:  // Two tiles from next scanline
+                    case 336:  // Two tiles from next scanline
                         spr_h = vram[v.addr];
                         if (scan_y == 256) {
                             inc_vert(v);
@@ -419,8 +403,7 @@ void PPU::execute(uint8_t cycles) {
         }
 
         if (scan_y == 239 && scan_x == 320)
-            if (frame_ready) 
-                frame_ready(fb);
+            if (frame_ready) frame_ready(fb);
 
         // Increment scanline/pixel counter
         if (scan_x == (ntsc_x - 1)) scan_y = (scan_y + 1) % ntsc_y;
@@ -501,38 +484,46 @@ void PPU::render() {
     }
 }
 
-void PPU::chr_write(uint16_t addr, uint8_t value) {
-    throw std::runtime_error("PPU CHR write unimplemented");
-}
-
-uint8_t PPU::chr_read(uint16_t addr) {
-    throw std::runtime_error("PPU CHR read unimplemented");
-}
-
 void PPU::cpu_write(uint16_t addr, uint8_t value) {
     switch (addr) {
-        case 0x2000:
+        case 0x2000:  // PPUCTRL
             ppuctrl.value = value;
             break;
-        case 0x2001:
+        case 0x2001:  // PPUMASK
             ppumask.value = value;
             break;
-        case 0x2002:
+        case 0x2002:  // PPUSTATUS read-only
             throw std::runtime_error("Invalid write to PPUSTATUS.");
-        case 0x2003:
-            write_oamaddr(value);
+        case 0x2003:  // OAMADDR
+            oamaddr = value;
             break;
-        case 0x2004:
-            write_oamdata(value);
+        case 0x2004:  // OAMDATA
+            oam[oamaddr++] = value;
             break;
-        case 0x2005:
-            write_ppuscroll(value);
+        case 0x2005:  // PPUSCROLL
+            if (!w) {
+                t.sc_x = ((value & 0xF8) >> 3);
+                x.fine = (value & 0x7);
+            } else {
+                t.sc_y = ((value & 0xF8) >> 3);
+                t.sc_fine_y = (value & 0x7);
+            }
+            w = !w;
             break;
-        case 0x2006:
-            write_ppuaddr(value);
+        case 0x2006:  // PPUADDR
+            if (!w)
+                v.h = value & 0x3F;
+            else
+                v.l = value;
+            w = !w;
             break;
-        case 0x2007:
-            write_ppudata(value);
+        case 0x2007:  // PPUDATA
+            write(v.addr, value);
+            if (ppuctrl.v_incr) {
+                v.addr += 0x20;
+            } else {
+                v.addr++;
+            }
             break;
         default:
             throw std::runtime_error("Invalid/unimplemented PPU write.");
@@ -552,10 +543,10 @@ uint8_t PPU::cpu_read(uint16_t addr) {
         case 0x2007:
             uint8_t ppudata_out;
             if (v.addr > 0x3EFF) {
-                ppudata_out = vram[0x3F00 + ((v.addr - 0x3F00) % 0x20)];
+                ppudata_out = read(v.addr);
             } else {
                 ppudata_out = ppudata_buf;
-                ppudata_buf = vram[v.addr];
+                ppudata_buf = read(v.addr);
             }
             if (ppuctrl.v_incr) {
                 v.addr += 0x20;
@@ -570,54 +561,134 @@ uint8_t PPU::cpu_read(uint16_t addr) {
     throw std::runtime_error("PPU read unimplemented.");
 }
 
-void PPU::write_ppuscroll(uint8_t value) {
-    if (!w) {
-        t.sc_x = ((value & 0xF8) >> 3);
-        x.fine = (value & 0x7);
-    } else {
-        t.sc_y = ((value & 0xF8) >> 3);
-        t.sc_fine_y = (value & 0x7);
-    }
-    w = !w;
-}
+// https://fceux.com/web/help/PPU.html
+// https://www.nesdev.org/wiki/PPU_programmer_reference
+//
+// PPU memory map
+//
+// $0000-$0FFF - CHR ROM/RAM Pattern table 0 (16 bit 2 plane patterns) (cart)
+// $1000-$1FFF - CHR ROM/RAM Pattern table 1 (cart)
+// $2000-$23FF - Nametable 0 (PPU VRAM)
+// $2400-$27FF - Nametable 1 (PPU VRAM)
+// $2800-$2BFF - Nametable 2 (mirrored or additional VRAM on cartridge)
+// $2C00-$2FFF - Nametable 3 (mirrored or additional VRAM on cartridge)
+// $3000-$3EFF - Mirrors of $2000-$2EFF
+// $3F00-$3F1F - Palette RAM indices (PPU VRAM)
+// $3F20-$3FFF - Palette RAM mirrors
 
-void PPU::write_oamaddr(uint8_t value) { oamaddr = value; }
-
-void PPU::write_oamdata(uint8_t value) { oam[oamaddr++] = value; }
-
-void PPU::write_ppuaddr(uint8_t value) {
-    if (!w)
-        t.h = value & 0x3F;
-    else
-        t.l = value;
-    w = !w;
-}
-
-void PPU::write_ppudata(uint8_t value) {
-    // - Because the PPU cannot make a read from PPU memory immediately upon
-    // request (via $2007), there is an internal buffer, which acts as a 1-stage
-    // data pipeline. As a read is requested, the contents of the read buffer
-    // are returned to the NES's CPU. After this, at the PPU's earliest
-    // convience (according to PPU read cycle timings), the PPU will fetch the
-    // requested data from the PPU memory, and throw it in the read buffer.
-    // Writes to PPU mem via $2007 are pipelined as well, but I currently haven
-    // unknown to me if the PPU uses this same buffer (this could be easily
-    // tested by writing somthing to $2007, and seeing if the same value is
-    // returned immediately after reading).
-    switch (v.addr) {
-        case 0x0 ... 0x3EFF:
-            vram[v.addr] = value;
+void PPU::write(uint16_t addr, uint8_t value) {
+    using namespace iNESv1::Mapper;
+    NTMirror mirror = mapper->mirroring();
+    switch (addr) {
+        case 0x0000 ... 0x1FFF:
+            mapper->write_ppu(addr, value);
+            break;
+        case 0x2000 ... 0x23FF:
+            vram[addr - 0x2000] = value;
+            break;
+        case 0x2400 ... 0x27FF:
+            switch (mirror) {
+                case map_hori:
+                case map_quad:
+                    vram[addr - 0x2000] = value;
+                    break;
+                case map_vert:
+                case map_single:
+                    vram[addr - 0x2400] = value;
+                    break;
+            }
+            break;
+        case 0x2800 ... 0x2BFF:
+            switch (mirror) {
+                case map_hori:
+                case map_single:
+                    vram[addr - 0x2800] = value;
+                    break;
+                case map_vert:
+                    vram[addr - 0x2400] = value;
+                    break;
+                case map_quad:
+                    mapper->write_ppu(addr, value);
+                    break;
+            }
+            break;
+        case 0x2C00 ... 0x2FFF:
+            switch (mirror) {
+                case map_hori:
+                case map_vert:
+                    vram[addr - 0x2800] = value;
+                    break;
+                case map_single:
+                    vram[addr - 0x2C00] = value;
+                    break;
+                case map_quad:
+                    mapper->write_ppu(addr, value);
+                    break;
+            }
             break;
         case 0x3F00 ... 0x3FFF:
-            vram[0x3F00 + ((v.addr - 0x3F00) % 0x20)] = value;
+            pram[((addr - 0x3F00) % 0x20)] = value;
             break;
         default:
-            throw std::runtime_error("Invalid VRAM address");
+            throw std::runtime_error("Invalid/unimplemented PPU write");
     }
+}
 
-    if (ppuctrl.v_incr) {
-        v.addr += 0x20;
-    } else {
-        v.addr++;
+uint8_t PPU::read(uint16_t addr) {
+    using namespace iNESv1::Mapper;
+    NTMirror mirror = mapper->mirroring();
+    switch (addr) {
+        case 0x0000 ... 0x1FFF:
+            return mapper->read_ppu(addr);
+            break;
+        case 0x2000 ... 0x23FF:
+            return vram[addr - 0x2000];
+            break;
+        case 0x2400 ... 0x27FF:
+            switch (mirror) {
+                case map_hori:
+                case map_quad:
+                    return vram[addr - 0x2000];
+                    break;
+                case map_vert:
+                case map_single:
+                    return vram[addr - 0x2400];
+                    break;
+            }
+            break;
+        case 0x2800 ... 0x2BFF:
+            switch (mirror) {
+                case map_hori:
+                case map_single:
+                    return vram[addr - 0x2800];
+                    break;
+                case map_vert:
+                    return vram[addr - 0x2400];
+                    break;
+                case map_quad:
+                    return mapper->read_ppu(addr);
+                    break;
+            }
+            break;
+        case 0x2C00 ... 0x2FFF:
+            switch (mirror) {
+                case map_hori:
+                case map_vert:
+                    return vram[addr - 0x2800];
+                    break;
+                case map_single:
+                    return vram[addr - 0x2C00];
+                    break;
+                case map_quad:
+                    return mapper->read_ppu(addr);
+                    break;
+            }
+            break;
+        case 0x3F00 ... 0x3FFF:
+            return pram[((addr - 0x3F00) % 0x20)];
+            break;
+        default:
+            break;
     }
+    throw std::runtime_error("Invalid or unimplemented PPU read");
 }

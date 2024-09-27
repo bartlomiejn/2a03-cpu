@@ -18,8 +18,8 @@ bitfield_union(
     uint8_t nt_xy_select : 2;  ///< Base nametable addr 0=$2000, 1=$2400,
                                ///< 2=$2800, 3=$2C00
     bool v_incr : 1;           ///< 1: Vertical v increment (+32 instead of +1)
-    bool spr_pt_addr : 1;  ///< 0: $0000 1: $1000, ignored in 8x16 mode
-    bool bg_pt_addr : 1;   ///< 0: $0000 1: $1000
+    bool spr_pt_addr : 1;      ///< 0: $0000 1: $1000, ignored in 8x16 mode
+    bool bg_pt_addr : 1;       ///< 0: $0000 1: $1000
     bool spr_size : 1;    ///< 0: 8x8 pixels, 1: 8x16 pixels (see PPU OAM byte
                           ///< 1)
     bool ppu_master : 1;  ///< EXT bus direction 0: input, 1: output
@@ -95,9 +95,10 @@ bitfield_union(CHRTile, uint8_t value,
                uint8_t y : 3;  ///< Row # or Y
 );
 
-static const size_t vram_sz = 0x3F20;   ///< PPU VRAM size
+static const size_t vram_sz = 0x800;    ///< PPU VRAM size
 static const size_t oam_sz = 0x100;     ///< PPU OAM size
 static const size_t oam_sec_sz = 0x20;  ///< Secondary OAM memory size
+static const size_t pram_sz = 0x20;     ///< Palette RAM size
 
 static const size_t ntsc_x = 341;  ///< NTSC pixel count (341 PPU clock cycles
                                    ///< per scanline)
@@ -116,6 +117,7 @@ class PPU {
     std::array<uint8_t, vram_sz> vram;        ///< PPU VRAM
     std::array<uint8_t, oam_sz> oam;          ///< PPU OAM
     std::array<uint8_t, oam_sec_sz> oam_sec;  ///< Secondary OAM
+    std::array<uint8_t, pram_sz> pram;        ///< Palette RAM
 
     // Internal PPU registers
     PPUVramAddr v;  ///< 15-bit Current VRAM addr
@@ -129,10 +131,10 @@ class PPU {
 
     struct {
         uint16_t addr : 14;
-    } bus; // Internal buffer
+    } bus;  // Internal buffer
 
-    uint8_t nt; // Tile idx for pattern lookup
-    uint8_t at; // Paltete info for a region of tiles (4x4 tiles = 32x32 px)
+    uint8_t nt;  // Tile idx for pattern lookup
+    uint8_t at;  // Paltete info for a region of tiles (4x4 tiles = 32x32 px)
     uint8_t spr_l;
     uint8_t spr_h;
 
@@ -157,7 +159,7 @@ class PPU {
         frame_ready;
     std::function<void()> nmi_vblank;  ///< Issues a VBlank NMI
 
-    uint16_t scan_x = 0;  ///< Pixel
+    uint16_t scan_x = 0;    ///< Pixel
     uint16_t scan_y = 261;  ///< Scanline
 
     PPU(NES::Palette _pal);
@@ -172,47 +174,18 @@ class PPU {
     /// Rendering scanline logic
     void render();
 
-    /// Nametable fetch
-    void vram_fetch_nt();
-
-    /// Attribute table fetch
-    void vram_fetch_at();
-
-    /// Fetch pattern low bits
-    void vram_fetch_bg_l();
-
-    /// Fetch pattern high bits
-    void vram_fetch_bg_h();
-
-    /// Fetch sprite low bits
-    void vram_fetch_spr_l();
-
-    /// Fetch sprite high bits
-    void vram_fetch_spr_h();
-
-    /// Write value @ addr to CHR memory
-    void chr_write(uint16_t addr, uint8_t value);
-
-    /// Reads value @ addr from CHR memory
-    uint8_t chr_read(uint16_t addr);
-
-    /// Writes value @ addr from CPU
+    /// Writes value @ addr from CPU bus
     void cpu_write(uint16_t addr, uint8_t value);
 
-    /// Reads value @ addr from CPU
+    /// Reads value @ addr from CPU bus
     uint8_t cpu_read(uint16_t addr);
 
    protected:
-    /// Handle PPUSCROLL X/Y write
-    void write_ppuscroll(uint8_t value);
+    /// Write value to addr
+    void write(uint16_t addr, uint8_t value);
 
-    /// Handle OAMADDR write and OAMDATA MMIO
-    void write_oamaddr(uint8_t value);
-    void write_oamdata(uint8_t value);
-
-    /// Handle H/L PPUADDR write and PPUDATA MMIO
-    void write_ppuaddr(uint8_t value);
-    void write_ppudata(uint8_t value);
+    /// Reads value from addr
+    uint8_t read(uint16_t addr);
 };
 
 }  // namespace NES
