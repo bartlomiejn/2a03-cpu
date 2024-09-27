@@ -45,6 +45,14 @@ void PPU::power() {
     ppudata_buf = 0x0;
     scan_y = 0;
     scan_x = 0;
+    for ( uint8_t &b : vram) 
+        b = 0x0;
+    for ( uint8_t &oa : oam )
+        oa = 0x3F;
+    for ( uint8_t &oa : oam_sec )
+        oa = 0x3F;
+    for ( uint8_t &pal : pram )
+        pal = 0xFF;
 }
 
 void PPU::execute(uint8_t cycles) {
@@ -122,10 +130,18 @@ void PPU::execute(uint8_t cycles) {
                     case 233:
                     case 241:
                     case 249:
+                    case 257:	
+                    case 265:	
+                    case 273:	
+                    case 281:	
+                    case 289:	
+                    case 297:	
+                    case 305:	
+                    case 313:
                     case 321:  // Two tiles from next scanline
                     case 329:  // Two tiles from next scanline
-                    case 337:  // TODO: Unused?
-                    case 339:  // TODO: Unused?
+                    case 337:  // Unused
+                    case 339:  // Unused
                         bus.addr = 0x2000 | (v.addr & 0x0FFF);
                         break;
                     // NT read
@@ -161,11 +177,19 @@ void PPU::execute(uint8_t cycles) {
                     case 234:
                     case 242:
                     case 250:
+                    case 258:	
+                    case 266:	
+                    case 274:	
+                    case 282:	
+                    case 290:	
+                    case 298:	
+                    case 306:	
+                    case 314:
                     case 322:  // Two tiles from next scanline
                     case 330:  // Two tiles from next scanline
-                    case 338:  // TODO: Unused?
-                    case 340:  // TODO: Unused?
-                        nt = vram[bus.addr];
+                    case 338:  // Unused
+                    case 340:  // Unused
+                        nt = read(bus.addr);
                         break;
                     // AT fetch
                     case 3:
@@ -241,7 +265,7 @@ void PPU::execute(uint8_t cycles) {
                     case 252:
                     case 324:  // Two tiles from next scanline
                     case 332:  // Two tiles from next scanline
-                        at = vram[v.addr];
+                        at = read(bus.addr);
                         break;
                     // BG l fetch
                     case 5:
@@ -278,8 +302,8 @@ void PPU::execute(uint8_t cycles) {
                     case 253:
                     case 325:  // Two tiles from next scanline
                     case 333:  // Two tiles from next scanline
-                        v.addr = (ppuctrl.spr_pt_addr ? 0x1000 : 0x0000) +
-                                 nt * 16 + v.sc_fine_y;
+                        bus.addr = (ppuctrl.spr_pt_addr ? 0x1000 : 0x0000) +
+                                    nt * 16 + v.sc_fine_y;
                         break;
                     // BG l read
                     case 6:
@@ -316,7 +340,7 @@ void PPU::execute(uint8_t cycles) {
                     case 254:
                     case 326:  // Two tiles from next scanline
                     case 334:  // Two tiles from next scanline
-                        spr_l = vram[v.addr];
+                        spr_l = read(bus.addr);
                         break;
                     // BG h fetch
                     case 7:
@@ -353,8 +377,8 @@ void PPU::execute(uint8_t cycles) {
                     case 255:
                     case 327:  // Two tiles from next scanline
                     case 335:  // Two tiles from next scanline
-                        v.addr = (ppuctrl.spr_pt_addr ? 0x1000 : 0x0000) +
-                                 nt * 16 + v.sc_fine_y + 8;
+                        bus.addr = (ppuctrl.spr_pt_addr ? 0x1000 : 0x0000) +
+                                    nt * 16 + v.sc_fine_y + 8;
                         break;
                     // BG h read
                     case 8:
@@ -391,7 +415,7 @@ void PPU::execute(uint8_t cycles) {
                     case 256:
                     case 328:  // Two tiles from next scanline
                     case 336:  // Two tiles from next scanline
-                        spr_h = vram[v.addr];
+                        spr_h = read(bus.addr);
                         if (scan_y == 256) {
                             inc_vert(v);
                         }
