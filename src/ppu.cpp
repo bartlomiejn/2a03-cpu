@@ -36,15 +36,18 @@ void PPU::power() {
     bus.addr = 0x0;
     nt = 0x0;
     at = 0x0;
-    spr_l = 0x0;
-    spr_h = 0x0;
+    bg_l = 0x0;
+    bg_h = 0x0;
     ppuctrl.value = 0x0;
     ppumask.value = 0x0;
     ppustatus.value = 0x0;
     oamaddr = 0x0;
     ppudata_buf = 0x0;
-    scan_y = 0;
     scan_x = 0;
+    scan_y = 261;
+    scan_x_end = ntsc_x;
+    scan_y_end = ntsc_y;
+    scan_short = 1;
     for (uint8_t &b : vram) b = 0x0;
     for (uint8_t &oa : oam) oa = 0x3F;
     for (uint8_t &oa : oam_sec) oa = 0x3F;
@@ -58,6 +61,11 @@ void PPU::execute(uint8_t cycles) {
         case 261:
             switch (scan_x) {
             case 0:
+                if (scan_y == 0) {
+                    // NT fetch happens here on odd frame
+                } else if (scan_y != 261) {
+                    // BG l addr
+                }
                 switch (scan_y) {
                 case 0:
                     // TODO: Skipped on BG+odd
@@ -118,7 +126,7 @@ void PPU::execute(uint8_t cycles) {
                 break;
                 // clang-format off
             case 4:     case 12:    case 20:    case 28:    case 36:
-            case 44:    case 52:    case 60     case 68:    case 76:
+            case 44:    case 52:    case 60:    case 68:    case 76:
             case 84:    case 92:    case 100:   case 108:   case 116:
             case 124:   case 132:   case 140:   case 148:   case 156:
             case 164:   case 172:   case 180:   case 188:   case 196:
@@ -149,7 +157,7 @@ void PPU::execute(uint8_t cycles) {
             case 206:   case 214:   case 222:   case 230:   case 238:
             case 246:   case 254:   case 326:   case 334:
                 // clang-format on
-                spr_l = read(bus.addr);
+                bg_l = read(bus.addr);
                 break;
                 // clang-format off
                 // BG H
@@ -173,7 +181,7 @@ void PPU::execute(uint8_t cycles) {
             case 208:   case 216:   case 224:   case 232:   case 240:
             case 248:   case 256:   case 328:   case 336:
                 // clang-format on
-                spr_h = read(bus.addr);
+                bg_h = read(bus.addr);
                 if (scan_y == 256) {
                     inc_vert(v);
                 }
@@ -186,6 +194,10 @@ void PPU::execute(uint8_t cycles) {
 
         if (scan_y == 239 && scan_x == 320)
             if (frame_ready) frame_ready(fb);
+
+        if (scan_x == ntsc_x - 1 && scan_y == ntsc_y - 1 && scan_short) {
+            scan_short = !scan_short;
+        }
 
         // Increment scanline/pixel counter
         if (scan_x == (ntsc_x - 1)) scan_y = (scan_y + 1) % ntsc_y;

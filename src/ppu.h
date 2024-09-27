@@ -135,8 +135,8 @@ class PPU {
 
     uint8_t nt;  // Tile idx for pattern lookup
     uint8_t at;  // Paltete info for a region of tiles (4x4 tiles = 32x32 px)
-    uint8_t spr_l;
-    uint8_t spr_h;
+    uint8_t bg_l;
+    uint8_t bg_h;
 
     // CPU memory mapped registers
     PPUCTRL ppuctrl;      ///< PPUCTRL, write access $2000
@@ -159,8 +159,11 @@ class PPU {
         frame_ready;
     std::function<void()> nmi_vblank;  ///< Issues a VBlank NMI
 
-    uint16_t scan_x = 0;    ///< Pixel
-    uint16_t scan_y = 261;  ///< Scanline
+    uint16_t scan_x;    ///< Pixel
+    uint16_t scan_y;  ///< Scanline
+    uint16_t scan_x_end;   ///< Pixels count
+    uint16_t scan_y_end;   ///< Scanline count
+    bool scan_short;    ///< Short scanline (340 ticks instead of 341)
 
     PPU(NES::Palette _pal);
 
