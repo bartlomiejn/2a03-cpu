@@ -76,8 +76,8 @@ void PPU::execute(uint8_t cycles) {
                     ppustatus.vblank = false;
                     ppustatus.spr0_hit = false;
                 }
-            // NT fetch
-            // clang-format off
+                // clang-format off
+                // NT
             case 9:     case 17:    case 25:    case 33:    case 41:    
             case 49:    case 57:    case 65:    case 73:    case 81:
             case 89:    case 97:    case 105:   case 113:   case 121:
@@ -90,8 +90,7 @@ void PPU::execute(uint8_t cycles) {
                 // clang-format on
                 bus.addr = 0x2000 | (v.addr & 0x0FFF);
                 break;
-            // NT read
-            // clang-format off
+                // clang-format off
             case 2:     case 10:    case 18:    case 26:    case 34:
             case 42:    case 50:    case 58:    case 66:    case 74:
             case 82:    case 90:    case 98:    case 106:   case 114:
@@ -104,8 +103,8 @@ void PPU::execute(uint8_t cycles) {
                 // clang-format on
                 nt = read(bus.addr);
                 break;
-            // AT fetch
-            // clang-format off
+                // clang-format off
+                // AT
             case 3:     case 11:    case 19:    case 27:    case 35:
             case 43:    case 51:    case 59:    case 67:    case 75:
             case 83:    case 91:    case 99:    case 107:   case 115:
@@ -117,8 +116,7 @@ void PPU::execute(uint8_t cycles) {
                 bus.addr = 0x23C0 | (v.addr & 0x0C00) | ((v.addr >> 4) & 0x38) |
                            ((v.addr >> 2) & 0x07);
                 break;
-            // AT read
-            // clang-format off
+                // clang-format off
             case 4:     case 12:    case 20:    case 28:    case 36:
             case 44:    case 52:    case 60     case 68:    case 76:
             case 84:    case 92:    case 100:   case 108:   case 116:
@@ -129,8 +127,8 @@ void PPU::execute(uint8_t cycles) {
                 // clang-format on
                 at = read(bus.addr);
                 break;
-            // BG l fetch
-            // clang-format off
+                // clang-format off
+                // BG L
             case 5:     case 13:    case 21:    case 29:    case 37:
             case 45:    case 53:    case 61:    case 69:    case 77:
             case 85:    case 93:    case 101:   case 109:   case 117:
@@ -142,8 +140,7 @@ void PPU::execute(uint8_t cycles) {
                 bus.addr = (ppuctrl.spr_pt_addr ? 0x1000 : 0x0000) + nt * 16 +
                            v.sc_fine_y;
                 break;
-            // BG l read
-            // clang-format off
+                // clang-format off
             case 6:     case 14:    case 22:    case 30:    case 38:
             case 46:    case 54:    case 62:    case 70:    case 78:
             case 86:    case 94:    case 102:   case 110:   case 118:
@@ -154,8 +151,8 @@ void PPU::execute(uint8_t cycles) {
                 // clang-format on
                 spr_l = read(bus.addr);
                 break;
-            // BG h fetch
-            // clang-format off
+                // clang-format off
+                // BG H
             case 7:     case 15:    case 23:    case 31:    case 39:
             case 47:    case 55:    case 63:    case 71:    case 79:
             case 87:    case 95:    case 103:   case 111:   case 119:
@@ -167,8 +164,7 @@ void PPU::execute(uint8_t cycles) {
                 bus.addr = (ppuctrl.spr_pt_addr ? 0x1000 : 0x0000) + nt * 16 +
                            v.sc_fine_y + 8;
                 break;
-            // BG h read
-            // clang-format off
+                // clang-format off
             case 8:     case 16:    case 24:    case 32:    case 40:
             case 48:    case 56:    case 64:    case 72:    case 80:
             case 88:    case 96:    case 104:   case 112:   case 120:

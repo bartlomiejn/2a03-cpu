@@ -92,7 +92,7 @@ void CPU::power() {
     cycles = 0;
     IRQ = NMI = false;
 
-    // TODO: Reenable once PPU is implemented
+    // TODO: Reenable once APU is implemented
     while (false) {
         for (uint16_t i = 0x4000; i <= 0x4013; i++) write(i, 0x0);
         write(0x4015, 0x0);  // All channels disabled
