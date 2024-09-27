@@ -32,29 +32,19 @@ struct Options {
 
         while ((opt = getopt(argc, argv, "cdtp")) != -1) {
             switch (opt) {
-                case 'c':
-                    log_steps_to_cerr = true;
-                    break;
-                case 'd':
-                    step_debug = true;
-                    break;
-                case 't':
-                    run_nestest = true;
-                    break;
-                case 'p':
-                    run_ppu_tests = true;
-                    break;
-                default:
-                    std::cerr << "Usage: " << argv[0] << " [-cdtp]"
-                              << std::endl;
-                    std::cerr << "Where:" << std::endl;
-                    std::cerr << "-c - Log CPU state for each step to stderr"
-                              << std::endl;
-                    std::cerr << "-d - Step through each instruction"
-                              << std::endl;
-                    std::cerr << "-t - Run nestest" << std::endl;
-                    std::cerr << "-p - Run PPU tests" << std::endl;
-                    throw std::runtime_error("Invalid usage");
+            case 'c': log_steps_to_cerr = true; break;
+            case 'd': step_debug = true; break;
+            case 't': run_nestest = true; break;
+            case 'p': run_ppu_tests = true; break;
+            default:
+                std::cerr << "Usage: " << argv[0] << " [-cdtp]" << std::endl;
+                std::cerr << "Where:" << std::endl;
+                std::cerr << "-c - Log CPU state for each step to stderr"
+                          << std::endl;
+                std::cerr << "-d - Step through each instruction" << std::endl;
+                std::cerr << "-t - Run nestest" << std::endl;
+                std::cerr << "-p - Run PPU tests" << std::endl;
+                throw std::runtime_error("Invalid usage");
             }
         }
     }

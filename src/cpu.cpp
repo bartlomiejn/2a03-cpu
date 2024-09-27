@@ -112,668 +112,258 @@ uint8_t CPU::execute() {
     uint8_t initial_cyc = cycles;
     uint16_t initial_pc = PC;
     switch (read(PC++)) {
-        case 0x10:
-            BPL();
-            break;
-        case 0x30:
-            BMI();
-            break;
-        case 0x50:
-            BVC();
-            break;
-        case 0x70:
-            BVS();
-            break;
-        case 0x90:
-            BCC();
-            break;
-        case 0xB0:
-            BCS();
-            break;
-        case 0xD0:
-            BNE();
-            break;
-        case 0xF0:
-            BEQ();
-            break;
-        case 0x4C:
-            JMP(abs);
-            break;
-        case 0x6C:
-            JMP(ind);
-            break;
-        case 0x20:
-            JSR();
-            break;
-        case 0x60:
-            RTS();
-            break;
-        case 0x40:
-            RTI();
-            break;
-        case 0x69:
-            ADC(imm);
-            break;
-        case 0x65:
-            ADC(zp);
-            break;
-        case 0x75:
-            ADC(zp_x);
-            break;
-        case 0x6D:
-            ADC(abs);
-            break;
-        case 0x7D:
-            ADC(abs_x);
-            break;
-        case 0x79:
-            ADC(abs_y);
-            break;
-        case 0x61:
-            ADC(idx_ind_x);
-            break;
-        case 0x71:
-            ADC(ind_idx_y);
-            break;
-        case 0x29:
-            AND(imm);
-            break;
-        case 0x25:
-            AND(zp);
-            break;
-        case 0x35:
-            AND(zp_x);
-            break;
-        case 0x2D:
-            AND(abs);
-            break;
-        case 0x3D:
-            AND(abs_x);
-            break;
-        case 0x39:
-            AND(abs_y);
-            break;
-        case 0x21:
-            AND(idx_ind_x);
-            break;
-        case 0x31:
-            AND(ind_idx_y);
-            break;
-        case 0x0A:
-            ASL_A();
-            break;
-        case 0x06:
-            ASL(zp);
-            break;
-        case 0x16:
-            ASL(zp_x);
-            break;
-        case 0x0E:
-            ASL(abs);
-            break;
-        case 0x1E:
-            ASL(abs_x);
-            break;
-        case 0x24:
-            BIT(zp);
-            break;
-        case 0x2C:
-            BIT(abs);
-            break;
-        case 0xC9:
-            CMP(imm);
-            break;
-        case 0xC5:
-            CMP(zp);
-            break;
-        case 0xD5:
-            CMP(zp_x);
-            break;
-        case 0xCD:
-            CMP(abs);
-            break;
-        case 0xDD:
-            CMP(abs_x);
-            break;
-        case 0xD9:
-            CMP(abs_y);
-            break;
-        case 0xC1:
-            CMP(idx_ind_x);
-            break;
-        case 0xD1:
-            CMP(ind_idx_y);
-            break;
-        case 0xE0:
-            CP(X, imm);
-            break;
-        case 0xE4:
-            CP(X, zp);
-            break;
-        case 0xEC:
-            CP(X, abs);
-            break;
-        case 0xC0:
-            CP(Y, imm);
-            break;
-        case 0xC4:
-            CP(Y, zp);
-            break;
-        case 0xCC:
-            CP(Y, abs);
-            break;
-        case 0xC6:
-            DEC(zp);
-            break;
-        case 0xD6:
-            DEC(zp_x);
-            break;
-        case 0xCE:
-            DEC(abs);
-            break;
-        case 0xDE:
-            DEC(abs_x);
-            break;
-        case 0x49:
-            EOR(imm);
-            break;
-        case 0x45:
-            EOR(zp);
-            break;
-        case 0x55:
-            EOR(zp_x);
-            break;
-        case 0x4D:
-            EOR(abs);
-            break;
-        case 0x5D:
-            EOR(abs_x);
-            break;
-        case 0x59:
-            EOR(abs_y);
-            break;
-        case 0x41:
-            EOR(idx_ind_x);
-            break;
-        case 0x51:
-            EOR(ind_idx_y);
-            break;
-        case 0x18:
-            CLC();
-            break;
-        case 0x38:
-            SEC();
-            break;
-        case 0x58:
-            CLI();
-            break;
-        case 0x78:
-            SEI();
-            break;
-        case 0xB8:
-            CLV();
-            break;
-        case 0xD8:
-            CLD();
-            break;
-        case 0xF8:
-            SED();
-            break;
-        case 0x4A:
-            LSR_A();
-            break;
-        case 0x46:
-            LSR(zp);
-            break;
-        case 0x56:
-            LSR(zp_x);
-            break;
-        case 0x4E:
-            LSR(abs);
-            break;
-        case 0x5E:
-            LSR(abs_x);
-            break;
-        case 0x09:
-            ORA(imm);
-            break;
-        case 0x05:
-            ORA(zp);
-            break;
-        case 0x15:
-            ORA(zp_x);
-            break;
-        case 0x0D:
-            ORA(abs);
-            break;
-        case 0x1D:
-            ORA(abs_x);
-            break;
-        case 0x19:
-            ORA(abs_y);
-            break;
-        case 0x01:
-            ORA(idx_ind_x);
-            break;
-        case 0x11:
-            ORA(ind_idx_y);
-            break;
-        case 0x2A:
-            ROL_A();
-            break;
-        case 0x26:
-            ROL(zp);
-            break;
-        case 0x36:
-            ROL(zp_x);
-            break;
-        case 0x2E:
-            ROL(abs);
-            break;
-        case 0x3E:
-            ROL(abs_x);
-            break;
-        case 0x6A:
-            ROR_A();
-            break;
-        case 0x66:
-            ROR(zp);
-            break;
-        case 0x76:
-            ROR(zp_x);
-            break;
-        case 0x6E:
-            ROR(abs);
-            break;
-        case 0x7E:
-            ROR(abs_x);
-            break;
-        case 0xE9:
-            SBC(imm);
-            break;
-        case 0xE5:
-            SBC(zp);
-            break;
-        case 0xF5:
-            SBC(zp_x);
-            break;
-        case 0xED:
-            SBC(abs);
-            break;
-        case 0xFD:
-            SBC(abs_x);
-            break;
-        case 0xF9:
-            SBC(abs_y);
-            break;
-        case 0xE1:
-            SBC(idx_ind_x);
-            break;
-        case 0xF1:
-            SBC(ind_idx_y);
-            break;
-        case 0xA9:
-            LD(A, imm);
-            break;
-        case 0xA5:
-            LD(A, zp);
-            break;
-        case 0xB5:
-            LD(A, zp_x);
-            break;
-        case 0xAD:
-            LD(A, abs);
-            break;
-        case 0xBD:
-            LD(A, abs_x);
-            break;
-        case 0xB9:
-            LD(A, abs_y);
-            break;
-        case 0xA1:
-            LD(A, idx_ind_x);
-            break;
-        case 0xB1:
-            LD(A, ind_idx_y);
-            break;
-        case 0xA2:
-            LD(X, imm);
-            break;
-        case 0xA6:
-            LD(X, zp);
-            break;
-        case 0xB6:
-            LD(X, zp_y);
-            break;
-        case 0xAE:
-            LD(X, abs);
-            break;
-        case 0xBE:
-            LD(X, abs_y);
-            break;
-        case 0xA0:
-            LD(Y, imm);
-            break;
-        case 0xA4:
-            LD(Y, zp);
-            break;
-        case 0xB4:
-            LD(Y, zp_x);
-            break;
-        case 0xAC:
-            LD(Y, abs);
-            break;
-        case 0xBC:
-            LD(Y, abs_x);
-            break;
-        case 0x85:
-            ST(A, zp);
-            break;
-        case 0x95:
-            ST(A, zp_x);
-            break;
-        case 0x8D:
-            ST(A, abs);
-            break;
-        case 0x9D:
-            ST(A, abs_x);
-            break;
-        case 0x99:
-            ST(A, abs_y);
-            break;
-        case 0x81:
-            ST(A, idx_ind_x);
-            break;
-        case 0x91:
-            ST(A, ind_idx_y);
-            break;
-        case 0x86:
-            ST(X, zp);
-            break;
-        case 0x96:
-            ST(X, zp_y);
-            break;
-        case 0x8E:
-            ST(X, abs);
-            break;
-        case 0x84:
-            ST(Y, zp);
-            break;
-        case 0x94:
-            ST(Y, zp_x);
-            break;
-        case 0x8C:
-            ST(Y, abs);
-            break;
-        case 0xE6:
-            INC(zp);
-            break;
-        case 0xF6:
-            INC(zp_x);
-            break;
-        case 0xEE:
-            INC(abs);
-            break;
-        case 0xFE:
-            INC(abs_x);
-            break;
-        case 0xAA:
-            T(A, X);
-            break;
-        case 0x8A:
-            T(X, A);
-            break;
-        case 0xA8:
-            T(A, Y);
-            break;
-        case 0x98:
-            T(Y, A);
-            break;
-        case 0xCA:
-            DE(X);
-            break;
-        case 0xE8:
-            IN(X);
-            break;
-        case 0x88:
-            DE(Y);
-            break;
-        case 0xC8:
-            IN(Y);
-            break;
-        case 0x9A:
-            T(X, S);
-            break;
-        case 0xBA:
-            T(S, X);
-            break;
-        case 0x48:
-            PH(A);
-            break;
-        case 0x08:
-            PH(P);
-            break;
-        case 0x68:
-            PL(A);
-            break;
-        case 0x28:
-            PL(P);
-            break;
-        case 0xEA: /* NOP */
-            cycles += 2;
-            break;
-        // TODO: Implement BRK
-        // Unofficial
-        case 0xA7:
-            LAX(zp);
-            break;
-        case 0xB7:
-            LAX(zp_y);
-            break;
-        case 0xAF:
-            LAX(abs);
-            break;
-        case 0xBF:
-            LAX(abs_y);
-            break;
-        case 0xA3:
-            LAX(idx_ind_x);
-            break;
-        case 0xB3:
-            LAX(ind_idx_y);
-            break;
-        case 0x87:
-            SAX(zp);
-            break;
-        case 0x97:
-            SAX(zp_y);
-            break;
-        case 0x8F:
-            SAX(abs);
-            break;
-        case 0x83:
-            SAX(idx_ind_x);
-            break;
-        case 0xEB:
-            USBC();
-            break;
-        case 0xC7:
-            DCP(zp);
-            break;
-        case 0xD7:
-            DCP(zp_x);
-            break;
-        case 0xCF:
-            DCP(abs);
-            break;
-        case 0xDF:
-            DCP(abs_x);
-            break;
-        case 0xDB:
-            DCP(abs_y);
-            break;
-        case 0xC3:
-            DCP(idx_ind_x);
-            break;
-        case 0xD3:
-            DCP(ind_idx_y);
-            break;
-        case 0xE7:
-            ISC(zp);
-            break;
-        case 0xF7:
-            ISC(zp_x);
-            break;
-        case 0xEF:
-            ISC(abs);
-            break;
-        case 0xFF:
-            ISC(abs_x);
-            break;
-        case 0xFB:
-            ISC(abs_y);
-            break;
-        case 0xE3:
-            ISC(idx_ind_x);
-            break;
-        case 0xF3:
-            ISC(ind_idx_y);
-            break;
-        case 0x07:
-            SLO(zp);
-            break;
-        case 0x17:
-            SLO(zp_x);
-            break;
-        case 0x0F:
-            SLO(abs);
-            break;
-        case 0x1F:
-            SLO(abs_x);
-            break;
-        case 0x1B:
-            SLO(abs_y);
-            break;
-        case 0x03:
-            SLO(idx_ind_x);
-            break;
-        case 0x13:
-            SLO(ind_idx_y);
-            break;
-        case 0x27:
-            RLA(zp);
-            break;
-        case 0x37:
-            RLA(zp_x);
-            break;
-        case 0x2F:
-            RLA(abs);
-            break;
-        case 0x3F:
-            RLA(abs_x);
-            break;
-        case 0x3B:
-            RLA(abs_y);
-            break;
-        case 0x23:
-            RLA(idx_ind_x);
-            break;
-        case 0x33:
-            RLA(ind_idx_y);
-            break;
-        case 0x47:
-            SRE(zp);
-            break;
-        case 0x57:
-            SRE(zp_x);
-            break;
-        case 0x4F:
-            SRE(abs);
-            break;
-        case 0x5F:
-            SRE(abs_x);
-            break;
-        case 0x5B:
-            SRE(abs_y);
-            break;
-        case 0x43:
-            SRE(idx_ind_x);
-            break;
-        case 0x53:
-            SRE(ind_idx_y);
-            break;
-        case 0x67:
-            RRA(zp);
-            break;
-        case 0x77:
-            RRA(zp_x);
-            break;
-        case 0x6F:
-            RRA(abs);
-            break;
-        case 0x7F:
-            RRA(abs_x);
-            break;
-        case 0x7B:
-            RRA(abs_y);
-            break;
-        case 0x63:
-            RRA(idx_ind_x);
-            break;
-        case 0x73:
-            RRA(ind_idx_y);
-            break;
-        /* 1-byte NOPs */
-        case 0x1A:
-        case 0x3A:
-        case 0x5A:
-        case 0x7A:
-        case 0xDA:
-        case 0xFA:
-            cycles += 2;
-            break;
-        /* 2-byte NOPs */
-        case 0x80:
-        case 0x82:
-        case 0x89:
-        case 0xC2:
-        case 0xE2:
-            PC++;
-            cycles += 2;
-            break;
-        case 0x04:
-        case 0x44:
-        case 0x64:
-            PC++;
-            cycles += 3;
-            break;
-        case 0x14:
-        case 0x34:
-        case 0x54:
-        case 0x74:
-        case 0xD4:
-        case 0xF4:
-            PC++;
-            cycles += 4;
-            break;
-        /* 3-byte NOPs */
-        case 0x0C:
-            PC += 2;
-            cycles += 4;
-            break;
-        /* Variable cycle count */
-        case 0x1C:
-        case 0x3C:
-        case 0x5C:
-        case 0x7C:
-        case 0xDC:
-        case 0xFC:
-            NOP_absx();
-            break;
-        default:
-            std::cerr << "Unhandled / invalid opcode: " << std::hex
-                      << static_cast<int>(read(initial_pc)) << std::endl;
-            throw InvalidOpcode();
+    case 0x10: BPL(); break;
+    case 0x30: BMI(); break;
+    case 0x50: BVC(); break;
+    case 0x70: BVS(); break;
+    case 0x90: BCC(); break;
+    case 0xB0: BCS(); break;
+    case 0xD0: BNE(); break;
+    case 0xF0: BEQ(); break;
+    case 0x4C: JMP(abs); break;
+    case 0x6C: JMP(ind); break;
+    case 0x20: JSR(); break;
+    case 0x60: RTS(); break;
+    case 0x40: RTI(); break;
+    case 0x69: ADC(imm); break;
+    case 0x65: ADC(zp); break;
+    case 0x75: ADC(zp_x); break;
+    case 0x6D: ADC(abs); break;
+    case 0x7D: ADC(abs_x); break;
+    case 0x79: ADC(abs_y); break;
+    case 0x61: ADC(idx_ind_x); break;
+    case 0x71: ADC(ind_idx_y); break;
+    case 0x29: AND(imm); break;
+    case 0x25: AND(zp); break;
+    case 0x35: AND(zp_x); break;
+    case 0x2D: AND(abs); break;
+    case 0x3D: AND(abs_x); break;
+    case 0x39: AND(abs_y); break;
+    case 0x21: AND(idx_ind_x); break;
+    case 0x31: AND(ind_idx_y); break;
+    case 0x0A: ASL_A(); break;
+    case 0x06: ASL(zp); break;
+    case 0x16: ASL(zp_x); break;
+    case 0x0E: ASL(abs); break;
+    case 0x1E: ASL(abs_x); break;
+    case 0x24: BIT(zp); break;
+    case 0x2C: BIT(abs); break;
+    case 0xC9: CMP(imm); break;
+    case 0xC5: CMP(zp); break;
+    case 0xD5: CMP(zp_x); break;
+    case 0xCD: CMP(abs); break;
+    case 0xDD: CMP(abs_x); break;
+    case 0xD9: CMP(abs_y); break;
+    case 0xC1: CMP(idx_ind_x); break;
+    case 0xD1: CMP(ind_idx_y); break;
+    case 0xE0: CP(X, imm); break;
+    case 0xE4: CP(X, zp); break;
+    case 0xEC: CP(X, abs); break;
+    case 0xC0: CP(Y, imm); break;
+    case 0xC4: CP(Y, zp); break;
+    case 0xCC: CP(Y, abs); break;
+    case 0xC6: DEC(zp); break;
+    case 0xD6: DEC(zp_x); break;
+    case 0xCE: DEC(abs); break;
+    case 0xDE: DEC(abs_x); break;
+    case 0x49: EOR(imm); break;
+    case 0x45: EOR(zp); break;
+    case 0x55: EOR(zp_x); break;
+    case 0x4D: EOR(abs); break;
+    case 0x5D: EOR(abs_x); break;
+    case 0x59: EOR(abs_y); break;
+    case 0x41: EOR(idx_ind_x); break;
+    case 0x51: EOR(ind_idx_y); break;
+    case 0x18: CLC(); break;
+    case 0x38: SEC(); break;
+    case 0x58: CLI(); break;
+    case 0x78: SEI(); break;
+    case 0xB8: CLV(); break;
+    case 0xD8: CLD(); break;
+    case 0xF8: SED(); break;
+    case 0x4A: LSR_A(); break;
+    case 0x46: LSR(zp); break;
+    case 0x56: LSR(zp_x); break;
+    case 0x4E: LSR(abs); break;
+    case 0x5E: LSR(abs_x); break;
+    case 0x09: ORA(imm); break;
+    case 0x05: ORA(zp); break;
+    case 0x15: ORA(zp_x); break;
+    case 0x0D: ORA(abs); break;
+    case 0x1D: ORA(abs_x); break;
+    case 0x19: ORA(abs_y); break;
+    case 0x01: ORA(idx_ind_x); break;
+    case 0x11: ORA(ind_idx_y); break;
+    case 0x2A: ROL_A(); break;
+    case 0x26: ROL(zp); break;
+    case 0x36: ROL(zp_x); break;
+    case 0x2E: ROL(abs); break;
+    case 0x3E: ROL(abs_x); break;
+    case 0x6A: ROR_A(); break;
+    case 0x66: ROR(zp); break;
+    case 0x76: ROR(zp_x); break;
+    case 0x6E: ROR(abs); break;
+    case 0x7E: ROR(abs_x); break;
+    case 0xE9: SBC(imm); break;
+    case 0xE5: SBC(zp); break;
+    case 0xF5: SBC(zp_x); break;
+    case 0xED: SBC(abs); break;
+    case 0xFD: SBC(abs_x); break;
+    case 0xF9: SBC(abs_y); break;
+    case 0xE1: SBC(idx_ind_x); break;
+    case 0xF1: SBC(ind_idx_y); break;
+    case 0xA9: LD(A, imm); break;
+    case 0xA5: LD(A, zp); break;
+    case 0xB5: LD(A, zp_x); break;
+    case 0xAD: LD(A, abs); break;
+    case 0xBD: LD(A, abs_x); break;
+    case 0xB9: LD(A, abs_y); break;
+    case 0xA1: LD(A, idx_ind_x); break;
+    case 0xB1: LD(A, ind_idx_y); break;
+    case 0xA2: LD(X, imm); break;
+    case 0xA6: LD(X, zp); break;
+    case 0xB6: LD(X, zp_y); break;
+    case 0xAE: LD(X, abs); break;
+    case 0xBE: LD(X, abs_y); break;
+    case 0xA0: LD(Y, imm); break;
+    case 0xA4: LD(Y, zp); break;
+    case 0xB4: LD(Y, zp_x); break;
+    case 0xAC: LD(Y, abs); break;
+    case 0xBC: LD(Y, abs_x); break;
+    case 0x85: ST(A, zp); break;
+    case 0x95: ST(A, zp_x); break;
+    case 0x8D: ST(A, abs); break;
+    case 0x9D: ST(A, abs_x); break;
+    case 0x99: ST(A, abs_y); break;
+    case 0x81: ST(A, idx_ind_x); break;
+    case 0x91: ST(A, ind_idx_y); break;
+    case 0x86: ST(X, zp); break;
+    case 0x96: ST(X, zp_y); break;
+    case 0x8E: ST(X, abs); break;
+    case 0x84: ST(Y, zp); break;
+    case 0x94: ST(Y, zp_x); break;
+    case 0x8C: ST(Y, abs); break;
+    case 0xE6: INC(zp); break;
+    case 0xF6: INC(zp_x); break;
+    case 0xEE: INC(abs); break;
+    case 0xFE: INC(abs_x); break;
+    case 0xAA: T(A, X); break;
+    case 0x8A: T(X, A); break;
+    case 0xA8: T(A, Y); break;
+    case 0x98: T(Y, A); break;
+    case 0xCA: DE(X); break;
+    case 0xE8: IN(X); break;
+    case 0x88: DE(Y); break;
+    case 0xC8: IN(Y); break;
+    case 0x9A: T(X, S); break;
+    case 0xBA: T(S, X); break;
+    case 0x48: PH(A); break;
+    case 0x08: PH(P); break;
+    case 0x68: PL(A); break;
+    case 0x28: PL(P); break;
+    case 0xEA: /* NOP */ cycles += 2; break;
+    // TODO: Implement BRK
+    // Unofficial
+    case 0xA7: LAX(zp); break;
+    case 0xB7: LAX(zp_y); break;
+    case 0xAF: LAX(abs); break;
+    case 0xBF: LAX(abs_y); break;
+    case 0xA3: LAX(idx_ind_x); break;
+    case 0xB3: LAX(ind_idx_y); break;
+    case 0x87: SAX(zp); break;
+    case 0x97: SAX(zp_y); break;
+    case 0x8F: SAX(abs); break;
+    case 0x83: SAX(idx_ind_x); break;
+    case 0xEB: USBC(); break;
+    case 0xC7: DCP(zp); break;
+    case 0xD7: DCP(zp_x); break;
+    case 0xCF: DCP(abs); break;
+    case 0xDF: DCP(abs_x); break;
+    case 0xDB: DCP(abs_y); break;
+    case 0xC3: DCP(idx_ind_x); break;
+    case 0xD3: DCP(ind_idx_y); break;
+    case 0xE7: ISC(zp); break;
+    case 0xF7: ISC(zp_x); break;
+    case 0xEF: ISC(abs); break;
+    case 0xFF: ISC(abs_x); break;
+    case 0xFB: ISC(abs_y); break;
+    case 0xE3: ISC(idx_ind_x); break;
+    case 0xF3: ISC(ind_idx_y); break;
+    case 0x07: SLO(zp); break;
+    case 0x17: SLO(zp_x); break;
+    case 0x0F: SLO(abs); break;
+    case 0x1F: SLO(abs_x); break;
+    case 0x1B: SLO(abs_y); break;
+    case 0x03: SLO(idx_ind_x); break;
+    case 0x13: SLO(ind_idx_y); break;
+    case 0x27: RLA(zp); break;
+    case 0x37: RLA(zp_x); break;
+    case 0x2F: RLA(abs); break;
+    case 0x3F: RLA(abs_x); break;
+    case 0x3B: RLA(abs_y); break;
+    case 0x23: RLA(idx_ind_x); break;
+    case 0x33: RLA(ind_idx_y); break;
+    case 0x47: SRE(zp); break;
+    case 0x57: SRE(zp_x); break;
+    case 0x4F: SRE(abs); break;
+    case 0x5F: SRE(abs_x); break;
+    case 0x5B: SRE(abs_y); break;
+    case 0x43: SRE(idx_ind_x); break;
+    case 0x53: SRE(ind_idx_y); break;
+    case 0x67: RRA(zp); break;
+    case 0x77: RRA(zp_x); break;
+    case 0x6F: RRA(abs); break;
+    case 0x7F: RRA(abs_x); break;
+    case 0x7B: RRA(abs_y); break;
+    case 0x63: RRA(idx_ind_x); break;
+    case 0x73: RRA(ind_idx_y); break;
+    /* 1-byte NOPs */
+    case 0x1A:
+    case 0x3A:
+    case 0x5A:
+    case 0x7A:
+    case 0xDA:
+    case 0xFA: cycles += 2; break;
+    /* 2-byte NOPs */
+    case 0x80:
+    case 0x82:
+    case 0x89:
+    case 0xC2:
+    case 0xE2:
+        PC++;
+        cycles += 2;
+        break;
+    case 0x04:
+    case 0x44:
+    case 0x64:
+        PC++;
+        cycles += 3;
+        break;
+    case 0x14:
+    case 0x34:
+    case 0x54:
+    case 0x74:
+    case 0xD4:
+    case 0xF4:
+        PC++;
+        cycles += 4;
+        break;
+    /* 3-byte NOPs */
+    case 0x0C:
+        PC += 2;
+        cycles += 4;
+        break;
+    /* Variable cycle count */
+    case 0x1C:
+    case 0x3C:
+    case 0x5C:
+    case 0x7C:
+    case 0xDC:
+    case 0xFC: NOP_absx(); break;
+    default:
+        std::cerr << "Unhandled / invalid opcode: " << std::hex
+                  << static_cast<int>(read(initial_pc)) << std::endl;
+        throw InvalidOpcode();
     }
 
     if (NMI) interrupt(i_nmi);
@@ -800,17 +390,11 @@ void CPU::interrupt(NES::Interrupt type) {
     P.I = true;
 
     switch (type) {
-        case i_nmi:
-            PC = read16(0xFFFA);
-            break;
-        case i_reset:
-            PC = read16(0xFFFC);
-            break;
-        case i_irq:
-        case i_brk:
-        default:
-            PC = read16(0xFFFE);
-            break;
+    case i_nmi: PC = read16(0xFFFA); break;
+    case i_reset: PC = read16(0xFFFC); break;
+    case i_irq:
+    case i_brk:
+    default: PC = read16(0xFFFE); break;
     }
 
     if (type == i_nmi)
@@ -821,11 +405,9 @@ void CPU::interrupt(NES::Interrupt type) {
 
 uint8_t CPU::read(uint16_t addr) {
     switch (dma) {
-        case DMA_OAM:
-        case DMA_PCM:
-            handle_dma();
-        default:
-            return bus.read(addr);
+    case DMA_OAM:
+    case DMA_PCM: handle_dma();
+    default: return bus.read(addr);
     }
 }
 
@@ -878,55 +460,55 @@ uint16_t CPU::operand_addr(AddressingMode mode) {
     uint8_t opc = 0x0;
     uint16_t addr = 0x0;
     switch (mode) {
-        case abs:
-            addr = read16(PC);
-            PC += 2;
-            break;
-        case abs_x:
-            opc = read(PC - 1);
-            addr = read16(PC) + X;
-            PC += 2;
-            if (idx_abs_crossing_cycle(opc) && !is_same_page(addr - X, addr))
-                cycles++;
-            break;
-        case abs_y:
-            opc = read(PC - 1);
-            addr = read16(PC) + Y;
-            PC += 2;
-            if (idx_abs_crossing_cycle(opc) && !is_same_page(addr - Y, addr))
-                cycles++;
-            break;
-        case imm:
-            addr = PC;
-            PC++;
-            break;
-        case zp:
-            addr = read(PC);
-            PC++;
-            break;
-        case zp_x:
-            addr = (read(PC) + X) % 0x100;
-            PC++;
-            break;
-        case zp_y:
-            addr = (read(PC) + Y) % 0x100;
-            PC++;
-            break;
-        case idx_ind_x:
-            addr = read16((read(PC) + X) % 0x100, true);
-            PC++;
-            break;
-        case ind_idx_y:
-            opc = read(PC - 1);
-            addr = read16(read(PC), true) + Y;
-            PC++;
-            if (idx_abs_crossing_cycle(opc) && !is_same_page(addr - Y, addr))
-                cycles++;
-            break;
-        case ind:
-        default:
-            std::cerr << "Invalid addressing mode: " << std::hex << int(mode)
-                      << std::endl;
+    case abs:
+        addr = read16(PC);
+        PC += 2;
+        break;
+    case abs_x:
+        opc = read(PC - 1);
+        addr = read16(PC) + X;
+        PC += 2;
+        if (idx_abs_crossing_cycle(opc) && !is_same_page(addr - X, addr))
+            cycles++;
+        break;
+    case abs_y:
+        opc = read(PC - 1);
+        addr = read16(PC) + Y;
+        PC += 2;
+        if (idx_abs_crossing_cycle(opc) && !is_same_page(addr - Y, addr))
+            cycles++;
+        break;
+    case imm:
+        addr = PC;
+        PC++;
+        break;
+    case zp:
+        addr = read(PC);
+        PC++;
+        break;
+    case zp_x:
+        addr = (read(PC) + X) % 0x100;
+        PC++;
+        break;
+    case zp_y:
+        addr = (read(PC) + Y) % 0x100;
+        PC++;
+        break;
+    case idx_ind_x:
+        addr = read16((read(PC) + X) % 0x100, true);
+        PC++;
+        break;
+    case ind_idx_y:
+        opc = read(PC - 1);
+        addr = read16(read(PC), true) + Y;
+        PC++;
+        if (idx_abs_crossing_cycle(opc) && !is_same_page(addr - Y, addr))
+            cycles++;
+        break;
+    case ind:
+    default:
+        std::cerr << "Invalid addressing mode: " << std::hex << int(mode)
+                  << std::endl;
     }
     return addr;
 }
@@ -1035,30 +617,28 @@ void CPU::BEQ() { branch_rel_if(P.Z) }
 
 void CPU::JMP(AddressingMode mode) {
     switch (mode) {
-        case abs:
-            PC = read16(PC);
-            cycles += 3;
-            break;
-        case ind:
-            // Vector beginning on a last byte of a page will take
-            // the high byte of the address from the beginning of
-            // the same page rather than the next one.
-            // $3000 = $40
-            // $30FF = $80
-            // $3100 = $50
-            // JMP ($30FF) will transfer control to $4080 rather
-            // than $5080.
-            uint16_t h_addr, l_addr;
-            l_addr = read16(PC);
-            h_addr = (l_addr % 0x100 == 0xFF)
-                         ? (uint16_t)(l_addr - l_addr % 0x100)
-                         : (uint16_t)(l_addr + 1);
-            PC = (uint16_t)(read(h_addr)) << 8 | read(l_addr);
-            cycles += 5;
-            break;
-        default:
-            std::cerr << "Invalid addressing mode for JMP: " << mode
-                      << std::endl;
+    case abs:
+        PC = read16(PC);
+        cycles += 3;
+        break;
+    case ind:
+        // Vector beginning on a last byte of a page will take
+        // the high byte of the address from the beginning of
+        // the same page rather than the next one.
+        // $3000 = $40
+        // $30FF = $80
+        // $3100 = $50
+        // JMP ($30FF) will transfer control to $4080 rather
+        // than $5080.
+        uint16_t h_addr, l_addr;
+        l_addr = read16(PC);
+        h_addr = (l_addr % 0x100 == 0xFF) ? (uint16_t)(l_addr - l_addr % 0x100)
+                                          : (uint16_t)(l_addr + 1);
+        PC = (uint16_t)(read(h_addr)) << 8 | read(l_addr);
+        cycles += 5;
+        break;
+    default:
+        std::cerr << "Invalid addressing mode for JMP: " << mode << std::endl;
     }
 }
 
@@ -1108,32 +688,15 @@ void CPU::ADC(AddressingMode mode) {
     uint16_t op_addr = operand_addr(mode);
     do_ADC(read(op_addr));
     switch (mode) {
-        case imm:
-            cycles += 2;
-            break;
-        case zp:
-            cycles += 3;
-            break;
-        case zp_x:
-            cycles += 4;
-            break;
-        case abs:
-            cycles += 4;
-            break;
-        case abs_x:
-            cycles += 4;
-            break;
-        case abs_y:
-            cycles += 4;
-            break;
-        case idx_ind_x:
-            cycles += 6;
-            break;
-        case ind_idx_y:
-            cycles += 5;
-            break;
-        default:
-            std::cerr << "Invalid addressing mode for ADC." << std::endl;
+    case imm: cycles += 2; break;
+    case zp: cycles += 3; break;
+    case zp_x: cycles += 4; break;
+    case abs: cycles += 4; break;
+    case abs_x: cycles += 4; break;
+    case abs_y: cycles += 4; break;
+    case idx_ind_x: cycles += 6; break;
+    case ind_idx_y: cycles += 5; break;
+    default: std::cerr << "Invalid addressing mode for ADC." << std::endl;
     }
 }
 
@@ -1141,32 +704,15 @@ void CPU::AND(AddressingMode mode) {
     A &= get_operand(mode);
     set_NZ(A);
     switch (mode) {
-        case imm:
-            cycles += 2;
-            break;
-        case zp:
-            cycles += 3;
-            break;
-        case zp_x:
-            cycles += 4;
-            break;
-        case abs:
-            cycles += 4;
-            break;
-        case abs_x:
-            cycles += 4;
-            break;
-        case abs_y:
-            cycles += 4;
-            break;
-        case idx_ind_x:
-            cycles += 6;
-            break;
-        case ind_idx_y:
-            cycles += 5;
-            break;
-        default:
-            std::cerr << "Invalid addressing mode for AND." << std::endl;
+    case imm: cycles += 2; break;
+    case zp: cycles += 3; break;
+    case zp_x: cycles += 4; break;
+    case abs: cycles += 4; break;
+    case abs_x: cycles += 4; break;
+    case abs_y: cycles += 4; break;
+    case idx_ind_x: cycles += 6; break;
+    case ind_idx_y: cycles += 5; break;
+    default: std::cerr << "Invalid addressing mode for AND." << std::endl;
     }
 }
 
@@ -1179,20 +725,11 @@ void CPU::ASL(AddressingMode mode) {
     uint16_t addr = operand_addr(mode);
     write(addr, shift_l(read(addr)));
     switch (mode) {
-        case zp:
-            cycles += 5;
-            break;
-        case zp_x:
-            cycles += 6;
-            break;
-        case abs:
-            cycles += 6;
-            break;
-        case abs_x:
-            cycles += 7;
-            break;
-        default:
-            std::cerr << "Invalid addressing mode for ASL." << std::endl;
+    case zp: cycles += 5; break;
+    case zp_x: cycles += 6; break;
+    case abs: cycles += 6; break;
+    case abs_x: cycles += 7; break;
+    default: std::cerr << "Invalid addressing mode for ASL." << std::endl;
     }
 }
 
@@ -1215,32 +752,15 @@ void CPU::CP(uint8_t &reg, AddressingMode mode) {
     P.C = reg >= operand;
     P.N = (reg - operand) >> 7;
     switch (mode) {
-        case imm:
-            cycles += 2;
-            break;
-        case zp:
-            cycles += 3;
-            break;
-        case zp_x:
-            cycles += 4;
-            break;
-        case abs:
-            cycles += 4;
-            break;
-        case abs_x:
-            cycles += 4;
-            break;
-        case abs_y:
-            cycles += 4;
-            break;
-        case idx_ind_x:
-            cycles += 6;
-            break;
-        case ind_idx_y:
-            cycles += 5;
-            break;
-        default:
-            std::cerr << "Invalid addressing mode for CPx." << std::endl;
+    case imm: cycles += 2; break;
+    case zp: cycles += 3; break;
+    case zp_x: cycles += 4; break;
+    case abs: cycles += 4; break;
+    case abs_x: cycles += 4; break;
+    case abs_y: cycles += 4; break;
+    case idx_ind_x: cycles += 6; break;
+    case ind_idx_y: cycles += 5; break;
+    default: std::cerr << "Invalid addressing mode for CPx." << std::endl;
     }
 }
 
@@ -1250,20 +770,11 @@ void CPU::DEC(AddressingMode mode) {
     write(op_addr, result);
     set_NZ(result);
     switch (mode) {
-        case zp:
-            cycles += 5;
-            break;
-        case zp_x:
-            cycles += 6;
-            break;
-        case abs:
-            cycles += 6;
-            break;
-        case abs_x:
-            cycles += 7;
-            break;
-        default:
-            std::cerr << "Invalid addressing mode for DEC." << std::endl;
+    case zp: cycles += 5; break;
+    case zp_x: cycles += 6; break;
+    case abs: cycles += 6; break;
+    case abs_x: cycles += 7; break;
+    default: std::cerr << "Invalid addressing mode for DEC." << std::endl;
     }
 }
 
@@ -1272,32 +783,15 @@ void CPU::EOR(AddressingMode mode) {
     A ^= operand;
     set_NZ(A);
     switch (mode) {
-        case imm:
-            cycles += 2;
-            break;
-        case zp:
-            cycles += 3;
-            break;
-        case zp_x:
-            cycles += 4;
-            break;
-        case abs:
-            cycles += 4;
-            break;
-        case abs_x:
-            cycles += 4;
-            break;
-        case abs_y:
-            cycles += 4;
-            break;
-        case idx_ind_x:
-            cycles += 6;
-            break;
-        case ind_idx_y:
-            cycles += 5;
-            break;
-        default:
-            std::cerr << "Invalid addressing mode for EOR." << std::endl;
+    case imm: cycles += 2; break;
+    case zp: cycles += 3; break;
+    case zp_x: cycles += 4; break;
+    case abs: cycles += 4; break;
+    case abs_x: cycles += 4; break;
+    case abs_y: cycles += 4; break;
+    case idx_ind_x: cycles += 6; break;
+    case ind_idx_y: cycles += 5; break;
+    default: std::cerr << "Invalid addressing mode for EOR." << std::endl;
     }
 }
 
@@ -1326,20 +820,11 @@ void CPU::LSR(AddressingMode mode) {
     write(addr, result);
 
     switch (mode) {
-        case zp:
-            cycles += 5;
-            break;
-        case zp_x:
-            cycles += 6;
-            break;
-        case abs:
-            cycles += 6;
-            break;
-        case abs_x:
-            cycles += 7;
-            break;
-        default:
-            std::cerr << "Invalid addressing mode for LSR." << std::endl;
+    case zp: cycles += 5; break;
+    case zp_x: cycles += 6; break;
+    case abs: cycles += 6; break;
+    case abs_x: cycles += 7; break;
+    default: std::cerr << "Invalid addressing mode for LSR." << std::endl;
     }
 }
 
@@ -1348,32 +833,15 @@ void CPU::ORA(AddressingMode mode) {
     A |= operand;
     set_NZ(A);
     switch (mode) {
-        case imm:
-            cycles += 2;
-            break;
-        case zp:
-            cycles += 3;
-            break;
-        case zp_x:
-            cycles += 4;
-            break;
-        case abs:
-            cycles += 4;
-            break;
-        case abs_x:
-            cycles += 4;
-            break;
-        case abs_y:
-            cycles += 4;
-            break;
-        case idx_ind_x:
-            cycles += 6;
-            break;
-        case ind_idx_y:
-            cycles += 5;
-            break;
-        default:
-            std::cerr << "Invalid addressing mode for CPx." << std::endl;
+    case imm: cycles += 2; break;
+    case zp: cycles += 3; break;
+    case zp_x: cycles += 4; break;
+    case abs: cycles += 4; break;
+    case abs_x: cycles += 4; break;
+    case abs_y: cycles += 4; break;
+    case idx_ind_x: cycles += 6; break;
+    case ind_idx_y: cycles += 5; break;
+    default: std::cerr << "Invalid addressing mode for CPx." << std::endl;
     }
 }
 
@@ -1386,20 +854,11 @@ void CPU::ROL(AddressingMode mode) {
     uint16_t addr = operand_addr(mode);
     write(addr, rot_l(read(addr)));
     switch (mode) {
-        case zp:
-            cycles += 5;
-            break;
-        case zp_x:
-            cycles += 6;
-            break;
-        case abs:
-            cycles += 6;
-            break;
-        case abs_x:
-            cycles += 7;
-            break;
-        default:
-            std::cerr << "Invalid addressing mode for ROL." << std::endl;
+    case zp: cycles += 5; break;
+    case zp_x: cycles += 6; break;
+    case abs: cycles += 6; break;
+    case abs_x: cycles += 7; break;
+    default: std::cerr << "Invalid addressing mode for ROL." << std::endl;
     }
 }
 
@@ -1412,20 +871,11 @@ void CPU::ROR(AddressingMode mode) {
     uint16_t addr = operand_addr(mode);
     write(addr, rot_r(read(addr)));
     switch (mode) {
-        case zp:
-            cycles += 5;
-            break;
-        case zp_x:
-            cycles += 6;
-            break;
-        case abs:
-            cycles += 6;
-            break;
-        case abs_x:
-            cycles += 7;
-            break;
-        default:
-            std::cerr << "Invalid addressing mode for ROR." << std::endl;
+    case zp: cycles += 5; break;
+    case zp_x: cycles += 6; break;
+    case abs: cycles += 6; break;
+    case abs_x: cycles += 7; break;
+    default: std::cerr << "Invalid addressing mode for ROR." << std::endl;
     }
 }
 
@@ -1433,32 +883,15 @@ void CPU::SBC(AddressingMode mode) {
     uint16_t op_addr = operand_addr(mode);
     do_ADC(~read(op_addr));
     switch (mode) {
-        case imm:
-            cycles += 2;
-            break;
-        case zp:
-            cycles += 3;
-            break;
-        case zp_x:
-            cycles += 4;
-            break;
-        case abs:
-            cycles += 4;
-            break;
-        case abs_x:
-            cycles += 4;
-            break;
-        case abs_y:
-            cycles += 4;
-            break;
-        case idx_ind_x:
-            cycles += 6;
-            break;
-        case ind_idx_y:
-            cycles += 5;
-            break;
-        default:
-            std::cerr << "Invalid addressing mode for SBC." << std::endl;
+    case imm: cycles += 2; break;
+    case zp: cycles += 3; break;
+    case zp_x: cycles += 4; break;
+    case abs: cycles += 4; break;
+    case abs_x: cycles += 4; break;
+    case abs_y: cycles += 4; break;
+    case idx_ind_x: cycles += 6; break;
+    case ind_idx_y: cycles += 5; break;
+    default: std::cerr << "Invalid addressing mode for SBC." << std::endl;
     }
 }
 
@@ -1471,35 +904,16 @@ void CPU::LD(uint8_t &reg, AddressingMode mode) {
     reg = operand;
     set_NZ(operand);
     switch (mode) {
-        case imm:
-            cycles += 2;
-            break;
-        case zp:
-            cycles += 3;
-            break;
-        case zp_x:
-            cycles += 4;
-            break;
-        case zp_y:
-            cycles += 4;
-            break;
-        case abs:
-            cycles += 4;
-            break;
-        case abs_x:
-            cycles += 4;
-            break;
-        case abs_y:
-            cycles += 4;
-            break;
-        case idx_ind_x:
-            cycles += 6;
-            break;
-        case ind_idx_y:
-            cycles += 5;
-            break;
-        default:
-            std::cerr << "Invalid addressing mode for LDx." << std::endl;
+    case imm: cycles += 2; break;
+    case zp: cycles += 3; break;
+    case zp_x: cycles += 4; break;
+    case zp_y: cycles += 4; break;
+    case abs: cycles += 4; break;
+    case abs_x: cycles += 4; break;
+    case abs_y: cycles += 4; break;
+    case idx_ind_x: cycles += 6; break;
+    case ind_idx_y: cycles += 5; break;
+    default: std::cerr << "Invalid addressing mode for LDx." << std::endl;
     }
 }
 
@@ -1507,30 +921,15 @@ void CPU::ST(uint8_t reg, AddressingMode mode) {
     uint16_t op_addr = operand_addr(mode);
     write(op_addr, reg);
     switch (mode) {
-        case zp:
-            cycles += 3;
-            break;
-        case zp_x:
-            cycles += 4;
-            break;
-        case zp_y:
-            cycles += 4;
-            break;
-        case abs:
-            cycles += 4;
-            break;
-        case abs_x:
-        case abs_y:
-            cycles += 5;
-            break;
-        case idx_ind_x:
-            cycles += 6;
-            break;
-        case ind_idx_y:
-            cycles += 6;
-            break;
-        default:
-            std::cerr << "Invalid addressing mode for STx." << std::endl;
+    case zp: cycles += 3; break;
+    case zp_x: cycles += 4; break;
+    case zp_y: cycles += 4; break;
+    case abs: cycles += 4; break;
+    case abs_x:
+    case abs_y: cycles += 5; break;
+    case idx_ind_x: cycles += 6; break;
+    case ind_idx_y: cycles += 6; break;
+    default: std::cerr << "Invalid addressing mode for STx." << std::endl;
     }
 }
 
@@ -1540,20 +939,11 @@ void CPU::INC(AddressingMode mode) {
     write(addr, newval);
     set_NZ(newval);
     switch (mode) {
-        case zp:
-            cycles += 5;
-            break;
-        case zp_x:
-            cycles += 6;
-            break;
-        case abs:
-            cycles += 6;
-            break;
-        case abs_x:
-            cycles += 7;
-            break;
-        default:
-            std::cerr << "Invalid addressing mode for INC." << std::endl;
+    case zp: cycles += 5; break;
+    case zp_x: cycles += 6; break;
+    case abs: cycles += 6; break;
+    case abs_x: cycles += 7; break;
+    default: std::cerr << "Invalid addressing mode for INC." << std::endl;
     }
 }
 
@@ -1625,26 +1015,13 @@ void CPU::LAX(AddressingMode mode) {
     X = operand;
     set_NZ(operand);
     switch (mode) {
-        case zp:
-            cycles += 3;
-            break;
-        case zp_y:
-            cycles += 4;
-            break;
-        case abs:
-            cycles += 4;
-            break;
-        case abs_y:
-            cycles += 4;
-            break;
-        case idx_ind_x:
-            cycles += 6;
-            break;
-        case ind_idx_y:
-            cycles += 5;
-            break;
-        default:
-            std::cerr << "Invalid addressing mode for LAX." << std::endl;
+    case zp: cycles += 3; break;
+    case zp_y: cycles += 4; break;
+    case abs: cycles += 4; break;
+    case abs_y: cycles += 4; break;
+    case idx_ind_x: cycles += 6; break;
+    case ind_idx_y: cycles += 5; break;
+    default: std::cerr << "Invalid addressing mode for LAX." << std::endl;
     }
 }
 
@@ -1652,20 +1029,11 @@ void CPU::SAX(AddressingMode mode) {
     uint16_t op_addr = operand_addr(mode);
     write(op_addr, A & X);
     switch (mode) {
-        case zp:
-            cycles += 3;
-            break;
-        case zp_y:
-            cycles += 4;
-            break;
-        case abs:
-            cycles += 4;
-            break;
-        case idx_ind_x:
-            cycles += 6;
-            break;
-        default:
-            std::cerr << "Invalid addressing mode for SAX." << std::endl;
+    case zp: cycles += 3; break;
+    case zp_y: cycles += 4; break;
+    case abs: cycles += 4; break;
+    case idx_ind_x: cycles += 6; break;
+    default: std::cerr << "Invalid addressing mode for SAX." << std::endl;
     }
 }
 
@@ -1680,29 +1048,14 @@ void CPU::DCP(AddressingMode mode) {
     P.N = bool((A - result) & 0x80);
 
     switch (mode) {
-        case zp:
-            cycles += 5;
-            break;
-        case zp_x:
-            cycles += 6;
-            break;
-        case abs:
-            cycles += 6;
-            break;
-        case abs_x:
-            cycles += 7;
-            break;
-        case abs_y:
-            cycles += 7;
-            break;
-        case idx_ind_x:
-            cycles += 8;
-            break;
-        case ind_idx_y:
-            cycles += 8;
-            break;
-        default:
-            std::cerr << "Invalid addressing mode for DCP." << std::endl;
+    case zp: cycles += 5; break;
+    case zp_x: cycles += 6; break;
+    case abs: cycles += 6; break;
+    case abs_x: cycles += 7; break;
+    case abs_y: cycles += 7; break;
+    case idx_ind_x: cycles += 8; break;
+    case ind_idx_y: cycles += 8; break;
+    default: std::cerr << "Invalid addressing mode for DCP." << std::endl;
     }
 }
 
@@ -1718,30 +1071,15 @@ void CPU::ISC(AddressingMode mode) {
     do_ADC(~result);
 
     switch (mode) {
-        case zp:
-            cycles += 5;
-            break;
-        case zp_x:
-            cycles += 6;
-            break;
-        case abs:
-            cycles += 6;
-            break;
-        case abs_x:
-            cycles += 7;
-            break;
-        case abs_y:
-            cycles += 7;
-            break;
-        case idx_ind_x:
-            cycles += 8;
-            break;
-        case ind_idx_y:
-            cycles += 8;
-            break;
-        default:
-            std::cerr << "Invalid addressing mode for ISC (ISB, INS)."
-                      << std::endl;
+    case zp: cycles += 5; break;
+    case zp_x: cycles += 6; break;
+    case abs: cycles += 6; break;
+    case abs_x: cycles += 7; break;
+    case abs_y: cycles += 7; break;
+    case idx_ind_x: cycles += 8; break;
+    case ind_idx_y: cycles += 8; break;
+    default:
+        std::cerr << "Invalid addressing mode for ISC (ISB, INS)." << std::endl;
     }
 }
 
@@ -1756,29 +1094,14 @@ void CPU::SLO(AddressingMode mode) {
     set_NZ(A);
 
     switch (mode) {
-        case zp:
-            cycles += 5;
-            break;
-        case zp_x:
-            cycles += 6;
-            break;
-        case abs:
-            cycles += 6;
-            break;
-        case abs_x:
-            cycles += 7;
-            break;
-        case abs_y:
-            cycles += 7;
-            break;
-        case idx_ind_x:
-            cycles += 8;
-            break;
-        case ind_idx_y:
-            cycles += 8;
-            break;
-        default:
-            std::cerr << "Invalid addressing mode for SLO/ASO." << std::endl;
+    case zp: cycles += 5; break;
+    case zp_x: cycles += 6; break;
+    case abs: cycles += 6; break;
+    case abs_x: cycles += 7; break;
+    case abs_y: cycles += 7; break;
+    case idx_ind_x: cycles += 8; break;
+    case ind_idx_y: cycles += 8; break;
+    default: std::cerr << "Invalid addressing mode for SLO/ASO." << std::endl;
     }
 }
 
@@ -1793,29 +1116,14 @@ void CPU::RLA(AddressingMode mode) {
     set_NZ(A);
 
     switch (mode) {
-        case zp:
-            cycles += 5;
-            break;
-        case zp_x:
-            cycles += 6;
-            break;
-        case abs:
-            cycles += 6;
-            break;
-        case abs_x:
-            cycles += 7;
-            break;
-        case abs_y:
-            cycles += 7;
-            break;
-        case idx_ind_x:
-            cycles += 8;
-            break;
-        case ind_idx_y:
-            cycles += 8;
-            break;
-        default:
-            std::cerr << "Invalid addressing mode for SLO/ASO." << std::endl;
+    case zp: cycles += 5; break;
+    case zp_x: cycles += 6; break;
+    case abs: cycles += 6; break;
+    case abs_x: cycles += 7; break;
+    case abs_y: cycles += 7; break;
+    case idx_ind_x: cycles += 8; break;
+    case ind_idx_y: cycles += 8; break;
+    default: std::cerr << "Invalid addressing mode for SLO/ASO." << std::endl;
     }
 }
 
@@ -1830,29 +1138,14 @@ void CPU::SRE(AddressingMode mode) {
     set_NZ(A);
 
     switch (mode) {
-        case zp:
-            cycles += 5;
-            break;
-        case zp_x:
-            cycles += 6;
-            break;
-        case abs:
-            cycles += 6;
-            break;
-        case abs_x:
-            cycles += 7;
-            break;
-        case abs_y:
-            cycles += 7;
-            break;
-        case idx_ind_x:
-            cycles += 8;
-            break;
-        case ind_idx_y:
-            cycles += 8;
-            break;
-        default:
-            std::cerr << "Invalid addressing mode for SRE." << std::endl;
+    case zp: cycles += 5; break;
+    case zp_x: cycles += 6; break;
+    case abs: cycles += 6; break;
+    case abs_x: cycles += 7; break;
+    case abs_y: cycles += 7; break;
+    case idx_ind_x: cycles += 8; break;
+    case ind_idx_y: cycles += 8; break;
+    default: std::cerr << "Invalid addressing mode for SRE." << std::endl;
     }
 }
 
@@ -1866,28 +1159,13 @@ void CPU::RRA(AddressingMode mode) {
     do_ADC(result);
 
     switch (mode) {
-        case zp:
-            cycles += 5;
-            break;
-        case zp_x:
-            cycles += 6;
-            break;
-        case abs:
-            cycles += 6;
-            break;
-        case abs_x:
-            cycles += 7;
-            break;
-        case abs_y:
-            cycles += 7;
-            break;
-        case idx_ind_x:
-            cycles += 8;
-            break;
-        case ind_idx_y:
-            cycles += 8;
-            break;
-        default:
-            std::cerr << "Invalid addressing mode for RRA." << std::endl;
+    case zp: cycles += 5; break;
+    case zp_x: cycles += 6; break;
+    case abs: cycles += 6; break;
+    case abs_x: cycles += 7; break;
+    case abs_y: cycles += 7; break;
+    case idx_ind_x: cycles += 8; break;
+    case ind_idx_y: cycles += 8; break;
+    default: std::cerr << "Invalid addressing mode for RRA." << std::endl;
     }
 }
