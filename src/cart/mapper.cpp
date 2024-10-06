@@ -28,7 +28,7 @@ Mapper::NROM::NROM(Cartridge &cartridge) : Mapper::Base(cartridge) {}
 uint8_t Mapper::NROM::read_prg(uint16_t addr) {
     switch (addr) {
     case 0x6000 ... 0x7FFF: 
-        if (addr - 0x6000 >= cartridge.prg_ram.size()) {
+        if ((size_t)(addr - 0x6000) >= cartridge.prg_ram.size()) {
             std::cerr << "PRG read exceeds PRG RAM size, addr: " << std::hex 
                 << addr - 0x6000 << std::endl;
             return 0x0;
@@ -37,7 +37,7 @@ uint8_t Mapper::NROM::read_prg(uint16_t addr) {
         }
     case 0x8000 ... 0xBFFF:
         // Low 16KB PRG ROM 
-        if (addr - 0x8000 >= cartridge.prg_ram.size()) {
+        if ((size_t)(addr - 0x8000) >= cartridge.prg_ram.size()) {
             std::cerr << "PRG read exceeds PRG RAM size, addr: " << std::hex 
                 << addr - 0x8000 << std::endl;
             return 0x0;
@@ -52,7 +52,7 @@ uint8_t Mapper::NROM::read_prg(uint16_t addr) {
         else
             base = 0x8000;
 
-        if (addr - base >= cartridge.prg_rom.size()) {
+        if ((size_t)(addr - base) >= cartridge.prg_rom.size()) {
             std::cerr << "PRG read exceeds PRG ROM size, addr: " << std::hex 
                 << addr - base << std::endl;
             return 0x0;
@@ -85,7 +85,7 @@ Mapper::NTMirror Mapper::NROM::mirroring() {
 
 uint8_t Mapper::NROM::read_ppu(uint16_t addr) {
     switch (addr) {
-    case 0x0000 ... 0x1FFF: i
+    case 0x0000 ... 0x1FFF: 
         if (addr >= cartridge.chr_rom.size()) {
             std::cerr << "PPU read exceeds CHR ROM size, addr: " << std::hex 
                 << addr << std::endl;

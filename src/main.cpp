@@ -26,24 +26,28 @@ struct Options {
     bool step_debug = false;
     bool run_nestest = false;
     bool run_ppu_tests = false;
+    std::string rom;
 
     Options(int argc, char *argv[]) {
         int opt;
 
-        while ((opt = getopt(argc, argv, "cdtp")) != -1) {
+        while ((opt = getopt(argc, argv, "cdtpr:")) != -1) {
             switch (opt) {
             case 'c': log_steps_to_cerr = true; break;
             case 'd': step_debug = true; break;
             case 't': run_nestest = true; break;
             case 'p': run_ppu_tests = true; break;
+            case 'r': rom = optarg; break;
+            case '?':
             default:
-                std::cerr << "Usage: " << argv[0] << " [-cdtp]" << std::endl;
+                std::cerr << "Usage: " << argv[0] << " [-cdtp] [-r filename.nes]" << std::endl;
                 std::cerr << "Where:" << std::endl;
                 std::cerr << "-c - Log CPU state for each step to stderr"
                           << std::endl;
                 std::cerr << "-d - Step through each instruction" << std::endl;
                 std::cerr << "-t - Run nestest" << std::endl;
                 std::cerr << "-p - Run PPU tests" << std::endl;
+                std::cerr << "-r - Load a ROM from filename" << std::endl;
                 throw std::runtime_error("Invalid usage");
             }
         }
@@ -121,8 +125,21 @@ int main(int argc, char *argv[]) {
         SDL_RenderPresent(r);
     };
 
-    if (opts.run_nestest) NES::Test::nestest(ee);
-    if (opts.run_ppu_tests) NES::Test::ppu_tests(ee);
+    if (!opts.rom.empty()) {
+        std::cout << "Running " << opts.rom << std::endl;
+        ee.logger.log_filename = NES::Test::gen_logname(opts.rom);
+        ee.load_iNESv1(opts.rom);
+        ee.power(nullptr);
+        ee.pre_step_hook = [](auto &ee) {
+            ee.logger.log();
+        };
+        ee.run();
+        ee.logger.save();
+    } else if (opts.run_nestest) {
+        NES::Test::nestest(ee);
+    } else if (opts.run_ppu_tests) {
+        NES::Test::ppu_tests(ee);
+    }
 
     return 0;
 }

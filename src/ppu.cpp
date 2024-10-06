@@ -344,6 +344,8 @@ void PPU::cpu_write(uint16_t addr, uint8_t value) {
 
 uint8_t PPU::cpu_read(uint16_t addr) {
     switch (addr) {
+    case 0x2000:
+        return ppuctrl.value;
     case 0x2002:
         w = (bool)0;
         // TODO: Reads from here should reset vblank flag bit 7
