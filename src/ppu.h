@@ -126,8 +126,6 @@ class PPU {
         uint8_t fine : 3;
     } x;     ///< 3-bit Fine X scroll register
     bool w;  ///< 1-bit internal pointer flip-flop
-             ///< first or second write toggle register to PPUSCROLL and
-             ///< PPUADDR
 
     struct {
         uint16_t addr : 14;
@@ -135,8 +133,8 @@ class PPU {
 
     uint8_t nt;  // Tile idx for pattern lookup
     uint8_t at;  // Paltete info for a region of tiles (4x4 tiles = 32x32 px)
-    uint8_t bg_l;
-    uint8_t bg_h;
+    uint16_t bg_l_shift;
+    uint16_t bg_h_shift;
 
     // CPU memory mapped registers
     PPUCTRL ppuctrl;      ///< PPUCTRL, write access $2000
@@ -148,15 +146,18 @@ class PPU {
     // $2006 PPUADDR
     // $2007 PPUDATA
 
-    uint16_t oamaddr;     ///< 8-bit OAM address register
+    uint16_t oamaddr;     ///< 8-bit (?) OAM address register
+    uint8_t oamdata;      ///< 8-bit OAM data buffer
     uint8_t ppudata_buf;  ///< 8-bit PPUADDR read buffer
 
     // Output
     NES::Palette pal;                                ///< Palette file
     std::array<uint32_t, ntsc_fb_x * ntsc_fb_y> fb;  ///< Framebuffer
-
+    std::array<uint32_t, ntsc_fb_x * ntsc_fb_y> fb_sec;
     std::function<void(std::array<uint32_t, ntsc_fb_x * ntsc_fb_y> &)>
         frame_ready;
+    bool fb_prim = true;
+
     std::function<void()> nmi_vblank;  ///< Issues a VBlank NMI
 
     uint16_t scan_x;    ///< Pixel
@@ -174,9 +175,6 @@ class PPU {
     /// \value cycles PPU cycles to execute
     void execute(uint8_t cycles);
 
-    /// Rendering scanline logic
-    void render();
-
     /// Writes value @ addr from CPU bus
     void cpu_write(uint16_t addr, uint8_t value);
 
@@ -189,6 +187,13 @@ class PPU {
 
     /// Reads value from addr
     uint8_t read(uint16_t addr);
+
+    /// Draws a pixel for the current cycle
+    void draw();
+
+    void oam_sec_clear();
+
+    void sprite_eval();
 };
 
 }  // namespace NES

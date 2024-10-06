@@ -6,7 +6,7 @@ using namespace NES;
 
 void inc_hori(PPUVramAddr &r) {
     r.sc_x++;
-    if (!r.sc_x) r.nt_h = !r.nt_h;
+    if (!r.sc_x) r.nt_h = !r.nt_h; // Not sure if the nametable switch is correct here
 }
 
 void inc_vert(PPUVramAddr &r) {
@@ -36,8 +36,8 @@ void PPU::power() {
     bus.addr = 0x0;
     nt = 0x0;
     at = 0x0;
-    bg_l = 0x0;
-    bg_h = 0x0;
+    bg_l_shift = 0x0;
+    bg_h_shift = 0x0;
     ppuctrl.value = 0x0;
     ppumask.value = 0x0;
     ppustatus.value = 0x0;
@@ -54,11 +54,86 @@ void PPU::power() {
     for (uint8_t &pal : pram) pal = 0xFF;
 }
 
+void PPU::oam_sec_clear() {
+    oam_sec[scan_x - 1] = 0xFF;
+}
+
+void PPU::sprite_eval() {
+    if (!ppumask.bg_show && !ppumask.spr_show) {
+        return;
+    }
+
+    if (scan_x & 0x1) {
+        oamdata = oam[oamaddr];
+        return;
+    } 
+    
+    OA *obj = nullptr;
+    size_t stride = sizeof(OA);
+    uint8_t tile_y = ppuctrl.spr_size ? 16 : 8;
+    uint8_t spr_num = 0;
+    for (size_t i = 0; i < (oam_sz / stride); i++) {
+        obj = (OA *)(oam.data() + i * stride);
+        if (obj->y <= scan_y && (obj->y <= scan_y + tile_y)) {
+            uint8_t *oam_target = (oam_sec.data() + spr_num * stride);
+            std::memcpy(oam_target, obj, stride);
+            spr_num++;
+            if (spr_num >= 8) break;
+        }
+    }
+}
+
+void PPU::draw() {
+    uint8_t out = 0;
+    uint8_t bg = 0;
+    //uint8_t spr = 0;
+
+    // Background
+    if (ppumask.bg_show) {
+        bg = ( ((bg_l_shift << v.sc_x) & 0x8000) >> 15 )
+             | ( ((bg_h_shift << v.sc_x) & 0x8000) >> 14 );
+        out = bg;
+    }
+
+    // Sprites
+    if (ppumask.spr_show) {
+        // TODO General
+        //
+        // TODO: Sprite 0 hit condition
+        // Sprite 0 is in range
+        // AND the first sprite output unit is outputting a non-zero
+        // pixel AND the background drawing unit is outputting a
+        // non-zero pixel
+    }
+
+    // Write to framebuffer
+    int fb_i = scan_y * ntsc_fb_x + scan_x;
+    if (fb_prim) {
+        fb[fb_i] = pal.get_rgb(out);
+    } else {
+        fb_sec[fb_i] = pal.get_rgb(out);
+    }
+
+    // Shift tile
+    bg_l_shift <<= 1;
+    bg_h_shift <<= 1;
+}
+
 void PPU::execute(uint8_t cycles) {
     while (cycles) {
         switch (scan_y) {
         case 0 ... 239:
+            if (scan_x >= 1 && scan_x <= 64)
+                oam_sec_clear();
+            if (scan_x >= 65 && scan_x <= 256)
+               sprite_eval();
+            if (scan_x >= 257 && scan_x <= 320)
+                oamaddr = 0x0;
+            draw();
         case 261:
+            if (scan_x >= 280 && scan_x <= 304) {
+                set_vert(v, t);
+            }
             switch (scan_x) {
             case 0:
                 if (scan_y == 0) {
@@ -96,6 +171,9 @@ void PPU::execute(uint8_t cycles) {
             case 289:   case 297:   case 305:   case 313:   case 321:
             case 329:   case 337:   case 339:
                 // clang-format on
+                if (scan_x == 257) {
+                   set_hori(v, t); 
+                }
                 bus.addr = 0x2000 | (v.addr & 0x0FFF);
                 break;
                 // clang-format off
@@ -121,8 +199,8 @@ void PPU::execute(uint8_t cycles) {
             case 203:   case 211:   case 219:   case 227:   case 235:
             case 243:   case 251:   case 323:   case 331:
                 // clang-format on
-                bus.addr = 0x23C0 | (v.addr & 0x0C00) | ((v.addr >> 4) & 0x38) |
-                           ((v.addr >> 2) & 0x07);
+                bus.addr = 0x23C0 | (v.addr & 0x0C00) | ((v.addr >> 4) & 0x38) 
+                           | ((v.addr >> 2) & 0x07);
                 break;
                 // clang-format off
             case 4:     case 12:    case 20:    case 28:    case 36:
@@ -157,7 +235,7 @@ void PPU::execute(uint8_t cycles) {
             case 206:   case 214:   case 222:   case 230:   case 238:
             case 246:   case 254:   case 326:   case 334:
                 // clang-format on
-                bg_l = read(bus.addr);
+                bg_l_shift |= read(bus.addr);
                 break;
                 // clang-format off
                 // BG H
@@ -181,10 +259,12 @@ void PPU::execute(uint8_t cycles) {
             case 208:   case 216:   case 224:   case 232:   case 240:
             case 248:   case 256:   case 328:   case 336:
                 // clang-format on
-                bg_h = read(bus.addr);
+                bg_h_shift |= read(bus.addr);
                 if (scan_y == 256) {
                     inc_vert(v);
                 }
+                bg_l_shift <<= 8;
+                bg_h_shift <<= 8;
                 inc_hori(v);
                 break;
             }
@@ -192,8 +272,15 @@ void PPU::execute(uint8_t cycles) {
             break;
         }
 
-        if (scan_y == 239 && scan_x == 320)
-            if (frame_ready) frame_ready(fb);
+        if (scan_y == 239 && scan_x == 320) {
+            if (frame_ready) {
+                if (fb_prim)
+                    frame_ready(fb);
+                else
+                    frame_ready(fb_sec);
+                fb_prim = !fb_prim;
+            }
+        }
 
         if (scan_x == ntsc_x - 1 && scan_y == ntsc_y - 1 && scan_short) {
             scan_short = !scan_short;
@@ -202,79 +289,6 @@ void PPU::execute(uint8_t cycles) {
         // Increment scanline/pixel counter
         if (scan_x == (ntsc_x - 1)) scan_y = (scan_y + 1) % ntsc_y;
         scan_x = (scan_x + 1) % ntsc_x;
-    }
-}
-
-void PPU::render() {
-    // NTSC
-    // If rendering off, each frame is 341*262 / 3 CPU clocks long
-    // Scanline (341 pixels) is 113+(2/3) CPU clocks long
-    // HBlank (85 pixels) is 28+(1/3) CPU clocks long
-    // Frame is 29780.5 CPU clocks long
-    // 3 PPU dots per 1 CPU cycle
-    // OAM DMA is 513 CPU cycles + 1 if starting on CPU get cycle
-    // Cycle reference:
-    // https://www.nesdev.org/wiki/Cycle_reference_chart
-    // Scanline timing:
-    // https://www.nesdev.org/wiki/NTSC_video
-
-    // BG and Sprite pixel
-    uint8_t bg_px = 0;
-    uint8_t spr_px = 0;
-    uint8_t out = 0;
-    // OA priority
-    // TODO: This is object specific, set it after sprite evaluation
-    bool oa_prio = 0;
-
-    // Background pixel mux
-    if (ppumask.bg_show) {
-        // 1. Fetch a nametable entry from $2000-$2FFF.
-        // 2. Fetch the corresponding attribute table entry from $23C0-$2FFF
-        //  and increment the current VRAM address within the same row.
-        // 3. Fetch the low-order byte of an 8x1 pixel sliver of pattern table
-        //  from $0000-$0FF7 or $1000-$1FF7.
-        // 4. Fetch the high-order byte of this sliver from an address 8 bytes
-        //  higher.
-        // 5. Turn the attribute data and the pattern table data into palette
-        //  indices, and combine them with data from sprite data using priority
-    }
-
-    // Sprite unit output
-    if (ppumask.spr_show) {
-        // Sprite evaluation
-        OA *obj = nullptr;
-        size_t stride = sizeof(OA);
-        uint8_t tile_y = ppuctrl.spr_size ? 16 : 8;
-        uint8_t spr_num = 0;
-        for (size_t i = 0; i < (oam_sz / stride); i++) {
-            obj = (OA *)(oam.data() + i * stride);
-            if (obj->y <= scan_y && (obj->y <= scan_y + tile_y)) {
-                uint8_t *oam_target = (oam_sec.data() + spr_num * stride);
-                // TODO: Sprite 0 hit condition
-                // Sprite 0 is in range
-                // AND the first sprite output unit is outputting a non-zero
-                // pixel AND the background drawing unit is outputting a
-                // non-zero pixel
-                std::memcpy(oam_target, obj, stride);
-                spr_num++;
-                if (spr_num >= 8) break;
-            }
-        }
-
-        // Sprite unit priority, lower addr overlaps higher addr
-    }
-
-    // Priority mux
-    if (!bg_px && !spr_px)
-        out = 0x0;  // Backdrop color $3F00 EXT in
-    else if (!bg_px)
-        out = spr_px;
-    else if (bg_px && !spr_px)
-        out = bg_px;
-    else
-        out = oa_prio ? spr_px : bg_px;
-
-    if (out) {
     }
 }
 

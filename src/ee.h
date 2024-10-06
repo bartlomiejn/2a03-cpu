@@ -44,6 +44,16 @@ class ExecutionEnvironment {
     }
 
     void run() {
+        // NTSC
+        // If rendering off, each frame is 341*262 / 3 CPU clocks long
+        // Scanline (341 pixels) is 113+(2/3) CPU clocks long
+        // HBlank (85 pixels) is 28+(1/3) CPU clocks long
+        // Frame is 29780.5 CPU clocks long
+        // 3 PPU dots per 1 CPU cycle
+        // OAM DMA is 513 CPU cycles + 1 if starting on CPU get cycle
+        // Cycle reference:
+        // https://www.nesdev.org/wiki/Cycle_reference_chart
+
         while (!stop) {
             if (pre_step_hook) pre_step_hook(*this);
 
