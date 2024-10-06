@@ -30,10 +30,11 @@ class Palette {
                   std::istream_iterator<uint8_t>(), std::back_inserter(data));
     };
 
-    uint32_t get_rgb(uint8_t pal_6b) {
-        return (data[pal_6b * 3] << 16) 
-               | (data[pal_6b * 3 + 1] << 8) 
-               | (data[pal_6b * 3 + 2]);
+    uint32_t get_rgba(uint8_t pal_6b) {
+        return (data[pal_6b * 3] << 24) 
+               | (data[pal_6b * 3 + 1] << 16) 
+               | (data[pal_6b * 3 + 2] << 8)
+               | 0xFF;
     }
 };
 

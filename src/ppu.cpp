@@ -48,10 +48,12 @@ void PPU::power() {
     scan_x_end = ntsc_x;
     scan_y_end = ntsc_y;
     scan_short = 1;
-    for (uint8_t &b : vram) b = 0x0;
-    for (uint8_t &oa : oam) oa = 0x3F;
-    for (uint8_t &oa : oam_sec) oa = 0x3F;
-    for (uint8_t &pal : pram) pal = 0xFF;
+    std::fill(vram.begin(), vram.end(), 0x0);
+    std::fill(oam.begin(), oam.end(), 0x3F);
+    std::fill(oam_sec.begin(), oam_sec.end(), 0x3F);
+    std::fill(pram.begin(), pram.end(), 0xFF);
+    std::fill(fb.begin(), fb.end(), 0x001100FF);
+    std::fill(fb_sec.begin(), fb.end(), 0x001100FF);
 }
 
 void PPU::oam_sec_clear() {
@@ -109,9 +111,9 @@ void PPU::draw() {
     // Write to framebuffer
     int fb_i = scan_y * ntsc_fb_x + scan_x;
     if (fb_prim) {
-        fb[fb_i] = pal.get_rgb(out);
+        fb[fb_i] = pal.get_rgba(out);
     } else {
-        fb_sec[fb_i] = pal.get_rgb(out);
+        fb_sec[fb_i] = pal.get_rgba(out);
     }
 
     // Shift tile
@@ -268,16 +270,15 @@ void PPU::execute(uint8_t cycles) {
                 inc_hori(v);
                 break;
             }
-            cycles--;
             break;
         }
 
         if (scan_y == 239 && scan_x == 320) {
             if (frame_ready) {
                 if (fb_prim)
-                    frame_ready(fb);
+                   frame_ready(fb.data());
                 else
-                    frame_ready(fb_sec);
+                   frame_ready(fb_sec.data());
                 fb_prim = !fb_prim;
             }
         }
@@ -289,6 +290,8 @@ void PPU::execute(uint8_t cycles) {
         // Increment scanline/pixel counter
         if (scan_x == (ntsc_x - 1)) scan_y = (scan_y + 1) % ntsc_y;
         scan_x = (scan_x + 1) % ntsc_x;
+
+        cycles--;
     }
 }
 

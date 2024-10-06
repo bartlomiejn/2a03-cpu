@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <memory>
+#include <vector>
 
 namespace NES {
 namespace iNESv1 {
@@ -60,29 +61,25 @@ struct Header {
 class Cartridge {
    public:
     /// iNESv1 cartridge image.
-    /// \param header iNESv1 file header
-    /// \param trainer_sz Trainer data size, if it's available.
-    /// \param prg_rom_sz Program code size.
-    /// \param chr_rom_sz Size of PPU data.
-    /// \param prg_ram_sz Program RAM size.
-    Cartridge(Header header, unsigned int trainer_sz, unsigned int prg_rom_sz,
-              unsigned int chr_rom_sz, unsigned int prg_ram_sz)
-        : header(header),
-          trainer(std::make_unique<uint8_t[]>(trainer_sz)),
-          prg_rom(std::make_unique<uint8_t[]>(prg_rom_sz)),
-          chr_rom(std::make_unique<uint8_t[]>(chr_rom_sz)),
-          prg_ram(std::make_unique<uint8_t[]>(prg_ram_sz)) {
-        std::fill(trainer.get(), trainer.get() + trainer_sz, 0x0);
-        std::fill(prg_rom.get(), prg_rom.get() + trainer_sz, 0x0);
-        std::fill(chr_rom.get(), chr_rom.get() + trainer_sz, 0x0);
-        std::fill(prg_ram.get(), prg_ram.get() + trainer_sz, 0x0);
-    };
+    /// \param _header iNESv1 file header
+    /// \param _trainer_sz Trainer data size, if it's available.
+    /// \param _prg_rom_sz Program code size.
+    /// \param _chr_rom_sz Size of PPU data.
+    /// \param _prg_ram_sz Program RAM size.
+    Cartridge(Header _header, unsigned int _trainer_sz, unsigned int _prg_rom_sz,
+              unsigned int _chr_rom_sz, unsigned int _prg_ram_sz)
+        : header(_header),
+          trainer(_trainer_sz, 0),
+          prg_rom(_prg_rom_sz, 0),
+          chr_rom(_chr_rom_sz, 0),
+          prg_ram(_prg_ram_sz, 0) 
+    {};
 
     Header header;
-    std::unique_ptr<uint8_t[]> trainer;
-    std::unique_ptr<uint8_t[]> prg_rom;
-    std::unique_ptr<uint8_t[]> chr_rom;
-    std::unique_ptr<uint8_t[]> prg_ram;
+    std::vector<uint8_t> trainer;
+    std::vector<uint8_t> prg_rom;
+    std::vector<uint8_t> chr_rom;
+    std::vector<uint8_t> prg_ram;
 };
 }  // namespace iNESv1
 }  // namespace NES

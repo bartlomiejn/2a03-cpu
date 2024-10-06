@@ -154,8 +154,7 @@ class PPU {
     NES::Palette pal;                                ///< Palette file
     std::array<uint32_t, ntsc_fb_x * ntsc_fb_y> fb;  ///< Framebuffer
     std::array<uint32_t, ntsc_fb_x * ntsc_fb_y> fb_sec;
-    std::function<void(std::array<uint32_t, ntsc_fb_x * ntsc_fb_y> &)>
-        frame_ready;
+    std::function<void(uint32_t*)> frame_ready;
     bool fb_prim = true;
 
     std::function<void()> nmi_vblank;  ///< Issues a VBlank NMI

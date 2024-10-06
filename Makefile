@@ -21,11 +21,17 @@ run_nestest: binary
 debug_nestest: binary
 	cd $(OUT_DIR) && $(CXX_DEBUG) -ex "run" --args ./2a03 -ct
 
+valgrind_nestest: binary
+	cd $(OUT_DIR) && valgrind --tool=memcheck --leak-check=full -s --log-file=valgrind.pputest.log ./2a03 -ct
+
 run_pputest: binary
 	cd $(OUT_DIR) && ./2a03 -cp
 
 debug_pputest: binary
 	cd $(OUT_DIR) && $(CXX_DEBUG) -ex "run" --args ./2a03 -cp
+
+valgrind_pputest: binary
+	cd $(OUT_DIR) && valgrind --tool=memcheck --leak-check=full -s --log-file=valgrind.pputest.log ./2a03 -cp
 
 debug: binary
 	cd $(OUT_DIR) && $(CXX_DEBUG) 2a03

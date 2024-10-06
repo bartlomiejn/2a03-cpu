@@ -27,16 +27,39 @@ Mapper::NROM::NROM(Cartridge &cartridge) : Mapper::Base(cartridge) {}
 
 uint8_t Mapper::NROM::read_prg(uint16_t addr) {
     switch (addr) {
-    case 0x6000 ... 0x7FFF: return cartridge.prg_ram[addr - 0x6000];
+    case 0x6000 ... 0x7FFF: 
+        if (addr - 0x6000 >= cartridge.prg_ram.size()) {
+            std::cerr << "PRG read exceeds PRG RAM size, addr: " << std::hex 
+                << addr - 0x6000 << std::endl;
+            return 0x0;
+        } else {
+            return cartridge.prg_ram[addr - 0x6000];
+        }
     case 0x8000 ... 0xBFFF:
-        // Low 16KB PRG ROM
-        return cartridge.prg_rom[addr - 0x8000];
+        // Low 16KB PRG ROM 
+        if (addr - 0x8000 >= cartridge.prg_ram.size()) {
+            std::cerr << "PRG read exceeds PRG RAM size, addr: " << std::hex 
+                << addr - 0x8000 << std::endl;
+            return 0x0;
+        } else {
+            return cartridge.prg_rom[addr - 0x8000];
+        }
     case 0xC000 ... 0xFFFF:
         // High 16KB PRG ROM, or mirrored low if 16KB
+        uint16_t base; 
         if (cartridge.header.prg_rom_banks == 1)
-            return cartridge.prg_rom[addr - 0xC000];
+            base = 0xC000;
         else
-            return cartridge.prg_rom[addr - 0x8000];
+            base = 0x8000;
+
+        if (addr - base >= cartridge.prg_rom.size()) {
+            std::cerr << "PRG read exceeds PRG ROM size, addr: " << std::hex 
+                << addr - base << std::endl;
+            return 0x0;
+        } else {
+            return cartridge.prg_rom[addr - base];
+        }
+
     default:
         std::cout << "Invalid NROM Mapper memory access: $"
                   << static_cast<int>(addr) << std::endl;
@@ -62,7 +85,15 @@ Mapper::NTMirror Mapper::NROM::mirroring() {
 
 uint8_t Mapper::NROM::read_ppu(uint16_t addr) {
     switch (addr) {
-    case 0x0000 ... 0x1FFF: return cartridge.chr_rom[addr]; break;
+    case 0x0000 ... 0x1FFF: i
+        if (addr >= cartridge.chr_rom.size()) {
+            std::cerr << "PPU read exceeds CHR ROM size, addr: " << std::hex 
+                << addr << std::endl;
+            return 0x0;
+        } else {
+            return cartridge.chr_rom[addr]; 
+        }
+        break;
     default: throw std::runtime_error("Invalid CHR read addr");
     }
 }

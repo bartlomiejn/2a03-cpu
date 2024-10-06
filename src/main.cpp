@@ -51,13 +51,13 @@ struct Options {
 };
 
 // NTSC dimensions
-int fb_ntsc_x = 256;
-int fb_ntsc_y = 240;
+const int fb_ntsc_x = 256;
+const int fb_ntsc_y = 240;
 // Scale size by this value
 int scaling = 3;
 
-int display_x = fb_ntsc_x * scaling;
-int display_y = fb_ntsc_y * scaling;
+const int display_x = fb_ntsc_x;
+const int display_y = fb_ntsc_y;
 
 SDL_Window *w;
 SDL_Renderer *r;
@@ -87,7 +87,7 @@ void setup_window() {
         throw std::runtime_error("SDL_CreateRenderer error");
     }
 
-    tex = SDL_CreateTexture(r, SDL_PIXELFORMAT_ARGB8888,
+    tex = SDL_CreateTexture(r, SDL_PIXELFORMAT_RGBA8888,
                             SDL_TEXTUREACCESS_STREAMING, display_x, display_y);
     if (!tex) {
         std::cerr << "SDL_CreateTexture error: " << SDL_GetError() << std::endl;
@@ -98,20 +98,28 @@ void setup_window() {
     }
 }
 
-int main(int argc, char *argv[]) {
-    NES::Palette pal("DigitalPrimeFBX.pal");
-    NES::OAMDMA oamdma;
-    NES::PPU ppu(pal);
-    NES::MemoryBus bus(ppu, oamdma);
-    NES::CPU cpu(bus, ppu);
-    NES::CPULogger logger(cpu, bus);
-    ExecutionEnvironment ee(bus, cpu, ppu, oamdma, logger);
+NES::Palette pal("DigitalPrimeFBX.pal");
+NES::OAMDMA oamdma;
+NES::PPU ppu(pal);
+NES::MemoryBus bus(ppu, oamdma);
+NES::CPU cpu(bus, ppu);
+NES::CPULogger logger(cpu, bus);
+ExecutionEnvironment ee(bus, cpu, ppu, oamdma, logger);
 
+int main(int argc, char *argv[]) {
     Options opts(argc, argv);
     ee.debug = opts.step_debug;
     if (opts.log_steps_to_cerr) logger.instr_ostream = std::cerr;
 
     setup_window();
+
+    // TODO: Threading
+    ppu.frame_ready = [&](uint32_t* fb) {
+        SDL_UpdateTexture(tex, NULL, fb, fb_ntsc_x * sizeof(uint32_t));
+        SDL_RenderClear(r);
+        SDL_RenderCopy(r, tex, NULL, NULL);
+        SDL_RenderPresent(r);
+    };
 
     if (opts.run_nestest) NES::Test::nestest(ee);
     if (opts.run_ppu_tests) NES::Test::ppu_tests(ee);
