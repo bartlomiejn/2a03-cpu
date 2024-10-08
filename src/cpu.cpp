@@ -434,13 +434,13 @@ void CPU::handle_dma() {
         throw std::runtime_error("PCM DMA unimplemented");
     } else if (dma == DMA_OAM) { 
         // TODO: PCM DMA can interrupt OAM DMA
-        uint8_t i;
-        uint8_t data;
+        uint8_t i = 0;
+        uint8_t data = 0;
         if (cycles & 0x1) {
             cycles++;
         }
         do {
-            data = bus.read((dma_page << 7) | i);
+            data = bus.read((dma_page << 8) | i);
             cycles++;
             bus.write(0x2004, data);
             cycles++;
