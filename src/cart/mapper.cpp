@@ -29,15 +29,15 @@ uint8_t Mapper::NROM::read_prg(uint16_t addr) {
     switch (addr) {
     case 0x6000 ... 0x7FFF: 
         if ((size_t)(addr - 0x6000) >= cartridge.prg_ram.size()) {
-            std::cerr << "PRG read exceeds PRG RAM size, addr: " << std::hex 
-                << addr - 0x6000 << std::endl;
+            std::cerr << "PRG read exceeds PRG RAM size, addr: $" << std::hex 
+                << addr - 0x6000 << " prg_ram size: 0x" << cartridge.prg_ram.size() << std::endl;
             return 0x0;
         } else {
             return cartridge.prg_ram[addr - 0x6000];
         }
     case 0x8000 ... 0xBFFF:
         // Low 16KB PRG ROM 
-        if ((size_t)(addr - 0x8000) >= cartridge.prg_ram.size()) {
+        if ((size_t)(addr - 0x8000) >= cartridge.prg_rom.size()) {
             std::cerr << "PRG read exceeds PRG RAM size, addr: " << std::hex 
                 << addr - 0x8000 << std::endl;
             return 0x0;

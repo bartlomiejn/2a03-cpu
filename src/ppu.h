@@ -155,10 +155,9 @@ class PPU {
     // Output
     std::array<uint32_t, ntsc_fb_x * ntsc_fb_y> fb;  ///< Framebuffer
     std::array<uint32_t, ntsc_fb_x * ntsc_fb_y> fb_sec;
-    std::function<void()> frame_ready;
     bool fb_prim = true;
 
-    std::function<void()> nmi_vblank;  ///< Issues a VBlank NMI
+    std::function<void()> on_nmi_vblank;  ///< Issues a VBlank NMI
 
     uint16_t scan_x;    ///< Pixel
     uint16_t scan_y;  ///< Scanline

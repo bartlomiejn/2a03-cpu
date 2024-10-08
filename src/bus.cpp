@@ -42,7 +42,8 @@ uint8_t MemoryBus::read(uint16_t addr) {
     case 0x4000 ... 0x4017:
         std::cerr << "APU register access at $" << std::hex << (int)addr << "."
                   << std::endl;
-        throw std::range_error("Unhandled APU read");
+        // throw std::range_error("Unhandled APU read");
+        return 0xFF;
 
     // CPU test mode APU/IO functionality (disabled)
     case 0x4018 ... 0x401F:
@@ -70,7 +71,10 @@ void MemoryBus::write(uint16_t addr, uint8_t val) {
     case 0x2000 ... 0x3FFF:
         ppu.cpu_write(0x2000 + ((addr - 0x2000) % 8), val);
         break;
+    case 0x4000 ... 0x4013: std::cerr << "APU write which won't work" << std::endl; break;
     case 0x4014: oamdma.write_oamdma(val); break;
+    case 0x4015: std::cerr << "APU write which won't work" << std::endl; break;
+    case 0x4017: std::cerr << "APU write which won't work" << std::endl; break;
     case 0x4020 ... 0xFFFF:
         if (mapper)
             mapper->write_prg(addr, val);

@@ -204,8 +204,8 @@ void nestest(ExecutionEnvironment &ee) {
 void ppu_tests(ExecutionEnvironment &ee) {
     using namespace NES::iNESv1;
 
-    std::string palette_ram = "test_ppu_read_buffer.nes";
-    ee.logger.log_filename = gen_logname("test_ppu_read_buffer");
+    std::string palette_ram = "palette_ram.nes";
+    ee.logger.log_filename = gen_logname("palette_ram");
 
     std::cout << "Running " << palette_ram << std::endl;
     std::cout << "Saving logs to: " << ee.logger.log_filename.value()
@@ -215,30 +215,10 @@ void ppu_tests(ExecutionEnvironment &ee) {
     ee.power(nullptr);
     ee.pre_step_hook = [](auto &ee) { ee.logger.log(); };
     ee.post_step_hook = [](auto &ee) {
-        uint8_t status = ee.bus.read(0x6000); 
-        if (status == 0x80) {
-            //std::cerr << "Test is running" << std::endl;
-        } else if (status == 0x81) {
-            std::cerr << "Reset should be pressed 100ms from now." << std::endl;
-        } else {
-            std::cerr << "Test finished running, result code: " << std::hex << status << std::endl;
+        if (ee.cpu.PC == 0xE412) {  // Failure?
+            std::cerr << "PC == E412. Terminating" << std::endl;
+            ee.stop = true;
         }
-
-        uint8_t byte;
-        uint16_t addr = 0x6004;
-        if (ee.bus.read(0x6001) == 0xDE && ee.bus.read(0x6002) == 0xB0) {
-            std::cerr << "Output ready, status: "; 
-            do {
-                byte = ee.bus.read(addr++);
-                std::cerr << byte;
-            } while (byte != 0x0);
-            std::cerr << std::endl;
-        }
-
-    //     if (ee.cpu.PC == 0xE412) {  // Failure
-    //         std::cerr << "PC == E412. Terminating" << std::endl;
-    //         ee.stop = true;
-    //     }
     };
 
     std::cout << "Starting execution." << std::endl;

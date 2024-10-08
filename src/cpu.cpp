@@ -80,7 +80,7 @@ CPU::CPU(NES::MemoryBus &bus, NES::PPU &ppu) : bus(bus) {
         std::bind(&CPU::schedule_dma_oam, this, std::placeholders::_1);
 
     // PPU /VBL line is connected directly to /NMI
-    ppu.nmi_vblank = std::bind(&CPU::schedule_nmi, this);
+    ppu.on_nmi_vblank = std::bind(&CPU::schedule_nmi, this);
 }
 
 void CPU::power() {

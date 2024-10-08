@@ -58,6 +58,16 @@ public:
         SDL_RenderCopy(r, tex, NULL, NULL);
         SDL_RenderPresent(r);
     }
+
+    bool poll_quit() {
+        SDL_Event event;
+        SDL_PollEvent(&event);
+        if (event.type == SDL_QUIT) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 };
 
 } // namespace GFX

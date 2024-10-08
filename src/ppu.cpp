@@ -155,8 +155,8 @@ void PPU::execute(uint8_t cycles) {
                 }
             case 1:
                 if (scan_y == 241) {
-                    // TODO: Is this the right flag or the NMI one?
                     ppustatus.vblank = true;
+                    on_nmi_vblank();
                 }
                 if (scan_y == 261) {
                     // TODO: Clear vblank flag and spr0 overflow

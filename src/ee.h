@@ -13,6 +13,7 @@ const int ntsc_cyc_ratio = 3;
 
 class ExecutionEnvironment {
    public:
+    GFX::Renderer &renderer;
     NES::MemoryBus &bus;
     NES::CPU &cpu;
     NES::PPU &ppu;
@@ -27,9 +28,9 @@ class ExecutionEnvironment {
     std::function<void(ExecutionEnvironment &)> post_step_hook;
 
     ExecutionEnvironment() = delete;
-    ExecutionEnvironment(NES::MemoryBus &_bus, NES::CPU &_cpu, NES::PPU &_ppu,
+    ExecutionEnvironment(GFX::Renderer &_renderer, NES::MemoryBus &_bus, NES::CPU &_cpu, NES::PPU &_ppu,
                          NES::OAMDMA &_oamdma, NES::CPULogger &_logger)
-        : bus(_bus), cpu(_cpu), ppu(_ppu), oamdma(_oamdma), logger(_logger) {}
+        : renderer(_renderer), bus(_bus), cpu(_cpu), ppu(_ppu), oamdma(_oamdma), logger(_logger) {}
 
     void power(std::function<void(NES::CPU &)> setup_hook) {
         cpu.power();
@@ -62,6 +63,7 @@ class ExecutionEnvironment {
             // TODO: Not sure if this is correct, as NMIs might get generated
             // before a CPU full instruction cycle finishes?
             ppu.execute(ntsc_cyc_ratio * cpu_cycs);
+            stop = renderer.poll_quit();
 
             if (post_step_hook) post_step_hook(*this);
 

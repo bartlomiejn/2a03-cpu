@@ -25,13 +25,19 @@ valgrind_nestest: binary
 	cd $(OUT_DIR) && valgrind --tool=memcheck --leak-check=full -s \
 		--log-file=vg.pputest.log ./2a03 -ct
 
+run_dk: binary
+	cd $(OUT_DIR) && ./2a03 -r DonkeyKong.nes
+
+debug_dk: binary
+	cd $(OUT_DIR) && $(CXX_DEBUG) -ex "run" --args ./2a03 -cr DonkeyKong.nes
+
 valgrind_dk: binary
 	cd $(OUT_DIR) && valgrind --tool=memcheck --leak-check=full -s \
 		--log-file=vk.dk.log --suppressions=../vgsuppress \
 		./2a03 -c -r DonkeyKong.nes
 
 run_pputest: binary
-	cd $(OUT_DIR) && ./2a03 -cp
+	cd $(OUT_DIR) && ./2a03 -p
 
 debug_pputest: binary
 	cd $(OUT_DIR) && $(CXX_DEBUG) -ex "run" --args ./2a03 -cp

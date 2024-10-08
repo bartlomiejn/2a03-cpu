@@ -61,7 +61,7 @@ NES::PPU ppu(renderer, pal);
 NES::MemoryBus bus(ppu, oamdma);
 NES::CPU cpu(bus, ppu);
 NES::CPULogger logger(cpu, bus);
-ExecutionEnvironment ee(bus, cpu, ppu, oamdma, logger);
+ExecutionEnvironment ee(renderer, bus, cpu, ppu, oamdma, logger);
 
 int main(int argc, char *argv[]) {
     Options opts(argc, argv);
