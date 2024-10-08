@@ -4,6 +4,7 @@
 #include <cart/mapper.h>
 #include <palette.h>
 #include <utils/bitfield.h>
+#include <render.h>
 
 #include <array>
 #include <cstdint>
@@ -110,8 +111,9 @@ static const size_t ntsc_fb_y = 240;  ///< NTSC framebuffer Y size
 /// Ricoh 2C02 NTSC PPU emulator
 class PPU {
    public:
-    // CHR memory
     iNESv1::Mapper::Base *mapper;  ///< Cartridge mapper
+    GFX::Renderer &renderer;       ///< Draws the actual frames
+    NES::Palette pal;              ///< Palette file
 
     // Internal memory
     std::array<uint8_t, vram_sz> vram;        ///< PPU VRAM
@@ -151,10 +153,9 @@ class PPU {
     uint8_t ppudata_buf;  ///< 8-bit PPUADDR read buffer
 
     // Output
-    NES::Palette pal;                                ///< Palette file
     std::array<uint32_t, ntsc_fb_x * ntsc_fb_y> fb;  ///< Framebuffer
     std::array<uint32_t, ntsc_fb_x * ntsc_fb_y> fb_sec;
-    std::function<void(uint32_t*)> frame_ready;
+    std::function<void()> frame_ready;
     bool fb_prim = true;
 
     std::function<void()> nmi_vblank;  ///< Issues a VBlank NMI
@@ -165,7 +166,7 @@ class PPU {
     uint16_t scan_y_end;   ///< Scanline count
     bool scan_short;    ///< Short scanline (340 ticks instead of 341)
 
-    PPU(NES::Palette _pal);
+    PPU(GFX::Renderer &_renderer, NES::Palette _pal);
 
     /// Powers up the PPU
     void power();

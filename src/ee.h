@@ -7,6 +7,7 @@
 #include <cpu.h>
 #include <ppu.h>
 #include <utils/logger.h>
+#include <render.h>
 
 const int ntsc_cyc_ratio = 3;
 

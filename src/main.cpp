@@ -1,9 +1,9 @@
-#include <SDL2/SDL.h>
 #include <cart/load.h>
 #include <cart/mapper.h>
 #include <cpu.h>
 #include <dma.h>
 #include <ee.h>
+#include <render.h>
 #include <palette.h>
 #include <ppu.h>
 #include <test.h>
@@ -54,57 +54,10 @@ struct Options {
     }
 };
 
-// NTSC dimensions
-const int fb_ntsc_x = 256;
-const int fb_ntsc_y = 240;
-// Scale size by this value
-int scaling = 3;
-
-const int display_x = fb_ntsc_x;
-const int display_y = fb_ntsc_y;
-
-SDL_Window *w;
-SDL_Renderer *r;
-SDL_Texture *tex;
-
-void setup_window() {
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-        std::cerr << "SDL_Init error: " << SDL_GetError() << std::endl;
-        throw std::runtime_error("SDL_Init error");
-    }
-
-    w = SDL_CreateWindow("2A03", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                         display_x, display_y, SDL_WINDOW_SHOWN);
-    if (!w) {
-        std::cerr << "SDL_CreateWindow error: " << SDL_GetError() << std::endl;
-        SDL_Quit();
-        throw std::runtime_error("SDL_CreateWindow error");
-    }
-
-    r = SDL_CreateRenderer(w, -1, SDL_RENDERER_ACCELERATED);
-
-    if (!r) {
-        std::cerr << "SDL_CreateRenderer error: " << SDL_GetError()
-                  << std::endl;
-        SDL_DestroyWindow(w);
-        SDL_Quit();
-        throw std::runtime_error("SDL_CreateRenderer error");
-    }
-
-    tex = SDL_CreateTexture(r, SDL_PIXELFORMAT_RGBA8888,
-                            SDL_TEXTUREACCESS_STREAMING, display_x, display_y);
-    if (!tex) {
-        std::cerr << "SDL_CreateTexture error: " << SDL_GetError() << std::endl;
-        SDL_DestroyRenderer(r);
-        SDL_DestroyWindow(w);
-        SDL_Quit();
-        throw std::runtime_error("SDL_CreateTexture error");
-    }
-}
-
+GFX::Renderer renderer(NES::ntsc_fb_x, NES::ntsc_fb_y);
 NES::Palette pal("DigitalPrimeFBX.pal");
 NES::OAMDMA oamdma;
-NES::PPU ppu(pal);
+NES::PPU ppu(renderer, pal);
 NES::MemoryBus bus(ppu, oamdma);
 NES::CPU cpu(bus, ppu);
 NES::CPULogger logger(cpu, bus);
@@ -115,15 +68,7 @@ int main(int argc, char *argv[]) {
     ee.debug = opts.step_debug;
     if (opts.log_steps_to_cerr) logger.instr_ostream = std::cerr;
 
-    setup_window();
-
-    // TODO: Threading
-    ppu.frame_ready = [&](uint32_t* fb) {
-        SDL_UpdateTexture(tex, NULL, fb, fb_ntsc_x * sizeof(uint32_t));
-        SDL_RenderClear(r);
-        SDL_RenderCopy(r, tex, NULL, NULL);
-        SDL_RenderPresent(r);
-    };
+    renderer.setup_window();
 
     if (!opts.rom.empty()) {
         std::cout << "Running " << opts.rom << std::endl;

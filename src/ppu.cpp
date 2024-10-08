@@ -1,4 +1,5 @@
 #include <ppu.h>
+#include <render.h>
 
 #include <cstring>
 
@@ -26,7 +27,8 @@ void set_vert(PPUVramAddr &to, PPUVramAddr &from) {
     to.sc_fine_y = from.sc_fine_y;
 }
 
-PPU::PPU(NES::Palette _pal) : pal(std::move(_pal)) {}
+PPU::PPU(GFX::Renderer &_renderer, NES::Palette _pal) 
+: renderer(_renderer), pal(std::move(_pal)) {}
 
 void PPU::power() {
     v.addr = 0;
@@ -274,13 +276,11 @@ void PPU::execute(uint8_t cycles) {
         }
 
         if (scan_y == 239 && scan_x == 320) {
-            if (frame_ready) {
-                if (fb_prim)
-                   frame_ready(fb.data());
-                else
-                   frame_ready(fb_sec.data());
-                fb_prim = !fb_prim;
-            }
+            if (fb_prim)
+               renderer.draw(fb.data());
+            else
+               renderer.draw(fb_sec.data());
+            fb_prim = !fb_prim;
         }
 
         if (scan_x == ntsc_x - 1 && scan_y == ntsc_y - 1 && scan_short) {
