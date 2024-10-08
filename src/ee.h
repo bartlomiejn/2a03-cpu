@@ -60,9 +60,8 @@ class ExecutionEnvironment {
         while (!stop) {
             if (pre_step_hook) pre_step_hook(*this);
 
+            // TODO: Synchronize CPU and PPU
             uint8_t cpu_cycs = cpu.execute();
-            // TODO: Not sure if this is correct, as NMIs might get generated
-            // before a CPU full instruction cycle finishes?
             ppu.execute(ntsc_cyc_ratio * cpu_cycs);
             stop = renderer.poll_quit();
 

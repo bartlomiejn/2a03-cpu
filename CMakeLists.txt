@@ -32,7 +32,6 @@ set(SOURCES
         src/cpu.cpp
         src/ppu.cpp
         src/bus.cpp
-        src/dma.cpp
         src/cart/load.cpp
         src/cart/mapper.cpp
         src/utils/logger.cpp)
