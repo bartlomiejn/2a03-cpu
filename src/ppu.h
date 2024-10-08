@@ -138,6 +138,8 @@ class PPU {
     uint16_t bg_l_shift;
     uint16_t bg_h_shift;
 
+    uint8_t cpu_bus;
+
     // CPU memory mapped registers
     PPUCTRL ppuctrl;      ///< PPUCTRL, write access $2000
     PPUMASK ppumask;      ///< PPUMASK, write access $2001

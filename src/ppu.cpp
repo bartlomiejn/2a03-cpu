@@ -36,6 +36,7 @@ void PPU::power() {
     x.fine = 0;
     w = false;
     bus.addr = 0x0;
+    cpu_bus = 0x0;
     nt = 0x0;
     at = 0x0;
     bg_l_shift = 0x0;
@@ -134,6 +135,11 @@ void PPU::execute(uint8_t cycles) {
             if (scan_x >= 257 && scan_x <= 320)
                 oamaddr = 0x0;
             draw();
+        case 241: 
+            if (scan_x == 1) {
+                ppustatus.vblank = true;
+                on_nmi_vblank();
+            }
         case 261:
             if (scan_x >= 280 && scan_x <= 304) {
                 set_vert(v, t);
@@ -154,10 +160,6 @@ void PPU::execute(uint8_t cycles) {
                     break;
                 }
             case 1:
-                if (scan_y == 241) {
-                    ppustatus.vblank = true;
-                    on_nmi_vblank();
-                }
                 if (scan_y == 261) {
                     // TODO: Clear vblank flag and spr0 overflow
                     ppustatus.vblank = false;
@@ -296,6 +298,7 @@ void PPU::execute(uint8_t cycles) {
 }
 
 void PPU::cpu_write(uint16_t addr, uint8_t value) {
+    cpu_bus = value;
     switch (addr) {
     case 0x2000:  // PPUCTRL
         ppuctrl.value = value;
@@ -304,7 +307,7 @@ void PPU::cpu_write(uint16_t addr, uint8_t value) {
         ppumask.value = value;
         break;
     case 0x2002:  // PPUSTATUS read-only
-        throw std::runtime_error("Invalid write to PPUSTATUS.");
+        break;
     case 0x2003:  // OAMADDR
         oamaddr = value;
         break;
@@ -344,15 +347,24 @@ void PPU::cpu_write(uint16_t addr, uint8_t value) {
 
 uint8_t PPU::cpu_read(uint16_t addr) {
     switch (addr) {
-    case 0x2000:
-        return ppuctrl.value;
+    case 0x2000: // Write-only
+        return cpu_bus;
+    case 0x2001: // Write-only
+        return cpu_bus;
     case 0x2002:
         w = (bool)0;
         // TODO: Reads from here should reset vblank flag bit 7
+        cpu_bus = (ppustatus.value & 0xE0) | (cpu_bus & 0x1F);
         return ppustatus.value;
+    case 0x2003: // Write-only
+        return cpu_bus;
     case 0x2004:
         // TODO: Reads while rendering should expose internal OAM accesses
+        cpu_bus = oam[oamaddr];
         return oam[oamaddr];
+    case 0x2005:
+    case 0x2006:
+        return cpu_bus;
     case 0x2007:
         uint8_t ppudata_out;
         if (v.addr > 0x3EFF) {
@@ -366,6 +378,7 @@ uint8_t PPU::cpu_read(uint16_t addr) {
         } else {
             v.addr++;
         }
+        cpu_bus = ppudata_out;
         return ppudata_out;
     default:
         throw std::runtime_error("Invalid/unimplemented PPU write.");

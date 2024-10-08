@@ -34,6 +34,7 @@ class ExecutionEnvironment {
 
     void power(std::function<void(NES::CPU &, NES::PPU &)> setup_hook) {
         cpu.power();
+        ppu.power();
         if (setup_hook) setup_hook(cpu, ppu);
     }
 
