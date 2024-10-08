@@ -17,7 +17,6 @@ class ExecutionEnvironment {
     NES::MemoryBus &bus;
     NES::CPU &cpu;
     NES::PPU &ppu;
-    NES::OAMDMA &oamdma;
     NES::SystemLogger &logger;
     std::optional<NES::iNESv1::Cartridge> cartridge;
 
@@ -28,9 +27,10 @@ class ExecutionEnvironment {
     std::function<void(ExecutionEnvironment &)> post_step_hook;
 
     ExecutionEnvironment() = delete;
-    ExecutionEnvironment(GFX::Renderer &_renderer, NES::MemoryBus &_bus, NES::CPU &_cpu, NES::PPU &_ppu,
-                         NES::OAMDMA &_oamdma, NES::SystemLogger &_logger)
-        : renderer(_renderer), bus(_bus), cpu(_cpu), ppu(_ppu), oamdma(_oamdma), logger(_logger) {}
+    ExecutionEnvironment(GFX::Renderer &_renderer, NES::MemoryBus &_bus, 
+                         NES::CPU &_cpu, NES::PPU &_ppu, 
+                         NES::SystemLogger &_logger)
+    : renderer(_renderer), bus(_bus), cpu(_cpu), ppu(_ppu), logger(_logger) {}
 
     void power(std::function<void(NES::CPU &, NES::PPU &)> setup_hook) {
         cpu.power();

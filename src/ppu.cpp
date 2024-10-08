@@ -341,7 +341,6 @@ void PPU::cpu_write(uint16_t addr, uint8_t value) {
         break;
     default:
         throw std::runtime_error("Invalid/unimplemented PPU write.");
-        // TODO: Move OAMDMA $4014 here?
     }
 }
 

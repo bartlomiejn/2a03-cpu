@@ -76,7 +76,7 @@
 using namespace NES;
 
 CPU::CPU(NES::MemoryBus &bus, NES::PPU &ppu) : bus(bus) {
-    bus.cpu_schedule_dma_oam =
+    bus.on_cpu_oamdma =
         std::bind(&CPU::schedule_dma_oam, this, std::placeholders::_1);
 
     // PPU /VBL line is connected directly to /NMI
@@ -432,9 +432,21 @@ void CPU::schedule_nmi() { NMI = true; }
 void CPU::handle_dma() {
     if (dma == DMA_PCM) {
         throw std::runtime_error("PCM DMA unimplemented");
-    } else if (dma == DMA_OAM) {
+    } else if (dma == DMA_OAM) { 
         // TODO: PCM DMA can interrupt OAM DMA
-        throw std::runtime_error("OAM DMA unimplemented");
+        uint8_t i;
+        uint8_t data;
+        if (cycles & 0x1) {
+            cycles++;
+        }
+        do {
+            data = bus.read((dma_page << 7) | i);
+            cycles++;
+            bus.write(0x2004, data);
+            cycles++;
+            i++;
+        } while (i != 0);
+        dma = DMA_Clear;
     }
 }
 

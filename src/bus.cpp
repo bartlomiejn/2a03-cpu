@@ -6,25 +6,10 @@
 
 using namespace NES;
 
-MemoryBus::MemoryBus(NES::PPU &_ppu, NES::OAMDMA &_oamdma)
-    : ppu(_ppu), oamdma(_oamdma) {
+MemoryBus::MemoryBus(NES::PPU &_ppu) : ppu(_ppu) {
     // Ram state is not consistent on a real machine
     std::fill(ram.begin(), ram.end(), 0x0);
-
-    // Setup OAMDMA handlers
-    oamdma.dma_schedule_cpu =
-        std::bind(&MemoryBus::dma_oam_handler, this, std::placeholders::_1);
-    oamdma.dma_read = std::bind(&MemoryBus::dma_oam_read_handler, this,
-                                std::placeholders::_1);
-    oamdma.dma_write = std::bind(&MemoryBus::dma_oam_write_handler, this,
-                                 std::placeholders::_1);
 }
-
-void MemoryBus::dma_oam_handler(uint8_t page) { cpu_schedule_dma_oam(page); }
-
-void MemoryBus::dma_oam_read_handler(uint16_t addr) {}
-
-void MemoryBus::dma_oam_write_handler(uint16_t addr) {}
 
 uint8_t MemoryBus::read(uint16_t addr) {
     switch (addr) {
@@ -72,7 +57,8 @@ void MemoryBus::write(uint16_t addr, uint8_t val) {
         ppu.cpu_write(0x2000 + ((addr - 0x2000) % 8), val);
         break;
     case 0x4000 ... 0x4013: std::cerr << "APU write which won't work" << std::endl; break;
-    case 0x4014: oamdma.write_oamdma(val); break;
+
+    case 0x4014: on_cpu_oamdma(val); break;
     case 0x4015: std::cerr << "APU write which won't work" << std::endl; break;
     case 0x4017: std::cerr << "APU write which won't work" << std::endl; break;
     case 0x4020 ... 0xFFFF:

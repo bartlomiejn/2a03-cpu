@@ -1,7 +1,6 @@
 #include <cart/load.h>
 #include <cart/mapper.h>
 #include <cpu.h>
-#include <dma.h>
 #include <ee.h>
 #include <render.h>
 #include <palette.h>
@@ -56,12 +55,11 @@ struct Options {
 
 GFX::Renderer renderer(NES::ntsc_fb_x, NES::ntsc_fb_y);
 NES::Palette pal("DigitalPrimeFBX.pal");
-NES::OAMDMA oamdma;
 NES::PPU ppu(renderer, pal);
-NES::MemoryBus bus(ppu, oamdma);
+NES::MemoryBus bus(ppu);
 NES::CPU cpu(bus, ppu);
 NES::SystemLogger logger(cpu, ppu, bus);
-ExecutionEnvironment ee(renderer, bus, cpu, ppu, oamdma, logger);
+ExecutionEnvironment ee(renderer, bus, cpu, ppu, logger);
 
 int main(int argc, char *argv[]) {
     Options opts(argc, argv);
