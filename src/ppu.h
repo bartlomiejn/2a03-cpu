@@ -25,7 +25,7 @@ bitfield_union(
                           ///< 1)
     bool ppu_master : 1;  ///< EXT bus direction 0: input, 1: output
     bool vbl_nmi : 1;     ///< Generate NMI at start of vertical blanking
-                          ///< interval (1: on).
+                         ///< interval (1: on).
 );
 
 /// PPUMASK write register

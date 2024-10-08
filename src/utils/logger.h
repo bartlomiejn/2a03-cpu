@@ -2,6 +2,7 @@
 #define INC_2A03_LOGGER_H
 
 #include <bus.h>
+#include <ppu.h>
 #include <cpu.h>
 
 #include <functional>
@@ -11,14 +12,15 @@
 #include <vector>
 
 namespace NES {
-class CPULogger {
+class SystemLogger {
    public:
-    /// Instantiates a CPULogger instance which logs the state of
+    /// Instantiates a SystemLogger instance which logs the state of
     /// the provided CPU.
     /// \param cpu CPU instance to use.
+    /// \param ppu PPU instance to use.
     /// \param bus BUS instance to get opcode/operand data from.
     /// Should be the same instance as the one used by the CPU.
-    CPULogger(NES::CPU &cpu, NES::MemoryBus &bus);
+    SystemLogger(NES::CPU &cpu, NES::PPU &ppu, NES::MemoryBus &bus);
 
     /// Two 8-bit reads on the bus with behaviour same as CPU
     uint16_t bus_read16(uint16_t addr, bool zp);
@@ -36,6 +38,7 @@ class CPULogger {
 
    protected:
     NES::CPU &cpu;                  ///< CPU whose state is logged.
+    NES::PPU &ppu;                  ///< PPU whose state is logged.
     NES::MemoryBus &bus;            ///< Bus whose devices are logged.
     std::vector<std::string> logs;  ///< Contains logs of CPU state
                                     ///< on each `log` call.

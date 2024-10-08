@@ -12,9 +12,9 @@ static const std::string target_pat = "{{TARGET}}";
 static const std::string sum_pat = "{{SUM}}";
 static const std::string im_pat = "{{IM}}";
 
-CPULogger::CPULogger(CPU &cpu, MemoryBus &bus) : cpu(cpu), bus(bus), logs() {}
+SystemLogger::SystemLogger(CPU &cpu, PPU &ppu, MemoryBus &bus) : cpu(cpu), ppu(ppu), bus(bus), logs() {}
 
-uint16_t CPULogger::bus_read16(uint16_t addr, bool zp = false) {
+uint16_t SystemLogger::bus_read16(uint16_t addr, bool zp = false) {
     // If we know this is a zero-page addr, wrap the most-significant bit
     // around zero-page bounds
     uint16_t h_addr = zp ? ((addr + 1) % 0x100) : (addr + 1);
@@ -23,7 +23,7 @@ uint16_t CPULogger::bus_read16(uint16_t addr, bool zp = false) {
     return (h_data << 8) | l_data;
 }
 
-std::string CPULogger::log() {
+std::string SystemLogger::log() {
     using namespace std;
 
     string line;
@@ -154,9 +154,8 @@ std::string CPULogger::log() {
     ss << "Y:" << setfill('0') << setw(2) << hex << (int)cpu.Y << " ";
     ss << "P:" << setfill('0') << setw(2) << hex << (int)cpu.P.status << " ";
     ss << "SP:" << setfill('0') << setw(2) << hex << (int)cpu.S << " ";
-    // TODO: PPU counters once PPU is implemented
-    ss << "PPU:  0,  0"
-       << " ";
+    ss << "PPU:" << setfill(' ') << setw(3) << right << dec << (int)ppu.scan_y << "," 
+        << setfill(' ') << setw(3) << right << dec << (int)ppu.scan_x << " ";
     ss << "CYC:" << dec << (int)cpu.cycles;
     line += string(ss.str());
     ss.str(string());
@@ -176,7 +175,7 @@ std::string CPULogger::log() {
     return line;
 }
 
-void CPULogger::save() {
+void SystemLogger::save() {
     std::ofstream fstream;
 
     if (log_filename)
@@ -189,7 +188,7 @@ void CPULogger::save() {
     fstream.close();
 }
 
-std::string CPULogger::decode(uint8_t opcode) {
+std::string SystemLogger::decode(uint8_t opcode) {
     switch (opcode) {
     case 0x10: return "BPL";
     case 0x30: return "BMI";
@@ -428,7 +427,7 @@ std::string CPULogger::decode(uint8_t opcode) {
     }
 }
 
-bool CPULogger::is_opcode_legal(uint8_t opcode) {
+bool SystemLogger::is_opcode_legal(uint8_t opcode) {
     switch (opcode) {
     /* LAX */
     case 0xA7:
@@ -526,7 +525,7 @@ bool CPULogger::is_opcode_legal(uint8_t opcode) {
     }
 }
 
-std::optional<AddressingMode> CPULogger::addr_mode_for_op(uint8_t opcode) {
+std::optional<AddressingMode> SystemLogger::addr_mode_for_op(uint8_t opcode) {
     switch (opcode) {
     // De facto mode is relative for each conditional branch opcode.
     case 0x10: return {AddressingMode::rel};
@@ -774,7 +773,7 @@ std::optional<AddressingMode> CPULogger::addr_mode_for_op(uint8_t opcode) {
     }
 }
 
-std::string CPULogger::templ_for_mode(AddressingMode addr_mode,
+std::string SystemLogger::templ_for_mode(AddressingMode addr_mode,
                                       uint8_t opcode) {
     switch (addr_mode) {
     case rel: return "$" + target_pat;
@@ -804,7 +803,7 @@ std::string CPULogger::templ_for_mode(AddressingMode addr_mode,
     }
 }
 
-uint8_t CPULogger::operand_len(NES::AddressingMode addr_mode) {
+uint8_t SystemLogger::operand_len(NES::AddressingMode addr_mode) {
     switch (addr_mode) {
     case abs:
     case abs_x:
@@ -821,7 +820,7 @@ uint8_t CPULogger::operand_len(NES::AddressingMode addr_mode) {
     }
 }
 
-uint8_t CPULogger::target_len(NES::AddressingMode addr_mode, uint8_t opcode) {
+uint8_t SystemLogger::target_len(NES::AddressingMode addr_mode, uint8_t opcode) {
     switch (addr_mode) {
     case rel:
     case ind: return 2;
@@ -837,7 +836,7 @@ uint8_t CPULogger::target_len(NES::AddressingMode addr_mode, uint8_t opcode) {
     }
 }
 
-uint16_t CPULogger::target_value(NES::AddressingMode addr_mode) {
+uint16_t SystemLogger::target_value(NES::AddressingMode addr_mode) {
     switch (addr_mode) {
     case rel:
         uint8_t rel_op;

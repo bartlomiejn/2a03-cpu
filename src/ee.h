@@ -18,7 +18,7 @@ class ExecutionEnvironment {
     NES::CPU &cpu;
     NES::PPU &ppu;
     NES::OAMDMA &oamdma;
-    NES::CPULogger &logger;
+    NES::SystemLogger &logger;
     std::optional<NES::iNESv1::Cartridge> cartridge;
 
     bool debug = false;
@@ -29,12 +29,12 @@ class ExecutionEnvironment {
 
     ExecutionEnvironment() = delete;
     ExecutionEnvironment(GFX::Renderer &_renderer, NES::MemoryBus &_bus, NES::CPU &_cpu, NES::PPU &_ppu,
-                         NES::OAMDMA &_oamdma, NES::CPULogger &_logger)
+                         NES::OAMDMA &_oamdma, NES::SystemLogger &_logger)
         : renderer(_renderer), bus(_bus), cpu(_cpu), ppu(_ppu), oamdma(_oamdma), logger(_logger) {}
 
-    void power(std::function<void(NES::CPU &)> setup_hook) {
+    void power(std::function<void(NES::CPU &, NES::PPU &)> setup_hook) {
         cpu.power();
-        if (setup_hook) setup_hook(cpu);
+        if (setup_hook) setup_hook(cpu, ppu);
     }
 
     void load_iNESv1(std::string rom) {

@@ -60,8 +60,8 @@ std::string gen_logname(std::string prefix) {
     return std::format("{}_{}.log", prefix, time_s.str());
 }
 
-void test_nestest_noppu_diff(std::string &logname) {
-    std::cout << "Running test_nestest_noppu_diff" << std::endl;
+void test_nestest_diff(std::string &logname) {
+    std::cout << "Running test_nestest_diff" << std::endl;
 
     std::string linebuf[5] = {""};
     std::string linebuf_nestest[5]{""};
@@ -80,15 +80,11 @@ void test_nestest_noppu_diff(std::string &logname) {
 
     while (std::getline(ifs_nestest, line_nestest) &&
            std::getline(ifs_log, line_log)) {
-        std::string noppu_log = trim_ppu(line_log);
-        std::string noppu_nestest = trim_ppu(line_nestest);
+        std::string trimmed_log = trim(line_log);
+        std::string trimmed_nestest = trim(line_nestest);
 
-        std::string trimmed_log = trim(noppu_log);
-        std::string trimmed_nestest = trim(noppu_nestest);
-
-        // Ignore PPU state for this test
-        linebuf[idx] = noppu_log;
-        linebuf_nestest[idx] = noppu_nestest;
+        linebuf[idx] = line_log;
+        linebuf_nestest[idx] = line_nestest;
         idx = (idx + 1) % 5;
 
         if (trimmed_log != trimmed_nestest) {
@@ -133,9 +129,10 @@ void nestest(ExecutionEnvironment &ee) {
     std::cout << "Setting up, PC=0xC000, cycles=7." << std::endl;
 
     ee.load_iNESv1(nestest_rom);
-    ee.power([](NES::CPU &cpu) {
+    ee.power([](NES::CPU &cpu, NES::PPU &ppu) {
         cpu.PC = 0xC000;
         cpu.cycles = 7;
+        ppu.execute(21);
     });
 
     std::cout << "Entering runloop." << std::endl;
@@ -155,10 +152,8 @@ void nestest(ExecutionEnvironment &ee) {
         line++;
         std::getline(ifs, line_nestest);
 
-        std::string noppu_ours = trim_ppu(line_ours);
-        std::string noppu_nestest = trim_ppu(line_nestest);
-        std::string trimmed_ours = trim(noppu_ours);
-        std::string trimmed_nestest = trim(noppu_nestest);
+        std::string trimmed_ours = trim(line_ours);
+        std::string trimmed_nestest = trim(line_nestest);
 
         if (trimmed_ours != trimmed_nestest) {
             std::cerr << "Ours:    " << trimmed_ours << std::endl;
@@ -198,7 +193,7 @@ void nestest(ExecutionEnvironment &ee) {
     std::cout << "Saved log to: " << ee.logger.log_filename.value()
               << std::endl;
 
-    NES::Test::test_nestest_noppu_diff(ee.logger.log_filename.value());
+    NES::Test::test_nestest_diff(ee.logger.log_filename.value());
 }
 
 void ppu_tests(ExecutionEnvironment &ee) {
