@@ -27,7 +27,7 @@ std::string rtrim(const std::string &str) {
     return (end == std::string::npos) ? "" : str.substr(0, end + 1);
 }
 
-std::string trim(std::string &line) {
+std::string trim(const std::string &line) {
     std::string result;
     bool in_whitespace = false;
 

@@ -59,7 +59,7 @@ class NROM : public Mapper::Base {
 
     uint8_t read_ppu(uint16_t addr) final;
 
-    void write_ppu(uint16_t addr, uint8_t val);
+    void write_ppu(uint16_t addr, uint8_t val) final;
 };
 
 class MMC1 : public Mapper::Base {

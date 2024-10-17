@@ -20,7 +20,7 @@ class MemoryBus {
     std::array<uint8_t, internal_ram_sz> ram;  ///< Internal RAM
 
     /// Initializes the memory bus.
-    MemoryBus(NES::PPU &_ppu);
+    explicit MemoryBus(NES::PPU &_ppu);
 
     /// Reads 8 bits of memory at the provided address.
     /// \param addr Address to read from.

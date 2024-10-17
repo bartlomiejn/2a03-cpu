@@ -23,7 +23,7 @@ class Palette {
     std::vector<uint8_t> data;
 
     Palette() = delete;
-    Palette(std::string filename) {
+    explicit Palette(std::string filename) {
         std::ifstream ifs(filename, std::ios::binary);
         assert(ifs.is_open());
         std::copy(std::istream_iterator<uint8_t>(ifs),

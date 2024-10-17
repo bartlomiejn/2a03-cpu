@@ -15,7 +15,11 @@ public:
     const int display_y;
 
     Renderer(int display_x, int display_y) 
-    : display_x(display_x), display_y(display_y) {};
+    : w(nullptr),
+    r(nullptr),
+    tex(nullptr),
+    display_x(display_x), 
+    display_y(display_y) {};
 
     void setup_window() {
         if (SDL_Init(SDL_INIT_VIDEO) != 0) {
