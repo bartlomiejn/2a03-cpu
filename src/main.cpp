@@ -1,13 +1,13 @@
-#include <cart/load.h>
-#include <cart/mapper.h>
 #include <cpu.h>
 #include <ee.h>
-#include <render.h>
+#include <load.h>
+#include <logger.h>
+#include <mapper.h>
 #include <palette.h>
 #include <ppu.h>
+#include <render.h>
 #include <test.h>
 #include <unistd.h>
-#include <utils/logger.h>
 
 #include <cassert>
 #include <chrono>
@@ -39,7 +39,8 @@ struct Options {
             case 'r': rom = optarg; break;
             case '?':
             default:
-                std::cerr << "Usage: " << argv[0] << " [-cdtp] [-r filename.nes]" << std::endl;
+                std::cerr << "Usage: " << argv[0]
+                          << " [-cdtp] [-r filename.nes]" << std::endl;
                 std::cerr << "Where:" << std::endl;
                 std::cerr << "-c - Log CPU state for each step to stderr"
                           << std::endl;
@@ -73,9 +74,7 @@ int main(int argc, char *argv[]) {
         ee.logger.log_filename = NES::Test::gen_logname(opts.rom);
         ee.load_iNESv1(opts.rom);
         ee.power(nullptr);
-        ee.pre_step_hook = [](auto &ee) {
-            ee.logger.log();
-        };
+        ee.pre_step_hook = [](auto &ee) { ee.logger.log(); };
         ee.run();
         ee.logger.save();
     } else if (opts.run_nestest) {

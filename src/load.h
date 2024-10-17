@@ -1,7 +1,7 @@
 #ifndef INC_2A03_INES_LOADER_H
 #define INC_2A03_INES_LOADER_H
 
-#include <cart/ines.h>
+#include <ines.h>
 
 #include <string>
 

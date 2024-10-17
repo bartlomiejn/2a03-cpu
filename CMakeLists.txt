@@ -16,15 +16,6 @@ endif()
 find_program(CPPCHECK_EXECUTABLE NAMES cppcheck)
 if(CPPCHECK_EXECUTABLE)
     message(STATUS "Found cppcheck")
-    set(CMAKE_CXX_CPPCHECK
-        "${CPPCHECK_EXECUTABLE}"
-        "--enable=all"
-        "--inconclusive"
-        "--std=c++20"
-        "--verbose"
-        "--language=c++"
-        "--include=src"
-    )
 endif()
 
 # Project options
@@ -47,9 +38,9 @@ set(SOURCES
         src/cpu.cpp
         src/ppu.cpp
         src/bus.cpp
-        src/cart/load.cpp
-        src/cart/mapper.cpp
-        src/utils/logger.cpp)
+        src/load.cpp
+        src/mapper.cpp
+        src/logger.cpp)
 
 include_directories(src)
 include_directories(${SDL2_INCLUDE_DIRS})
@@ -78,6 +69,8 @@ add_custom_target(
         --language=c++
         --project="${CMAKE_BINARY_DIR}/compile_commands.json"
         --suppress=missingIncludeSystem
+        --check-level=exhaustive
+        --checkers-report=cppcheckers
     COMMENT "Running cppcheck on source and header files"
 )
 

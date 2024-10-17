@@ -6,7 +6,7 @@
 
 using namespace NES;
 
-MemoryBus::MemoryBus(NES::PPU &_ppu) : ppu(_ppu) {
+MemoryBus::MemoryBus(NES::PPU &_ppu) : ppu(_ppu), mapper(nullptr) {
     // Ram state is not consistent on a real machine
     std::fill(ram.begin(), ram.end(), 0x0);
 }
@@ -56,7 +56,9 @@ void MemoryBus::write(uint16_t addr, uint8_t val) {
     case 0x2000 ... 0x3FFF:
         ppu.cpu_write(0x2000 + ((addr - 0x2000) % 8), val);
         break;
-    case 0x4000 ... 0x4013: std::cerr << "APU write which won't work" << std::endl; break;
+    case 0x4000 ... 0x4013:
+        std::cerr << "APU write which won't work" << std::endl;
+        break;
 
     case 0x4014: on_cpu_oamdma(val); break;
     case 0x4015: std::cerr << "APU write which won't work" << std::endl; break;

@@ -2,11 +2,11 @@
 #define INC_2A03_EE_H
 
 #include <bus.h>
-#include <cart/load.h>
-#include <cart/mapper.h>
 #include <cpu.h>
+#include <load.h>
+#include <logger.h>
+#include <mapper.h>
 #include <ppu.h>
-#include <utils/logger.h>
 #include <render.h>
 
 const int ntsc_cyc_ratio = 3;
@@ -27,10 +27,14 @@ class ExecutionEnvironment {
     std::function<void(ExecutionEnvironment &)> post_step_hook;
 
     ExecutionEnvironment() = delete;
-    ExecutionEnvironment(GFX::Renderer &_renderer, NES::MemoryBus &_bus, 
-                         NES::CPU &_cpu, NES::PPU &_ppu, 
+    ExecutionEnvironment(GFX::Renderer &_renderer, NES::MemoryBus &_bus,
+                         NES::CPU &_cpu, NES::PPU &_ppu,
                          NES::SystemLogger &_logger)
-    : renderer(_renderer), bus(_bus), cpu(_cpu), ppu(_ppu), logger(_logger) {}
+        : renderer(_renderer),
+          bus(_bus),
+          cpu(_cpu),
+          ppu(_ppu),
+          logger(_logger) {}
 
     void power(std::function<void(NES::CPU &, NES::PPU &)> setup_hook) {
         cpu.power();

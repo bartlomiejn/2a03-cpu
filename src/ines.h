@@ -1,7 +1,7 @@
 #ifndef INC_2A03_INES_H
 #define INC_2A03_INES_H
 
-#include <utils/bitfield.h>
+#include <bitfield.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -66,14 +66,14 @@ class Cartridge {
     /// \param _prg_rom_sz Program code size.
     /// \param _chr_rom_sz Size of PPU data.
     /// \param _prg_ram_sz Program RAM size.
-    Cartridge(Header _header, unsigned int _trainer_sz, unsigned int _prg_rom_sz,
-              unsigned int _chr_rom_sz, unsigned int _prg_ram_sz)
+    Cartridge(Header _header, unsigned int _trainer_sz,
+              unsigned int _prg_rom_sz, unsigned int _chr_rom_sz,
+              unsigned int _prg_ram_sz)
         : header(_header),
           trainer(_trainer_sz, 0),
           prg_rom(_prg_rom_sz, 0),
           chr_rom(_chr_rom_sz, 0),
-          prg_ram(_prg_ram_sz, 0) 
-    {};
+          prg_ram(_prg_ram_sz, 0) {};
 
     Header header;
     std::vector<uint8_t> trainer;

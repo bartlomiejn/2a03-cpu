@@ -7,7 +7,8 @@ using namespace NES;
 
 void inc_hori(PPUVramAddr &r) {
     r.sc_x++;
-    if (!r.sc_x) r.nt_h = !r.nt_h; // Not sure if the nametable switch is correct here
+    if (!r.sc_x)
+        r.nt_h = !r.nt_h;  // Not sure if the nametable switch is correct here
 }
 
 void inc_vert(PPUVramAddr &r) {
@@ -16,19 +17,21 @@ void inc_vert(PPUVramAddr &r) {
     if (!r.sc_y) r.nt_v = !r.nt_v;
 }
 
-void set_hori(PPUVramAddr &to, PPUVramAddr &from) {
+void set_hori(PPUVramAddr &to, const PPUVramAddr &from) {
     to.sc_x = from.sc_x;
     to.nt_h = from.nt_h;
 }
 
-void set_vert(PPUVramAddr &to, PPUVramAddr &from) {
+void set_vert(PPUVramAddr &to, const PPUVramAddr &from) {
     to.sc_y = from.sc_y;
     to.nt_v = from.nt_v;
     to.sc_fine_y = from.sc_fine_y;
 }
 
-PPU::PPU(GFX::Renderer &_renderer, NES::Palette _pal) 
-: renderer(_renderer), pal(std::move(_pal)) {}
+PPU::PPU(GFX::Renderer &_renderer, NES::Palette _pal)
+    : mapper(nullptr), renderer(_renderer), pal(std::move(_pal)) {
+    power();
+}
 
 void PPU::power() {
     v.addr = 0;
@@ -45,6 +48,7 @@ void PPU::power() {
     ppumask.value = 0x0;
     ppustatus.value = 0x0;
     oamaddr = 0x0;
+    oamdata = 0x0;
     ppudata_buf = 0x0;
     scan_x = 0;
     scan_y = 0;
@@ -56,12 +60,10 @@ void PPU::power() {
     std::fill(oam_sec.begin(), oam_sec.end(), 0x3F);
     std::fill(pram.begin(), pram.end(), 0xFF);
     std::fill(fb.begin(), fb.end(), 0x001100FF);
-    std::fill(fb_sec.begin(), fb.end(), 0x001100FF);
+    std::fill(fb_sec.begin(), fb_sec.end(), 0x001100FF);
 }
 
-void PPU::oam_sec_clear() {
-    oam_sec[scan_x - 1] = 0xFF;
-}
+void PPU::oam_sec_clear() { oam_sec[scan_x - 1] = 0xFF; }
 
 void PPU::sprite_eval() {
     if (!ppumask.bg_show && !ppumask.spr_show) {
@@ -71,14 +73,14 @@ void PPU::sprite_eval() {
     if (scan_x & 0x1) {
         oamdata = oam[oamaddr];
         return;
-    } 
-    
-    OA *obj = nullptr;
+    }
+
+    const OA *obj = nullptr;
     size_t stride = sizeof(OA);
     uint8_t tile_y = ppuctrl.spr_size ? 16 : 8;
     uint8_t spr_num = 0;
     for (size_t i = 0; i < (oam_sz / stride); i++) {
-        obj = (OA *)(oam.data() + i * stride);
+        obj = std::bit_cast<OA *>(oam.data() + i * stride);
         if (obj->y <= scan_y && (obj->y <= scan_y + tile_y)) {
             uint8_t *oam_target = (oam_sec.data() + spr_num * stride);
             std::memcpy(oam_target, obj, stride);
@@ -90,13 +92,13 @@ void PPU::sprite_eval() {
 
 void PPU::draw() {
     uint8_t out = 0;
-    uint8_t bg = 0;
-    //uint8_t spr = 0;
+    // uint8_t bg = 0;
+    // uint8_t spr = 0;
 
     // Background
     if (ppumask.bg_show) {
-        bg = ( ((bg_l_shift << v.sc_x) & 0x8000) >> 15 )
-             | ( ((bg_h_shift << v.sc_x) & 0x8000) >> 14 );
+        uint8_t bg = (((bg_l_shift << v.sc_x) & 0x8000) >> 15) |
+                     (((bg_h_shift << v.sc_x) & 0x8000) >> 14);
         out = bg;
     }
 
@@ -128,14 +130,11 @@ void PPU::execute(uint8_t cycles) {
     while (cycles) {
         switch (scan_y) {
         case 0 ... 239:
-            if (scan_x >= 1 && scan_x <= 64)
-                oam_sec_clear();
-            if (scan_x >= 65 && scan_x <= 256)
-               sprite_eval();
-            if (scan_x >= 257 && scan_x <= 320)
-                oamaddr = 0x0;
+            if (scan_x >= 1 && scan_x <= 64) oam_sec_clear();
+            if (scan_x >= 65 && scan_x <= 256) sprite_eval();
+            if (scan_x >= 257 && scan_x <= 320) oamaddr = 0x0;
             draw();
-        case 241: 
+        case 241:
             if (scan_x == 1) {
                 ppustatus.vblank = true;
                 on_nmi_vblank();
@@ -178,7 +177,7 @@ void PPU::execute(uint8_t cycles) {
             case 329:   case 337:   case 339:
                 // clang-format on
                 if (scan_x == 257) {
-                   set_hori(v, t); 
+                    set_hori(v, t);
                 }
                 bus.addr = 0x2000 | (v.addr & 0x0FFF);
                 break;
@@ -205,8 +204,8 @@ void PPU::execute(uint8_t cycles) {
             case 203:   case 211:   case 219:   case 227:   case 235:
             case 243:   case 251:   case 323:   case 331:
                 // clang-format on
-                bus.addr = 0x23C0 | (v.addr & 0x0C00) | ((v.addr >> 4) & 0x38) 
-                           | ((v.addr >> 2) & 0x07);
+                bus.addr = 0x23C0 | (v.addr & 0x0C00) | ((v.addr >> 4) & 0x38) |
+                           ((v.addr >> 2) & 0x07);
                 break;
                 // clang-format off
             case 4:     case 12:    case 20:    case 28:    case 36:
@@ -279,9 +278,9 @@ void PPU::execute(uint8_t cycles) {
 
         if (scan_y == 239 && scan_x == 320) {
             if (fb_prim)
-               renderer.draw(fb.data());
+                renderer.draw(fb.data());
             else
-               renderer.draw(fb_sec.data());
+                renderer.draw(fb_sec.data());
             fb_prim = !fb_prim;
         }
 
@@ -339,31 +338,29 @@ void PPU::cpu_write(uint16_t addr, uint8_t value) {
             v.addr++;
         }
         break;
-    default:
-        throw std::runtime_error("Invalid/unimplemented PPU write.");
+    default: throw std::runtime_error("Invalid/unimplemented PPU write.");
     }
 }
 
 uint8_t PPU::cpu_read(uint16_t addr) {
     switch (addr) {
-    case 0x2000: // Write-only
+    case 0x2000:  // Write-only
         return cpu_bus;
-    case 0x2001: // Write-only
+    case 0x2001:  // Write-only
         return cpu_bus;
     case 0x2002:
         w = (bool)0;
         // TODO: Reads from here should reset vblank flag bit 7
         cpu_bus = (ppustatus.value & 0xE0) | (cpu_bus & 0x1F);
         return ppustatus.value;
-    case 0x2003: // Write-only
+    case 0x2003:  // Write-only
         return cpu_bus;
     case 0x2004:
         // TODO: Reads while rendering should expose internal OAM accesses
         cpu_bus = oam[oamaddr];
         return oam[oamaddr];
     case 0x2005:
-    case 0x2006:
-        return cpu_bus;
+    case 0x2006: return cpu_bus;
     case 0x2007:
         uint8_t ppudata_out;
         if (v.addr > 0x3EFF) {

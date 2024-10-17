@@ -15,8 +15,6 @@ enum TestState { running = 0x80, reset_required = 0x81 };
 
 namespace Test {
 
-void handle_sigint(int signum) {}
-
 std::string ltrim(const std::string &str) {
     size_t start = str.find_first_not_of(" \t\n\r\f\v");
     return (start == std::string::npos) ? "" : str.substr(start);
@@ -27,7 +25,7 @@ std::string rtrim(const std::string &str) {
     return (end == std::string::npos) ? "" : str.substr(0, end + 1);
 }
 
-std::string trim(std::string &line) {
+std::string trim(const std::string &line) {
     std::string result;
     bool in_whitespace = false;
 
@@ -46,10 +44,13 @@ std::string trim(std::string &line) {
     return result;
 }
 
+/*
+Don't have to trim ppu state anymore, keep it in case its ever needed
 std::string trim_ppu(std::string &line) {
     std::regex pat(R"(PPU:\s*\d+,\s*\d+)");
     return std::regex_replace(line, pat, "");
 }
+*/
 
 std::string gen_logname(std::string prefix) {
     auto now = std::chrono::system_clock::now();

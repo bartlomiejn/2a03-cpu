@@ -1,4 +1,4 @@
-#include <utils/logger.h>
+#include <logger.h>
 
 #include <fstream>
 #include <iomanip>
@@ -12,7 +12,8 @@ static const std::string target_pat = "{{TARGET}}";
 static const std::string sum_pat = "{{SUM}}";
 static const std::string im_pat = "{{IM}}";
 
-SystemLogger::SystemLogger(CPU &cpu, PPU &ppu, MemoryBus &bus) : cpu(cpu), ppu(ppu), bus(bus), logs() {}
+SystemLogger::SystemLogger(CPU &cpu, PPU &ppu, MemoryBus &bus)
+    : cpu(cpu), ppu(ppu), bus(bus), logs() {}
 
 uint16_t SystemLogger::bus_read16(uint16_t addr, bool zp = false) {
     // If we know this is a zero-page addr, wrap the most-significant bit
@@ -30,8 +31,6 @@ std::string SystemLogger::log() {
     stringstream ss;
     string op_templ;
     uint8_t op_len;
-    uint16_t operand = 0;
-    uint8_t tgt_len;
     uint8_t opcode = bus.read(cpu.PC);
     std::optional<AddressingMode> addr_mode = addr_mode_for_op(opcode);
 
@@ -73,14 +72,15 @@ std::string SystemLogger::log() {
 
     // Pretty print parameter with addressing mode.
     if (addr_mode.has_value() && op_len > 0) {
-        // Get template for the mode.
+        // uint16_t operand = 0;
+        //  Get template for the mode.
         op_templ = templ_for_mode(addr_mode.value(), opcode);
 
         // Revert endianness.
         for (int i = op_len; i > 0; i--) {
             uint8_t op8 = bus.read(cpu.PC + (uint8_t)i);
             ss << setfill('0') << setw(2) << hex << (int)op8;
-            operand |= op8 << (i - 1) * 8;
+            // operand |= op8 << (i - 1) * 8;
         }
 
         // Replace template with the operand in little endian.
@@ -128,7 +128,7 @@ std::string SystemLogger::log() {
             ss.str(string());
         }
 
-        tgt_len = target_len(addr_mode.value(), opcode);
+        uint8_t tgt_len = target_len(addr_mode.value(), opcode);
         if (tgt_len > 0) {
             uint16_t val = target_value(addr_mode.value());
 
@@ -154,8 +154,9 @@ std::string SystemLogger::log() {
     ss << "Y:" << setfill('0') << setw(2) << hex << (int)cpu.Y << " ";
     ss << "P:" << setfill('0') << setw(2) << hex << (int)cpu.P.status << " ";
     ss << "SP:" << setfill('0') << setw(2) << hex << (int)cpu.S << " ";
-    ss << "PPU:" << setfill(' ') << setw(3) << right << dec << (int)ppu.scan_y << "," 
-        << setfill(' ') << setw(3) << right << dec << (int)ppu.scan_x << " ";
+    ss << "PPU:" << setfill(' ') << setw(3) << right << dec << (int)ppu.scan_y
+       << "," << setfill(' ') << setw(3) << right << dec << (int)ppu.scan_x
+       << " ";
     ss << "CYC:" << dec << (int)cpu.cycles;
     line += string(ss.str());
     ss.str(string());
@@ -183,7 +184,7 @@ void SystemLogger::save() {
     else
         fstream.open("latest.log");
 
-    for (auto str : logs) fstream << str << std::endl;
+    for (const auto &str : logs) fstream << str << std::endl;
 
     fstream.close();
 }
@@ -774,7 +775,7 @@ std::optional<AddressingMode> SystemLogger::addr_mode_for_op(uint8_t opcode) {
 }
 
 std::string SystemLogger::templ_for_mode(AddressingMode addr_mode,
-                                      uint8_t opcode) {
+                                         uint8_t opcode) {
     switch (addr_mode) {
     case rel: return "$" + target_pat;
     case abs:
@@ -820,7 +821,8 @@ uint8_t SystemLogger::operand_len(NES::AddressingMode addr_mode) {
     }
 }
 
-uint8_t SystemLogger::target_len(NES::AddressingMode addr_mode, uint8_t opcode) {
+uint8_t SystemLogger::target_len(NES::AddressingMode addr_mode,
+                                 uint8_t opcode) {
     switch (addr_mode) {
     case rel:
     case ind: return 2;

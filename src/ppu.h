@@ -1,9 +1,9 @@
 #ifndef INC_2A03_PPU_H
 #define INC_2A03_PPU_H
 
-#include <cart/mapper.h>
+#include <bitfield.h>
+#include <mapper.h>
 #include <palette.h>
-#include <utils/bitfield.h>
 #include <render.h>
 
 #include <array>
@@ -25,7 +25,7 @@ bitfield_union(
                           ///< 1)
     bool ppu_master : 1;  ///< EXT bus direction 0: input, 1: output
     bool vbl_nmi : 1;     ///< Generate NMI at start of vertical blanking
-                         ///< interval (1: on).
+                          ///< interval (1: on).
 );
 
 /// PPUMASK write register
@@ -161,11 +161,11 @@ class PPU {
 
     std::function<void()> on_nmi_vblank;  ///< Issues a VBlank NMI
 
-    uint16_t scan_x;    ///< Pixel
-    uint16_t scan_y;  ///< Scanline
-    uint16_t scan_x_end;   ///< Pixels count
-    uint16_t scan_y_end;   ///< Scanline count
-    bool scan_short;    ///< Short scanline (340 ticks instead of 341)
+    uint16_t scan_x;      ///< Pixel
+    uint16_t scan_y;      ///< Scanline
+    uint16_t scan_x_end;  ///< Pixels count
+    uint16_t scan_y_end;  ///< Scanline count
+    bool scan_short;      ///< Short scanline (340 ticks instead of 341)
 
     PPU(GFX::Renderer &_renderer, NES::Palette _pal);
 

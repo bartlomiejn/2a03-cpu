@@ -1,4 +1,4 @@
-#include <cart/load.h>
+#include <load.h>
 
 #include <fstream>
 #include <iostream>
@@ -8,9 +8,9 @@ using namespace NES::iNESv1;
 /// Checks if magic number is valid. Increments the input iterator by 4 bytes.
 static bool is_magic_valid(std::string::iterator &iter) {
     std::string magic;
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 4; ++i) {
         magic += *iter;
-        iter++;
+        ++iter;
     }
     return magic == "NES\x1A";
 }
@@ -18,20 +18,20 @@ static bool is_magic_valid(std::string::iterator &iter) {
 /// Generates an iNESv1 header. Increments the input iterator by 6 bytes.
 static Header get_inesv1_header(std::string::iterator &iter) {
     auto prg_rom_sz = static_cast<uint8_t>(*iter);
-    iter++;
+    ++iter;
     auto chr_rom_sz = static_cast<uint8_t>(*iter);
-    iter++;
+    ++iter;
     Byte6 flags_6 = {.byte = static_cast<uint8_t>(*iter)};
-    iter++;
+    ++iter;
     Byte7 flags_7 = {.byte = static_cast<uint8_t>(*iter)};
-    iter++;
+    ++iter;
     auto prg_ram = static_cast<uint8_t>(*iter);
     auto prg_ram_sz =
         prg_ram != 0 ? prg_ram * prg_ram_def_sz  // If not 0 then calculate size
                      : prg_ram_def_sz;           // If 0 then 8KB
-    iter++;
+    ++iter;
     Byte9 flags_9 = {.byte = static_cast<uint8_t>(*iter)};
-    iter++;
+    ++iter;
     return Header(prg_rom_sz, chr_rom_sz, flags_6, flags_7, prg_ram_sz,
                   flags_9);
 }
@@ -73,22 +73,22 @@ Cartridge NES::iNESv1::load(std::string &filename) {
 
     // If trainer is available, copy trainer memory first
     if (header.flags_6.has_trainer) {
-        for (uint i = 0; i < trainer_sz; i++) {
+        for (uint i = 0; i < trainer_sz; ++i) {
             cart.trainer[i] = static_cast<uint8_t>(*fstr_iter);
-            fstr_iter++;
+            ++fstr_iter;
         }
     }
 
     // Copy PRG ROM
-    for (uint i = 0; i < prg_rom_sz; i++) {
+    for (uint i = 0; i < prg_rom_sz; ++i) {
         cart.prg_rom[i] = static_cast<uint8_t>(*fstr_iter);
-        fstr_iter++;
+        ++fstr_iter;
     }
 
     // Copy CHR ROM
-    for (uint i = 0; i < chr_rom_sz; i++) {
+    for (uint i = 0; i < chr_rom_sz; ++i) {
         cart.chr_rom[i] = static_cast<uint8_t>(*fstr_iter);
-        fstr_iter++;
+        ++fstr_iter;
     }
 
     std::cout << filename << " ROM loaded successfully." << std::endl;

@@ -23,7 +23,7 @@ class Palette {
     std::vector<uint8_t> data;
 
     Palette() = delete;
-    Palette(std::string filename) {
+    explicit Palette(std::string filename) {
         std::ifstream ifs(filename, std::ios::binary);
         assert(ifs.is_open());
         std::copy(std::istream_iterator<uint8_t>(ifs),
@@ -31,10 +31,8 @@ class Palette {
     };
 
     uint32_t get_rgba(uint8_t pal_6b) {
-        return (data[pal_6b * 3] << 24) 
-               | (data[pal_6b * 3 + 1] << 16) 
-               | (data[pal_6b * 3 + 2] << 8)
-               | 0xFF;
+        return (data[pal_6b * 3] << 24) | (data[pal_6b * 3 + 1] << 16) |
+               (data[pal_6b * 3 + 2] << 8) | 0xFF;
     }
 };
 

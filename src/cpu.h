@@ -1,9 +1,9 @@
 #ifndef INC_2A03_CPU_H
 #define INC_2A03_CPU_H
 
+#include <bitfield.h>
 #include <bus.h>
 #include <ppu.h>
-#include <utils/bitfield.h>
 
 #include <cstdint>
 
@@ -62,6 +62,13 @@ class CPU {
     uint32_t cycles;  ///< Cycle counter.
 
     CPU(MemoryBus &bus, NES::PPU &ppu);
+
+    /// Does crossing the page boundary result in an additional cycle for
+    /// this opcode
+    static bool idx_abs_crossing_cycle(uint8_t opcode);
+
+    /// Returns `true` if addr and addr2 are on the same page.
+    static bool is_same_page(uint16_t addr, uint16_t addr2);
 
     /// Starts the CPU.
     void power();
@@ -125,10 +132,6 @@ class CPU {
     /// \return Parameter for current instruction.
     uint8_t get_operand(AddressingMode mode);
 
-    /// Does crossing the page boundary result in an additional cycle for
-    /// this opcode
-    bool idx_abs_crossing_cycle(uint8_t opcode);
-
     // Auxiliary functions
 
     /// Rotates left the value once. Carry is shifted into output
@@ -160,9 +163,6 @@ class CPU {
 
     /// Sets the N and Z flags based on the value provided.
     void set_NZ(uint8_t value);
-
-    /// Returns `true` if addr and addr2 are on the same page.
-    bool is_same_page(uint16_t addr, uint16_t addr2);
 
     // Instructions
     // http://www.6502.org/tutorials/6502opcodes.html - Docs
@@ -250,7 +250,7 @@ class CPU {
     /// on the sign of result and equality of the operand.
     /// \param reg Register to compare to.
     /// \param mode Addressing mode to use.
-    void CP(uint8_t &reg, AddressingMode mode);
+    void CP(const uint8_t &reg, AddressingMode mode);
 
     /// Decrement memory. Affects N, Z.
     /// \param mode Addressing mode to use.
@@ -346,7 +346,7 @@ class CPU {
     void PH(uint8_t value);
 
     /// Push P to stack.
-    void PH(StatusRegister &p);
+    void PH(const StatusRegister &p);
 
     /// Pull value from stack.
     /// \param reg_to Register to pull the value to.

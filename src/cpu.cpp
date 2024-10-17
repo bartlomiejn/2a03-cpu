@@ -420,7 +420,7 @@ uint16_t CPU::read16(uint16_t addr, bool zp) {
     return (h_data << 8) | l_data;
 }
 
-void CPU::write(uint16_t addr, uint8_t val) { bus.write(addr, val); }
+void CPU::write(uint16_t addr, uint8_t value) { bus.write(addr, value); }
 
 void CPU::schedule_dma_oam(uint8_t page) {
     dma = DMA_OAM;
@@ -432,15 +432,14 @@ void CPU::schedule_nmi() { NMI = true; }
 void CPU::handle_dma() {
     if (dma == DMA_PCM) {
         throw std::runtime_error("PCM DMA unimplemented");
-    } else if (dma == DMA_OAM) { 
+    } else if (dma == DMA_OAM) {
         // TODO: PCM DMA can interrupt OAM DMA
-        uint8_t i = 0;
-        uint8_t data = 0;
         if (cycles & 0x1) {
             cycles++;
         }
+        uint8_t i = 0;
         do {
-            data = bus.read((dma_page << 8) | i);
+            uint8_t data = bus.read((dma_page << 8) | i);
             cycles++;
             bus.write(0x2004, data);
             cycles++;
@@ -758,7 +757,7 @@ void CPU::BIT(AddressingMode mode) {
 
 void CPU::CMP(AddressingMode mode) { CP(A, mode); }
 
-void CPU::CP(uint8_t &reg, AddressingMode mode) {
+void CPU::CP(const uint8_t &reg, AddressingMode mode) {
     uint8_t operand = get_operand(mode);
     P.Z = reg == operand;
     P.C = reg >= operand;
@@ -990,7 +989,7 @@ void CPU::PH(uint8_t value) {
     cycles += 3;
 }
 
-void CPU::PH(StatusRegister &p) {
+void CPU::PH(const StatusRegister &p) {
     write((uint16_t)(0x100 + S), (uint8_t)(p.status | 0x10));
     S--;
     cycles += 3;

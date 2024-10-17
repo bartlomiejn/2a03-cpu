@@ -1,4 +1,4 @@
-#include <cart/mapper.h>
+#include <mapper.h>
 
 #include <iostream>
 
@@ -27,34 +27,35 @@ Mapper::NROM::NROM(Cartridge &cartridge) : Mapper::Base(cartridge) {}
 
 uint8_t Mapper::NROM::read_prg(uint16_t addr) {
     switch (addr) {
-    case 0x6000 ... 0x7FFF: 
+    case 0x6000 ... 0x7FFF:
         if ((size_t)(addr - 0x6000) >= cartridge.prg_ram.size()) {
-            std::cerr << "PRG read exceeds PRG RAM size, addr: $" << std::hex 
-                << addr - 0x6000 << " prg_ram size: 0x" << cartridge.prg_ram.size() << std::endl;
+            std::cerr << "PRG read exceeds PRG RAM size, addr: $" << std::hex
+                      << addr - 0x6000 << " prg_ram size: 0x"
+                      << cartridge.prg_ram.size() << std::endl;
             return 0x0;
         } else {
             return cartridge.prg_ram[addr - 0x6000];
         }
     case 0x8000 ... 0xBFFF:
-        // Low 16KB PRG ROM 
+        // Low 16KB PRG ROM
         if ((size_t)(addr - 0x8000) >= cartridge.prg_rom.size()) {
-            std::cerr << "PRG read exceeds PRG RAM size, addr: " << std::hex 
-                << addr - 0x8000 << std::endl;
+            std::cerr << "PRG read exceeds PRG RAM size, addr: " << std::hex
+                      << addr - 0x8000 << std::endl;
             return 0x0;
         } else {
             return cartridge.prg_rom[addr - 0x8000];
         }
     case 0xC000 ... 0xFFFF:
         // High 16KB PRG ROM, or mirrored low if 16KB
-        uint16_t base; 
+        uint16_t base;
         if (cartridge.header.prg_rom_banks == 1)
             base = 0xC000;
         else
             base = 0x8000;
 
         if ((size_t)(addr - base) >= cartridge.prg_rom.size()) {
-            std::cerr << "PRG read exceeds PRG ROM size, addr: " << std::hex 
-                << addr - base << std::endl;
+            std::cerr << "PRG read exceeds PRG ROM size, addr: " << std::hex
+                      << addr - base << std::endl;
             return 0x0;
         } else {
             return cartridge.prg_rom[addr - base];
@@ -85,13 +86,13 @@ Mapper::NTMirror Mapper::NROM::mirroring() {
 
 uint8_t Mapper::NROM::read_ppu(uint16_t addr) {
     switch (addr) {
-    case 0x0000 ... 0x1FFF: 
+    case 0x0000 ... 0x1FFF:
         if (addr >= cartridge.chr_rom.size()) {
-            std::cerr << "PPU read exceeds CHR ROM size, addr: " << std::hex 
-                << addr << std::endl;
+            std::cerr << "PPU read exceeds CHR ROM size, addr: " << std::hex
+                      << addr << std::endl;
             return 0x0;
         } else {
-            return cartridge.chr_rom[addr]; 
+            return cartridge.chr_rom[addr];
         }
         break;
     default: throw std::runtime_error("Invalid CHR read addr");
@@ -228,14 +229,14 @@ void Mapper::MMC1::set_prg_bank_reg(uint8_t value) {
     wram_enable = (bool)((value & 0b10000) >> 4);
 }
 
-uint8_t Mapper::MMC1::read_32k_prg_bank(uint16_t addr) {
+uint8_t Mapper::MMC1::read_32k_prg_bank(uint16_t addr) const {
     uint16_t prg_offset = addr - (uint16_t)0x8000;
     // Only upper 3 bits are used when determining a 32k PRG bank
     uint32_t abs_addr = (prg_bank >> 1) * prg_rom_page_sz + prg_offset;
     return cartridge.prg_rom[abs_addr];
 }
 
-uint8_t Mapper::MMC1::read_l_16k_prg_bank(uint16_t addr) {
+uint8_t Mapper::MMC1::read_l_16k_prg_bank(uint16_t addr) const {
     uint16_t prg_offset = addr - (uint16_t)0x8000;
     if (prg_bank_swap == swap_h_prg_bank)
         return cartridge.prg_rom[prg_offset];
@@ -246,7 +247,7 @@ uint8_t Mapper::MMC1::read_l_16k_prg_bank(uint16_t addr) {
     }
 }
 
-uint8_t Mapper::MMC1::read_h_16k_prg_bank(uint16_t addr) {
+uint8_t Mapper::MMC1::read_h_16k_prg_bank(uint16_t addr) const {
     uint16_t prg_offset = addr - (uint16_t)0xC000;
     if (prg_bank_swap == swap_l_prg_bank) {
         uint32_t abs_addr =

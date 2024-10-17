@@ -2,8 +2,8 @@
 #define INC_2A03_LOGGER_H
 
 #include <bus.h>
-#include <ppu.h>
 #include <cpu.h>
+#include <ppu.h>
 
 #include <functional>
 #include <iostream>
@@ -45,32 +45,33 @@ class SystemLogger {
 
    private:
     /// Decodes an opcode into a readable string form.
-    std::string decode(uint8_t opcode);
+    static std::string decode(uint8_t opcode);
 
     /// Returns the addressing mode for an opcode, if it's
     /// applicable.
-    std::optional<NES::AddressingMode> addr_mode_for_op(uint8_t opcode);
+    static std::optional<NES::AddressingMode> addr_mode_for_op(uint8_t opcode);
 
     /// Returns a templated string for provided mode.
     /// \param addr_mode Addressing mode to provide a template for.
     /// \return Templated string for provided mode with optional
     /// operand marked as `{{OPERAND}}` and optional target marked
     /// as `{{TARGET}}`.
-    std::string templ_for_mode(NES::AddressingMode addr_mode, uint8_t opcode);
+    static std::string templ_for_mode(NES::AddressingMode addr_mode,
+                                      uint8_t opcode);
 
     /// Returns the operand length in bytes for provided mode.
-    uint8_t operand_len(NES::AddressingMode addr_mode);
+    static uint8_t operand_len(NES::AddressingMode addr_mode);
 
     /// If there is a target for a specified mode, returns
     /// the amount of bytes to be printed.
-    uint8_t target_len(NES::AddressingMode addr_mode, uint8_t opcode);
+    static uint8_t target_len(NES::AddressingMode addr_mode, uint8_t opcode);
 
     /// Retrieve target value for specified addressing mode.
     uint16_t target_value(NES::AddressingMode addr_mode);
 
     /// Returns true if provided `opcode` is part of the official
     /// instruction set.
-    bool is_opcode_legal(uint8_t opcode);
+    static bool is_opcode_legal(uint8_t opcode);
 };
 }  // namespace NES
 

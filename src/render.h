@@ -6,7 +6,7 @@
 namespace GFX {
 
 class Renderer {
-public:
+   public:
     SDL_Window *w;
     SDL_Renderer *r;
     SDL_Texture *tex;
@@ -14,8 +14,12 @@ public:
     const int display_x;
     const int display_y;
 
-    Renderer(int display_x, int display_y) 
-    : display_x(display_x), display_y(display_y) {};
+    Renderer(int display_x, int display_y)
+        : w(nullptr),
+          r(nullptr),
+          tex(nullptr),
+          display_x(display_x),
+          display_y(display_y) {};
 
     void setup_window() {
         if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -23,10 +27,12 @@ public:
             throw std::runtime_error("SDL_Init error");
         }
 
-        w = SDL_CreateWindow("2A03", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                             display_x, display_y, SDL_WINDOW_SHOWN);
+        w = SDL_CreateWindow("2A03", SDL_WINDOWPOS_CENTERED,
+                             SDL_WINDOWPOS_CENTERED, display_x, display_y,
+                             SDL_WINDOW_SHOWN);
         if (!w) {
-            std::cerr << "SDL_CreateWindow error: " << SDL_GetError() << std::endl;
+            std::cerr << "SDL_CreateWindow error: " << SDL_GetError()
+                      << std::endl;
             SDL_Quit();
             throw std::runtime_error("SDL_CreateWindow error");
         }
@@ -42,9 +48,11 @@ public:
         }
 
         tex = SDL_CreateTexture(r, SDL_PIXELFORMAT_RGBA8888,
-                                SDL_TEXTUREACCESS_STREAMING, display_x, display_y);
+                                SDL_TEXTUREACCESS_STREAMING, display_x,
+                                display_y);
         if (!tex) {
-            std::cerr << "SDL_CreateTexture error: " << SDL_GetError() << std::endl;
+            std::cerr << "SDL_CreateTexture error: " << SDL_GetError()
+                      << std::endl;
             SDL_DestroyRenderer(r);
             SDL_DestroyWindow(w);
             SDL_Quit();
@@ -59,7 +67,7 @@ public:
         SDL_RenderPresent(r);
     }
 
-    bool poll_quit() {
+    static bool poll_quit() {
         SDL_Event event;
         SDL_PollEvent(&event);
         if (event.type == SDL_QUIT) {
@@ -70,6 +78,6 @@ public:
     }
 };
 
-} // namespace GFX
+}  // namespace GFX
 
-#endif // INC_2A03_RENDERER_H
+#endif  // INC_2A03_RENDERER_H
