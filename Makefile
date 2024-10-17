@@ -15,11 +15,14 @@ binary: $(OUT_DIR)
 		$(SRC_DIR)
 	$(MAKE) 2a03 -C $(OUT_DIR)
 
+cppcheck:
+	$(MAKE) cppcheck -C $(OUT_DIR)
+
 run_nestest: binary
 	cd $(OUT_DIR) && ./2a03 -ct
 
 debug_nestest: binary
-	cd $(OUT_DIR) && $(CXX_DEBUG) -ex "run" --args ./2a03 -ct
+	cd $(OUT_DIR) && $(CXX_DEBUG) -ex "b main" -ex "run" --args ./2a03 -ct
 
 valgrind_nestest: binary
 	cd $(OUT_DIR) && valgrind --tool=memcheck --leak-check=full -s \

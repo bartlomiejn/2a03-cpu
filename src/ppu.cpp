@@ -47,7 +47,7 @@ void PPU::power() {
     oamaddr = 0x0;
     ppudata_buf = 0x0;
     scan_x = 0;
-    scan_y = 261;
+    scan_y = 0;
     scan_x_end = ntsc_x;
     scan_y_end = ntsc_y;
     scan_short = 1;

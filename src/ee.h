@@ -63,7 +63,7 @@ class ExecutionEnvironment {
             // TODO: Synchronize CPU and PPU
             uint8_t cpu_cycs = cpu.execute();
             ppu.execute(ntsc_cyc_ratio * cpu_cycs);
-            stop = renderer.poll_quit();
+            stop = stop || renderer.poll_quit();
 
             if (post_step_hook) post_step_hook(*this);
 

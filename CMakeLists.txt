@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 project(2a03)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(SDL2 REQUIRED)
 if (SDL2_FOUND)
@@ -10,6 +11,20 @@ if (SDL2_FOUND)
     message(STATUS "Include dirs: ${SDL2_INCLUDE_DIRS}")
 else()
     message(FATAL_ERROR "SDL2 not found")
+endif()
+
+find_program(CPPCHECK_EXECUTABLE NAMES cppcheck)
+if(CPPCHECK_EXECUTABLE)
+    message(STATUS "Found cppcheck")
+    set(CMAKE_CXX_CPPCHECK
+        "${CPPCHECK_EXECUTABLE}"
+        "--enable=all"
+        "--inconclusive"
+        "--std=c++20"
+        "--verbose"
+        "--language=c++"
+        "--include=src"
+    )
 endif()
 
 # Project options
@@ -49,5 +64,21 @@ configure_file(${PPU_RDBUF_TESTS_DIR}/test_ppu_read_buffer.nes test_ppu_read_buf
 configure_file(${EXTERNAL_DIR}/DigitalPrimeFBX.pal DigitalPrimeFBX.pal COPYONLY)
 
 add_executable(2a03 ${SOURCES})
+
+list(TRANSFORM SOURCES PREPEND "${CMAKE_SOURCE_DIR}/" OUTPUT_VARIABLE CPPCHECK_SOURCES)
+
+add_custom_target(
+    cppcheck
+    COMMAND 
+        "${CPPCHECK_EXECUTABLE}"
+        --enable=all
+        --inconclusive
+        --std=c++20
+        --verbose
+        --language=c++
+        --project="${CMAKE_BINARY_DIR}/compile_commands.json"
+        --suppress=missingIncludeSystem
+    COMMENT "Running cppcheck on source and header files"
+)
 
 target_link_libraries(2a03 ${SDL2_LIBRARIES})
