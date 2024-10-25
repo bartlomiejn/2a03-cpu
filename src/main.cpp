@@ -5,6 +5,7 @@
 #include <mapper.h>
 #include <palette.h>
 #include <ppu.h>
+#include <apu.h>
 #include <render.h>
 #include <test.h>
 #include <unistd.h>
@@ -57,7 +58,8 @@ struct Options {
 GFX::Renderer renderer(NES::ntsc_fb_x, NES::ntsc_fb_y);
 NES::Palette pal("DigitalPrimeFBX.pal");
 NES::PPU ppu(renderer, pal);
-NES::MemoryBus bus(ppu);
+NES::APU apu;
+NES::MemoryBus bus(ppu, apu);
 NES::CPU cpu(bus, ppu);
 NES::SystemLogger logger(cpu, ppu, bus);
 ExecutionEnvironment ee(renderer, bus, cpu, ppu, logger);

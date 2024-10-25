@@ -1,12 +1,13 @@
 #include <bus.h>
 #include <ppu.h>
+#include <apu.h>
 
 #include <cstring>
 #include <iostream>
 
 using namespace NES;
 
-MemoryBus::MemoryBus(NES::PPU &_ppu) : ppu(_ppu), mapper(nullptr) {
+MemoryBus::MemoryBus(NES::PPU &_ppu, NES::APU &_apu) : ppu(_ppu), apu(_apu), mapper(nullptr) {
     // Ram state is not consistent on a real machine
     std::fill(ram.begin(), ram.end(), 0x0);
 }
@@ -25,10 +26,7 @@ uint8_t MemoryBus::read(uint16_t addr) {
 
     // APU registers
     case 0x4000 ... 0x4017:
-        std::cerr << "APU register access at $" << std::hex << (int)addr << "."
-                  << std::endl;
-        // throw std::range_error("Unhandled APU read");
-        return 0xFF;
+        return apu.read(addr);
 
     // CPU test mode APU/IO functionality (disabled)
     case 0x4018 ... 0x401F:
@@ -56,13 +54,11 @@ void MemoryBus::write(uint16_t addr, uint8_t val) {
     case 0x2000 ... 0x3FFF:
         ppu.cpu_write(0x2000 + ((addr - 0x2000) % 8), val);
         break;
-    case 0x4000 ... 0x4013:
-        std::cerr << "APU write which won't work" << std::endl;
-        break;
-
-    case 0x4014: on_cpu_oamdma(val); break;
-    case 0x4015: std::cerr << "APU write which won't work" << std::endl; break;
-    case 0x4017: std::cerr << "APU write which won't work" << std::endl; break;
+    case 0x4000 ... 0x4017:
+        if (addr == 0x4014)  
+            return on_cpu_oamdma(val);
+        else
+            return apu.write(val);
     case 0x4020 ... 0xFFFF:
         if (mapper)
             mapper->write_prg(addr, val);

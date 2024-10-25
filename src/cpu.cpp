@@ -92,12 +92,9 @@ void CPU::power() {
     cycles = 0;
     IRQ = NMI = false;
 
-    // TODO: Reenable once APU is implemented
-    while (false) {
-        for (uint16_t i = 0x4000; i <= 0x4013; i++) write(i, 0x0);
-        write(0x4015, 0x0);  // All channels disabled
-        write(0x4017, 0x0);  // Frame IRQ enabled
-    }
+    for (uint16_t i = 0x4000; i <= 0x4013; i++) write(i, 0x0);
+    write(0x4015, 0x0);  // All channels disabled
+    write(0x4017, 0x0);  // Frame IRQ enabled
 
     // TODO: Rest of power up logic
     // All 15 bits of noise channel LFSR = $0000[4]. The first time the LFSR
@@ -112,6 +109,7 @@ uint8_t CPU::execute() {
     uint8_t initial_cyc = cycles;
     uint16_t initial_pc = PC;
     switch (read(PC++)) {
+    case 0x0: BRK(); break;
     case 0x10: BPL(); break;
     case 0x30: BMI(); break;
     case 0x50: BVC(); break;
@@ -262,7 +260,6 @@ uint8_t CPU::execute() {
     case 0x68: PL(A); break;
     case 0x28: PL(P); break;
     case 0xEA: /* NOP */ cycles += 2; break;
-    // TODO: Implement BRK
     // Unofficial
     case 0xA7: LAX(zp); break;
     case 0xB7: LAX(zp_y); break;
@@ -361,7 +358,7 @@ uint8_t CPU::execute() {
     case 0xDC:
     case 0xFC: NOP_absx(); break;
     default:
-        std::cerr << "Unhandled / invalid opcode: " << std::hex
+        std::cerr << "Unhandled opcode: " << std::hex
                   << static_cast<int>(read(initial_pc)) << std::endl;
         throw InvalidOpcode();
     }
@@ -378,13 +375,10 @@ void CPU::interrupt(NES::Interrupt type) {
     if (type != i_reset) {
         PH((uint8_t)PC >> 8);
         PH((uint8_t)PC);
-        PH(P.status);
+        PH(type == i_brk ? P.status | 0x10 : P.status);
     } else {
         P.status |= 0x04;
-        // TODO: Reenable once the APU is implemented
-        while (false) {
-            write(0x4015, 0x0);  // All channels disabled
-        }
+        write(0x4015, 0x0);  // All channels disabled
     }
 
     P.I = true;
@@ -583,6 +577,12 @@ void CPU::do_ADC(uint8_t operand) {
 void CPU::set_NZ(uint8_t value) {
     P.Z = value == 0;
     P.N = (bool)(value & 0x80);
+}
+
+void CPU::BRK() {
+    PC++;
+    cycles += 7;
+    interrupt(i_brk);
 }
 
 // Branch instructions

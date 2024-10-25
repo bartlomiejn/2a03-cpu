@@ -3,7 +3,7 @@
 
 #include <mapper.h>
 #include <ppu.h>
-
+#include <apu.h>
 #include <array>
 #include <cstdint>
 #include <functional>
@@ -15,12 +15,13 @@ namespace NES {
 class MemoryBus {
    public:
     NES::PPU &ppu;
+    NES::APU &apu;
     iNESv1::Mapper::Base *mapper;              ///< Cartridge mapper, if it's
                                                ///< inserted.
     std::array<uint8_t, internal_ram_sz> ram;  ///< Internal RAM
 
     /// Initializes the memory bus.
-    explicit MemoryBus(NES::PPU &_ppu);
+    explicit MemoryBus(NES::PPU &_ppu, NES::APU &_apu);
 
     /// Reads 8 bits of memory at the provided address.
     /// \param addr Address to read from.
