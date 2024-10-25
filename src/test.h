@@ -149,10 +149,10 @@ void nestest(ExecutionEnvironment &ee) {
 
     ee.pre_step_hook = [&](auto &ee) {
         using namespace NES::Test;
+        line_ours = ee.logger.log();
         if (!comp_check) {
             return;
         }
-        line_ours = ee.logger.log();
         line++;
         if (!std::getline(ifs, line_nestest)) {
             std::cerr << "Nestest.log ended. Check successful. "
