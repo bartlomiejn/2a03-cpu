@@ -70,7 +70,10 @@ uint8_t Mapper::NROM::read_prg(uint16_t addr) {
 
 void Mapper::NROM::write_prg(uint16_t addr, uint8_t val) {
     switch (addr) {
-    case 0x6000 ... 0x7FFF: cartridge.prg_ram[addr - 0x6000] = val; break;
+    case 0x6000 ... 0x7FFF: 
+        if ((size_t)(addr - 0x6000) < cartridge.prg_ram.size()) 
+            cartridge.prg_ram[addr - 0x6000] = val; 
+        break;
     default: throw std::runtime_error("Invalid PRG write addr");
     }
 }

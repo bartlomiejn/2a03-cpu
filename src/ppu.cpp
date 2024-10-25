@@ -114,11 +114,13 @@ void PPU::draw() {
     }
 
     // Write to framebuffer
-    int fb_i = scan_y * ntsc_fb_x + scan_x;
-    if (fb_prim) {
-        fb[fb_i] = pal.get_rgba(out);
-    } else {
-        fb_sec[fb_i] = pal.get_rgba(out);
+    if (scan_y >= 0 && scan_y <= 239 && scan_x <= 256) {
+        int fb_i = scan_y * ntsc_fb_x + scan_x - 1;
+        if (fb_prim) {
+            fb[fb_i] = pal.get_rgba(out);
+        } else {
+            fb_sec[fb_i] = pal.get_rgba(out);
+        }
     }
 
     // Shift tile

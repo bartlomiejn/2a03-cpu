@@ -362,8 +362,14 @@ uint8_t CPU::execute() {
         throw InvalidOpcode();
     }
 
-    if (NMI) interrupt(i_nmi);
-    if (IRQ && !P.I) interrupt(i_irq);
+    if (NMI) {
+        std::cerr << "Handling NMI" << std::endl;
+        interrupt(i_nmi);
+    }
+    if (IRQ && !P.I) { 
+        std::cerr << "Handling IRQ" << std::endl;
+        interrupt(i_irq);
+    }
 
     return cycles > initial_cyc
                ? cycles - initial_cyc
@@ -371,6 +377,7 @@ uint8_t CPU::execute() {
 }
 
 void CPU::interrupt(NES::Interrupt type) {
+    std::cerr << "CPU::interrupt " << type << std::endl;
     if (type != i_reset) {
         PH((uint8_t)PC >> 8);
         PH((uint8_t)PC);
@@ -416,6 +423,7 @@ uint16_t CPU::read16(uint16_t addr, bool zp) {
 void CPU::write(uint16_t addr, uint8_t value) { bus->write(addr, value); }
 
 void CPU::schedule_dma_oam(uint8_t page) {
+    std::cerr << "CPU::schedule_dma_oam page: " << page << std::endl;
     dma = DMA_OAM;
     dma_page = page;
 }
