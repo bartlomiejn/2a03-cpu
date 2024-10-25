@@ -35,7 +35,8 @@ debug: binary
 
 vg: binary
 	cd $(OUT_DIR) && valgrind --tool=memcheck --leak-check=full -s \
-		--log-file=vg.$(BIN).log --suppressions=../vgsuppress ./2a03 $(ARGS)
+		--track-origins=yes --log-file=vg.$(BIN).log \
+		--suppressions=../vgsuppress ./2a03 $(ARGS)
 
 check:
 	$(MAKE) cppcheck -C $(OUT_DIR)

@@ -60,7 +60,7 @@ NES::Palette pal("DigitalPrimeFBX.pal");
 NES::PPU ppu(renderer, pal);
 NES::APU apu;
 NES::MemoryBus bus(ppu, apu);
-NES::CPU cpu(bus, ppu);
+NES::CPU cpu(&bus, ppu);
 NES::SystemLogger logger(cpu, ppu, bus);
 ExecutionEnvironment ee(renderer, bus, cpu, ppu, logger);
 

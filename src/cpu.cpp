@@ -1,5 +1,5 @@
 #include <cpu.h>
-#include <ppu.h>
+#include <bus.h> 
 
 #include <cstdlib>
 #include <cstring>
@@ -75,12 +75,11 @@
 
 using namespace NES;
 
-CPU::CPU(NES::MemoryBus &bus, NES::PPU &ppu) : bus(bus) {
-    bus.on_cpu_oamdma =
-        std::bind(&CPU::schedule_dma_oam, this, std::placeholders::_1);
+CPU::CPU(NES::MemoryBus *bus, NES::PPU &ppu) : bus(bus) {
+    bus->cpu = this;
 
     // PPU /VBL line is connected directly to /NMI
-    ppu.on_nmi_vblank = std::bind(&CPU::schedule_nmi, this);
+    ppu.on_nmi_vblank = [this]() { this->schedule_nmi(); };
 }
 
 void CPU::power() {
@@ -106,7 +105,7 @@ void CPU::power() {
 void CPU::reset() { interrupt(i_reset); }
 
 uint8_t CPU::execute() {
-    uint8_t initial_cyc = cycles;
+    uint32_t initial_cyc = cycles;
     uint16_t initial_pc = PC;
     switch (read(PC++)) {
     case 0x0: BRK(); break;
@@ -401,7 +400,7 @@ uint8_t CPU::read(uint16_t addr) {
     switch (dma) {
     case DMA_OAM:
     case DMA_PCM: handle_dma();
-    default: return bus.read(addr);
+    default: return bus->read(addr);
     }
 }
 
@@ -414,7 +413,7 @@ uint16_t CPU::read16(uint16_t addr, bool zp) {
     return (h_data << 8) | l_data;
 }
 
-void CPU::write(uint16_t addr, uint8_t value) { bus.write(addr, value); }
+void CPU::write(uint16_t addr, uint8_t value) { bus->write(addr, value); }
 
 void CPU::schedule_dma_oam(uint8_t page) {
     dma = DMA_OAM;
@@ -433,9 +432,9 @@ void CPU::handle_dma() {
         }
         uint8_t i = 0;
         do {
-            uint8_t data = bus.read((dma_page << 8) | i);
+            uint8_t data = bus->read((dma_page << 8) | i);
             cycles++;
-            bus.write(0x2004, data);
+            bus->write(0x2004, data);
             cycles++;
             i++;
         } while (i != 0);

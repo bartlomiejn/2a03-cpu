@@ -12,10 +12,14 @@
 static const int internal_ram_sz = 0x800;  ///< NES Internal RAM size.
 
 namespace NES {
+
+class CPU;
+
 class MemoryBus {
    public:
     NES::PPU &ppu;
     NES::APU &apu;
+    NES::CPU *cpu;
     iNESv1::Mapper::Base *mapper;              ///< Cartridge mapper, if it's
                                                ///< inserted.
     std::array<uint8_t, internal_ram_sz> ram;  ///< Internal RAM

@@ -132,7 +132,8 @@ void PPU::execute(uint8_t cycles) {
         case 241:
             if (scan_x == 1) {
                 ppustatus.vblank = true;
-                on_nmi_vblank();
+                if (on_nmi_vblank)
+                    on_nmi_vblank();
                 break;
             }
         case 0 ... 239:
