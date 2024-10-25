@@ -129,18 +129,23 @@ void PPU::draw() {
 void PPU::execute(uint8_t cycles) {
     while (cycles) {
         switch (scan_y) {
-        case 0 ... 239:
-            if (scan_x >= 1 && scan_x <= 64) oam_sec_clear();
-            if (scan_x >= 65 && scan_x <= 256) sprite_eval();
-            if (scan_x >= 257 && scan_x <= 320) oamaddr = 0x0;
-            draw();
         case 241:
             if (scan_x == 1) {
                 ppustatus.vblank = true;
                 on_nmi_vblank();
+                break;
             }
+        case 0 ... 239:
         case 261:
-            if (scan_x >= 280 && scan_x <= 304) {
+            if (scan_x >= 1 && scan_x <= 64) oam_sec_clear();
+            if (scan_x >= 65 && scan_x <= 256) sprite_eval();
+            if (scan_x >= 257 && scan_x <= 320) oamaddr = 0x0;
+            draw();
+            if (scan_y == 261 && scan_x == 1) {
+                ppustatus.vblank = false;
+                ppustatus.spr0_hit = false;
+            }
+            if (scan_y == 261 && scan_x >= 280 && scan_x <= 304) {
                 set_vert(v, t);
             }
             switch (scan_x) {

@@ -191,6 +191,7 @@ void SystemLogger::save() {
 
 std::string SystemLogger::decode(uint8_t opcode) {
     switch (opcode) {
+    case 0x0: return "BRK";
     case 0x10: return "BPL";
     case 0x30: return "BMI";
     case 0x50: return "BVC";

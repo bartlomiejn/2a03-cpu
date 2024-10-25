@@ -133,7 +133,7 @@ void nestest(ExecutionEnvironment &ee) {
     ee.power([](NES::CPU &cpu, NES::PPU &ppu) {
         cpu.PC = 0xC000;
         cpu.cycles = 7;
-        ppu.execute(21);
+        ppu.scan_x = 21;
     });
 
     std::cout << "Entering runloop." << std::endl;
@@ -145,13 +145,21 @@ void nestest(ExecutionEnvironment &ee) {
     std::string line_ours;
     std::ifstream ifs(nestest_log);
     assert(ifs.is_open());
+    bool comp_check = true;
 
     ee.pre_step_hook = [&](auto &ee) {
         using namespace NES::Test;
-
+        if (!comp_check) {
+            return;
+        }
         line_ours = ee.logger.log();
         line++;
-        std::getline(ifs, line_nestest);
+        if (!std::getline(ifs, line_nestest)) {
+            std::cerr << "Nestest.log ended. Check successful. "
+                         "Continuing execution." << std::endl;
+            comp_check = false;
+            return;
+        }
 
         std::string trimmed_ours = trim(line_ours);
         std::string trimmed_nestest = trim(line_nestest);
