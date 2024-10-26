@@ -1,3 +1,4 @@
+#include <apu.h>
 #include <cpu.h>
 #include <ee.h>
 #include <load.h>
@@ -5,7 +6,6 @@
 #include <mapper.h>
 #include <palette.h>
 #include <ppu.h>
-#include <apu.h>
 #include <render.h>
 #include <test.h>
 #include <unistd.h>

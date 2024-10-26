@@ -1,9 +1,10 @@
 #ifndef INC_2A03_BUS_H
 #define INC_2A03_BUS_H
 
+#include <apu.h>
 #include <mapper.h>
 #include <ppu.h>
-#include <apu.h>
+
 #include <array>
 #include <cstdint>
 #include <functional>

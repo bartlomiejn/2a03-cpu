@@ -1,14 +1,15 @@
-#include <bus.h>
-#include <ppu.h>
 #include <apu.h>
+#include <bus.h>
 #include <cpu.h>
+#include <ppu.h>
 
 #include <cstring>
 #include <iostream>
 
 using namespace NES;
 
-MemoryBus::MemoryBus(NES::PPU &_ppu, NES::APU &_apu) : ppu(_ppu), apu(_apu), cpu(nullptr), mapper(nullptr) {
+MemoryBus::MemoryBus(NES::PPU &_ppu, NES::APU &_apu)
+    : ppu(_ppu), apu(_apu), cpu(nullptr), mapper(nullptr) {
     // Ram state is not consistent on a real machine
     std::fill(ram.begin(), ram.end(), 0x0);
 }
@@ -26,8 +27,7 @@ uint8_t MemoryBus::read(uint16_t addr) {
     case 0x2000 ... 0x3FFF: return ppu.cpu_read(addr);
 
     // APU registers
-    case 0x4000 ... 0x4017:
-        return apu.read(addr);
+    case 0x4000 ... 0x4017: return apu.read(addr);
 
     // CPU test mode APU/IO functionality (disabled)
     case 0x4018 ... 0x401F:
@@ -56,7 +56,7 @@ void MemoryBus::write(uint16_t addr, uint8_t val) {
         ppu.cpu_write(0x2000 + ((addr - 0x2000) % 8), val);
         break;
     case 0x4000 ... 0x4017:
-        if (addr == 0x4014)  
+        if (addr == 0x4014)
             return cpu->schedule_dma_oam(val);
         else
             return apu.write(val);

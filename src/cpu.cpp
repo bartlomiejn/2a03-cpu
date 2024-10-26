@@ -1,5 +1,5 @@
+#include <bus.h>
 #include <cpu.h>
-#include <bus.h> 
 
 #include <cstdlib>
 #include <cstring>
@@ -80,6 +80,8 @@ CPU::CPU(NES::MemoryBus *bus, NES::PPU &ppu) : bus(bus) {
 
     // PPU /VBL line is connected directly to /NMI
     ppu.on_nmi_vblank = [this]() { this->schedule_nmi(); };
+
+    power();
 }
 
 void CPU::power() {
@@ -91,9 +93,9 @@ void CPU::power() {
     cycles = 0;
     IRQ = NMI = false;
 
-    //for (uint16_t i = 0x4000; i <= 0x4013; i++) write(i, 0x0);
-    //write(0x4015, 0x0);  // All channels disabled
-    //write(0x4017, 0x0);  // Frame IRQ enabled
+    // for (uint16_t i = 0x4000; i <= 0x4013; i++) write(i, 0x0);
+    // write(0x4015, 0x0);  // All channels disabled
+    // write(0x4017, 0x0);  // Frame IRQ enabled
 
     // TODO: Rest of power up logic
     // All 15 bits of noise channel LFSR = $0000[4]. The first time the LFSR
@@ -366,7 +368,7 @@ uint8_t CPU::execute() {
         std::cerr << "Handling NMI" << std::endl;
         interrupt(i_nmi);
     }
-    if (IRQ && !P.I) { 
+    if (IRQ && !P.I) {
         std::cerr << "Handling IRQ" << std::endl;
         interrupt(i_irq);
     }
@@ -384,7 +386,7 @@ void CPU::interrupt(NES::Interrupt type) {
         PH(type == i_brk ? P.status | 0x10 : P.status);
     } else {
         P.status |= 0x04;
-        //write(0x4015, 0x0);  // All channels disabled
+        // write(0x4015, 0x0);  // All channels disabled
     }
 
     P.I = true;
@@ -401,6 +403,8 @@ void CPU::interrupt(NES::Interrupt type) {
         NMI = false;
     else if (type == i_irq)
         IRQ = false;
+
+    cycles += 7;
 }
 
 uint8_t CPU::read(uint16_t addr) {
@@ -588,7 +592,6 @@ void CPU::set_NZ(uint8_t value) {
 
 void CPU::BRK() {
     PC++;
-    cycles += 7;
     interrupt(i_brk);
 }
 

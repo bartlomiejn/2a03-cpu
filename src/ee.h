@@ -70,8 +70,8 @@ class ExecutionEnvironment {
                 ppu.execute(ntsc_cyc_ratio * cpu_cycs);
                 stop = stop || renderer.poll_quit();
             } catch (NES::InvalidOpcode &e) {
-                std::cerr << "Unhandled opcode executed. Exiting " << std::endl;
-                stop = true;
+                std::cerr << "Unhandled opcode executed." << std::endl;
+                // stop = true;
             }
 
             if (post_step_hook) post_step_hook(*this);

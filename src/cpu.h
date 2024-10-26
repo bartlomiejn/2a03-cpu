@@ -169,7 +169,7 @@ class CPU {
     // http://www.6502.org/tutorials/6502opcodes.html - Docs
 
     void BRK();
-    
+
     // Branch instructions
 
     /// Does a relative branch using the opcode's operand.

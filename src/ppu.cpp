@@ -114,7 +114,7 @@ void PPU::draw() {
     }
 
     // Write to framebuffer
-    if (scan_y >= 0 && scan_y <= 239 && scan_x <= 256) {
+    if (scan_y <= 239 && scan_x <= 256) {
         int fb_i = scan_y * ntsc_fb_x + scan_x - 1;
         if (fb_prim) {
             fb[fb_i] = pal.get_rgba(out);
@@ -134,8 +134,7 @@ void PPU::execute(uint8_t cycles) {
         case 241:
             if (scan_x == 1) {
                 ppustatus.vblank = true;
-                if (on_nmi_vblank)
-                    on_nmi_vblank();
+                if (on_nmi_vblank) on_nmi_vblank();
                 break;
             }
         case 0 ... 239:

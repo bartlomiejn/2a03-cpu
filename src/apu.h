@@ -3,14 +3,12 @@
 
 namespace NES {
 class APU {
-public:
-    uint8_t read(uint8_t addr) {
-        return 0xFF;
-    }
+   public:
+    uint8_t read(uint8_t addr) { return 0xFF; }
 
     void write(uint8_t val) {}
 };
 
-} // namespace NES
+}  // namespace NES
 
 #endif

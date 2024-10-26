@@ -8,15 +8,14 @@ CPU state matches with Nintendulator nestest.nes run up to the part it starts wr
 
 In progress:
 - PPU + SDL2 window output
-- MMC1
 
 CPU:
 - Official opcodes
-- Partial unofficial opcodes
 - Cycle counting
 - Addressing modes
 - Memory bus
 - Interrupts
+- OAM DMA
 
 Cartridges:
 - iNESv1 cartridge model

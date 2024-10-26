@@ -27,6 +27,10 @@ Mapper::NROM::NROM(Cartridge &cartridge) : Mapper::Base(cartridge) {}
 
 uint8_t Mapper::NROM::read_prg(uint16_t addr) {
     switch (addr) {
+    case 0x4020 ... 0x5FFF:
+        std::cerr << "PRG read from unmapped space: " << std::hex << addr
+                  << std::endl;
+        return 0x0;
     case 0x6000 ... 0x7FFF:
         if ((size_t)(addr - 0x6000) >= cartridge.prg_ram.size()) {
             std::cerr << "PRG read exceeds PRG RAM size, addr: $" << std::hex
@@ -39,7 +43,7 @@ uint8_t Mapper::NROM::read_prg(uint16_t addr) {
     case 0x8000 ... 0xBFFF:
         // Low 16KB PRG ROM
         if ((size_t)(addr - 0x8000) >= cartridge.prg_rom.size()) {
-            std::cerr << "PRG read exceeds PRG RAM size, addr: " << std::hex
+            std::cerr << "PRG read exceeds PRG ROM size, addr: " << std::hex
                       << addr - 0x8000 << std::endl;
             return 0x0;
         } else {
@@ -62,7 +66,7 @@ uint8_t Mapper::NROM::read_prg(uint16_t addr) {
         }
 
     default:
-        std::cout << "Invalid NROM Mapper memory access: $"
+        std::cout << "Invalid NROM Mapper memory access: $" << std::hex
                   << static_cast<int>(addr) << std::endl;
         throw std::runtime_error("Invalid PRG memory access.");
     }
@@ -70,9 +74,17 @@ uint8_t Mapper::NROM::read_prg(uint16_t addr) {
 
 void Mapper::NROM::write_prg(uint16_t addr, uint8_t val) {
     switch (addr) {
-    case 0x6000 ... 0x7FFF: 
-        if ((size_t)(addr - 0x6000) < cartridge.prg_ram.size()) 
-            cartridge.prg_ram[addr - 0x6000] = val; 
+    case 0x4020 ... 0x5FFF:
+        std::cerr << "PRG write to unmapped space: " << std::hex << addr
+                  << std::endl;
+        break;
+    case 0x6000 ... 0x7FFF:
+        if ((size_t)(addr - 0x6000) < cartridge.prg_ram.size())
+            cartridge.prg_ram[addr - 0x6000] = val;
+        break;
+    case 0x8000 ... 0xFFFF:
+        std::cerr << "PRG write to R/O space: " << std::hex << addr
+                  << std::endl;
         break;
     default: throw std::runtime_error("Invalid PRG write addr");
     }

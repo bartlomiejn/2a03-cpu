@@ -156,7 +156,8 @@ void nestest(ExecutionEnvironment &ee) {
         line++;
         if (!std::getline(ifs, line_nestest)) {
             std::cerr << "Nestest.log ended. Check successful. "
-                         "Continuing execution." << std::endl;
+                         "Continuing execution."
+                      << std::endl;
             comp_check = false;
             return;
         }
