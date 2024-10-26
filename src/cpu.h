@@ -2,13 +2,12 @@
 #define INC_2A03_CPU_H
 
 #include <bitfield.h>
-#include <ppu.h>
 
 #include <cstdint>
 
 namespace NES {
 
-class MemoryBus;
+class MemoryBusIntf;
 
 /// Addressing mode for an operation.
 enum AddressingMode {
@@ -49,7 +48,7 @@ bitfield_union(StatusRegister, uint8_t status,
 /// called.
 class CPU {
    public:
-    MemoryBus *bus;
+    NES::MemoryBusIntf *bus;
 
     uint8_t A;         ///< Accumulator
     uint8_t X, Y;      ///< Index registers
@@ -62,7 +61,7 @@ class CPU {
                ///< IRQ after next instruction completes.
     uint32_t cycles;  ///< Cycle counter.
 
-    CPU(MemoryBus *bus, NES::PPU &ppu);
+    CPU(NES::MemoryBusIntf *bus);
 
     /// Does crossing the page boundary result in an additional cycle for
     /// this opcode

@@ -18,9 +18,6 @@ if(CPPCHECK_EXECUTABLE)
     message(STATUS "Found cppcheck")
 endif()
 
-# Project options
-option(2A03_INCLUDE_TESTS "Include tests in the output." FALSE)
-
 # Disable optimizations for GCC debug builds
 if(CMAKE_COMPILER_IS_GNUCC)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -Werror -Wall -fsanitize=address")
@@ -55,8 +52,6 @@ configure_file(${PPU_RDBUF_TESTS_DIR}/test_ppu_read_buffer.nes test_ppu_read_buf
 configure_file(${EXTERNAL_DIR}/DigitalPrimeFBX.pal DigitalPrimeFBX.pal COPYONLY)
 
 add_executable(2a03 ${SOURCES})
-
-list(TRANSFORM SOURCES PREPEND "${CMAKE_SOURCE_DIR}/" OUTPUT_VARIABLE CPPCHECK_SOURCES)
 
 add_custom_target(
     cppcheck

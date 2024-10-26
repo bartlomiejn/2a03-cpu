@@ -1,6 +1,8 @@
 #ifndef INC_2A03_APU_H
 #define INC_2A03_APU_H
 
+#include <cstdint>
+
 namespace NES {
 class APU {
    public:

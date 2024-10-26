@@ -8,6 +8,8 @@ ifeq ($(BIN), nestest)
 	ARGS = -ct 
 else ifeq ($(BIN), pputest)
 	ARGS = -cp
+else ifeq ($(BIN), cputest)
+	ARGS = -cu
 else ifeq ($(BIN), dk)
 	ARGS = -cr DonkeyKong.nes
 else
@@ -22,7 +24,6 @@ $(OUT_DIR):
 binary: $(OUT_DIR)
 	cd $(OUT_DIR) && cmake \
 		-DCMAKE_BUILD_TYPE=Debug \
-		-D2A03_INCLUDE_TESTS=TRUE \
 		-Wall -Werror \
 		$(SRC_DIR)
 	$(MAKE) 2a03 -C $(OUT_DIR)

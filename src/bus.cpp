@@ -9,7 +9,7 @@
 using namespace NES;
 
 MemoryBus::MemoryBus(NES::PPU &_ppu, NES::APU &_apu)
-    : ppu(_ppu), apu(_apu), cpu(nullptr), mapper(nullptr) {
+    : ppu(_ppu), apu(_apu), cpu(nullptr) {
     // Ram state is not consistent on a real machine
     std::fill(ram.begin(), ram.end(), 0x0);
 }

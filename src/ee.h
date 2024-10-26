@@ -11,10 +11,12 @@
 
 const int ntsc_cyc_ratio = 3;
 
+namespace NES {
+
 class ExecutionEnvironment {
    public:
     GFX::Renderer &renderer;
-    NES::MemoryBus &bus;
+    NES::MemoryBusIntf *bus;
     NES::CPU &cpu;
     NES::PPU &ppu;
     NES::SystemLogger &logger;
@@ -27,7 +29,8 @@ class ExecutionEnvironment {
     std::function<void(ExecutionEnvironment &)> post_step_hook;
 
     ExecutionEnvironment() = delete;
-    ExecutionEnvironment(GFX::Renderer &_renderer, NES::MemoryBus &_bus,
+    ExecutionEnvironment(GFX::Renderer &_renderer, 
+                         NES::MemoryBusIntf *_bus,
                          NES::CPU &_cpu, NES::PPU &_ppu,
                          NES::SystemLogger &_logger)
         : renderer(_renderer),
@@ -37,8 +40,12 @@ class ExecutionEnvironment {
           logger(_logger) {}
 
     void power(std::function<void(NES::CPU &, NES::PPU &)> setup_hook) {
+        // PPU /VBL line is connected directly to /NMI
+        ppu.on_nmi_vblank = [&]() { cpu.schedule_nmi(); };
+
         cpu.power();
         ppu.power();
+
         if (setup_hook) setup_hook(cpu, ppu);
     }
 
@@ -46,7 +53,7 @@ class ExecutionEnvironment {
         cartridge = NES::iNESv1::load(rom);
         NES::iNESv1::Mapper::Base *mapper =
             NES::iNESv1::Mapper::mapper(cartridge.value());
-        bus.mapper = mapper;
+        bus->mapper = mapper;
         ppu.mapper = mapper;
     }
 
@@ -71,7 +78,6 @@ class ExecutionEnvironment {
                 stop = stop || renderer.poll_quit();
             } catch (NES::InvalidOpcode &e) {
                 std::cerr << "Unhandled opcode executed." << std::endl;
-                // stop = true;
             }
 
             if (post_step_hook) post_step_hook(*this);
@@ -89,5 +95,7 @@ class ExecutionEnvironment {
         }
     }
 };
+
+} // namespace NES
 
 #endif

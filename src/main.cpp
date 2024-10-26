@@ -7,9 +7,12 @@
 #include <palette.h>
 #include <ppu.h>
 #include <render.h>
-#include <test.h>
-#include <unistd.h>
+#include <test/test.h>
+#include <test/test_cpu.h>
+#include <test/test_ppu.h>
+#include <test/test_nestest.h>
 
+#include <unistd.h>
 #include <cassert>
 #include <chrono>
 #include <cstdlib>
@@ -26,17 +29,19 @@ struct Options {
     bool step_debug = false;
     bool run_nestest = false;
     bool run_ppu_tests = false;
+    bool run_cpu_tests = false;
     std::string rom;
 
     Options(int argc, char *argv[]) {
         int opt;
 
-        while ((opt = getopt(argc, argv, "cdtpr:")) != -1) {
+        while ((opt = getopt(argc, argv, "cdtpur:")) != -1) {
             switch (opt) {
             case 'c': log_steps_to_cerr = true; break;
             case 'd': step_debug = true; break;
             case 't': run_nestest = true; break;
             case 'p': run_ppu_tests = true; break;
+            case 'u': run_cpu_tests = true; break;
             case 'r': rom = optarg; break;
             case '?':
             default:
@@ -55,20 +60,29 @@ struct Options {
     }
 };
 
-GFX::Renderer renderer(NES::ntsc_fb_x, NES::ntsc_fb_y);
-NES::Palette pal("DigitalPrimeFBX.pal");
-NES::PPU ppu(renderer, pal);
-NES::APU apu;
-NES::MemoryBus bus(ppu, apu);
-NES::CPU cpu(&bus, ppu);
-NES::SystemLogger logger(cpu, ppu, bus);
-ExecutionEnvironment ee(renderer, bus, cpu, ppu, logger);
-
 int main(int argc, char *argv[]) {
     Options opts(argc, argv);
+
+    GFX::Renderer renderer(NES::ntsc_fb_x, NES::ntsc_fb_y);
+    NES::Palette pal("DigitalPrimeFBX.pal");
+    NES::PPU ppu(renderer, pal);
+    NES::APU apu;
+    NES::MemoryBusIntf *bus;
+    NES::Test::MemoryBus *mock_bus;
+    if (opts.run_cpu_tests) {
+        mock_bus = new NES::Test::MemoryBus();
+        bus = mock_bus;
+    } else {
+        bus = new NES::MemoryBus(ppu, apu);
+    }
+    NES::CPU cpu(bus);
+    if (!mock_bus)
+        ((NES::MemoryBus*)bus)->cpu = &cpu;
+    NES::SystemLogger logger(cpu, ppu, bus);
+    NES::ExecutionEnvironment ee(renderer, bus, cpu, ppu, logger);
+
     ee.debug = opts.step_debug;
     if (opts.log_steps_to_cerr) logger.instr_ostream = std::cerr;
-
     renderer.setup_window();
 
     if (!opts.rom.empty()) {
@@ -82,7 +96,9 @@ int main(int argc, char *argv[]) {
     } else if (opts.run_nestest) {
         NES::Test::nestest(ee);
     } else if (opts.run_ppu_tests) {
-        NES::Test::ppu_tests(ee);
+        NES::Test::ppu(ee);
+    } else if (opts.run_cpu_tests) {
+        NES::Test::cpu(ee, mock_bus);
     }
 
     return 0;

@@ -75,13 +75,14 @@
 
 using namespace NES;
 
-CPU::CPU(NES::MemoryBus *bus, NES::PPU &ppu) : bus(bus) {
-    bus->cpu = this;
-
-    // PPU /VBL line is connected directly to /NMI
-    ppu.on_nmi_vblank = [this]() { this->schedule_nmi(); };
-
-    power();
+CPU::CPU(NES::MemoryBusIntf *bus) : bus(bus) {
+    A = 0x0;
+    X = 0x0;
+    Y = 0x0;
+    S = 0xFD;
+    P.status = 0x24;
+    cycles = 0;
+    IRQ = NMI = false;
 }
 
 void CPU::power() {

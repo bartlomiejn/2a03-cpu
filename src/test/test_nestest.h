@@ -1,19 +1,17 @@
-#include <ee.h>
-#include <unistd.h>
+#ifndef INC_2A03_TEST_NESTEST_H
+#define INC_2A03_TEST_NESTEST_H
 
 #include <cassert>
-#include <chrono>
-#include <csignal>
-#include <ctime>
 #include <fstream>
 #include <iostream>
 #include <regex>
 #include <string>
 
 namespace NES {
-enum TestState { running = 0x80, reset_required = 0x81 };
 
 namespace Test {
+
+extern std::string gen_logname(std::string prefix);
 
 std::string ltrim(const std::string &str) {
     size_t start = str.find_first_not_of(" \t\n\r\f\v");
@@ -51,18 +49,8 @@ std::string trim_ppu(std::string &line) {
     return std::regex_replace(line, pat, "");
 }
 */
-
-std::string gen_logname(std::string prefix) {
-    auto now = std::chrono::system_clock::now();
-    std::time_t now_time = std::chrono::system_clock::to_time_t(now);
-    std::tm lt = *std::localtime(&now_time);
-    std::stringstream time_s;
-    time_s << std::put_time(&lt, "%d_%H:%M:%S");
-    return std::format("{}_{}.log", prefix, time_s.str());
-}
-
-void test_nestest_diff(std::string &logname) {
-    std::cout << "Running test_nestest_diff" << std::endl;
+void nestest_diff_log(std::string &logname) {
+    std::cout << "Running nestest_diff_log" << std::endl;
 
     std::string linebuf[5] = {""};
     std::string linebuf_nestest[5]{""};
@@ -127,7 +115,7 @@ void nestest(ExecutionEnvironment &ee) {
     std::cout << "Running " << nestest_rom << std::endl;
     std::cout << "Saving logs to: " << ee.logger.log_filename.value()
               << std::endl;
-    std::cout << "Setting up, PC=0xC000, cycles=7." << std::endl;
+    std::cout << "Setting up, PC=0xC000, cycles=7, scan_x=21" << std::endl;
 
     ee.load_iNESv1(nestest_rom);
     ee.power([](NES::CPU &cpu, NES::PPU &ppu) {
@@ -180,10 +168,10 @@ void nestest(ExecutionEnvironment &ee) {
         }
     };
     ee.post_step_hook = [&](auto &ee) {
-        if (ee.bus.read(0x02) != 0x0)  // Some sort of error occured:
+        if (ee.bus->read(0x02) != 0x0)  // Some sort of error occured:
         {
             std::cerr << "Nestest failure code: " << std::hex
-                      << ee.bus.read(0x02) << "." << std::endl;
+                      << ee.bus->read(0x02) << "." << std::endl;
             std::cerr << "Continue with y, stop with n" << std::endl;
             in = 0x0;
             while (in != 'y' && in != 'n') {
@@ -203,34 +191,10 @@ void nestest(ExecutionEnvironment &ee) {
     std::cout << "Saved log to: " << ee.logger.log_filename.value()
               << std::endl;
 
-    NES::Test::test_nestest_diff(ee.logger.log_filename.value());
+    NES::Test::nestest_diff_log(ee.logger.log_filename.value());
 }
 
-void ppu_tests(ExecutionEnvironment &ee) {
-    using namespace NES::iNESv1;
+} // namespace Test
 
-    std::string palette_ram = "palette_ram.nes";
-    ee.logger.log_filename = gen_logname("palette_ram");
-
-    std::cout << "Running " << palette_ram << std::endl;
-    std::cout << "Saving logs to: " << ee.logger.log_filename.value()
-              << std::endl;
-
-    ee.load_iNESv1(palette_ram);
-    ee.power(nullptr);
-    ee.pre_step_hook = [](auto &ee) { ee.logger.log(); };
-    ee.post_step_hook = [](auto &ee) {
-        if (ee.cpu.PC == 0xE412) {  // Failure?
-            std::cerr << "PC == E412. Terminating" << std::endl;
-            ee.stop = true;
-        }
-    };
-
-    std::cout << "Starting execution." << std::endl;
-    ee.run();
-    std::cout << "Finished execution. Saving log to file." << std::endl;
-    ee.logger.save();
-}
-
-};  // namespace Test
-}  // namespace NES
+} // namespace NES
+#endif

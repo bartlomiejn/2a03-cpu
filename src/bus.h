@@ -10,20 +10,33 @@
 #include <functional>
 #include <optional>
 
-static const int internal_ram_sz = 0x800;  ///< NES Internal RAM size.
-
 namespace NES {
 
 class CPU;
 
-class MemoryBus {
+class MemoryBusIntf {
    public:
+    iNESv1::Mapper::Base *mapper = nullptr;    
+
+    /// Reads 8 bits of memory at the provided address.
+    /// \param addr Address to read from.
+    /// \return Byte that has been read.
+    virtual uint8_t read(uint16_t addr) = 0;
+
+    /// Writes a value to the provided address.
+    /// \param addr Address to write the value to.
+    /// \param val Value to write.
+    virtual void write(uint16_t addr, uint8_t val) = 0;
+};
+
+class MemoryBus : public MemoryBusIntf {
+   public:
+    static const int ram_size = 0x800;  ///< NES Internal RAM size.
+
     NES::PPU &ppu;
     NES::APU &apu;
     NES::CPU *cpu;
-    iNESv1::Mapper::Base *mapper;              ///< Cartridge mapper, if it's
-                                               ///< inserted.
-    std::array<uint8_t, internal_ram_sz> ram;  ///< Internal RAM
+    std::array<uint8_t, ram_size> ram;  ///< Internal RAM
 
     /// Initializes the memory bus.
     explicit MemoryBus(NES::PPU &_ppu, NES::APU &_apu);
@@ -31,20 +44,12 @@ class MemoryBus {
     /// Reads 8 bits of memory at the provided address.
     /// \param addr Address to read from.
     /// \return Byte that has been read.
-    uint8_t read(uint16_t addr);
+    uint8_t read(uint16_t addr) final;
 
     /// Writes a value to the provided address.
     /// \param addr Address to write the value to.
     /// \param val Value to write.
-    void write(uint16_t addr, uint8_t val);
-
-    /// Schedule DMA on the CPU
-    /// \param uint8_t Page to transfer
-    std::function<void(uint8_t)> on_cpu_oamdma;
-
-    /// Schedule NMI on the CPU, NMI will be handled at the end of the next
-    /// instruction cycle
-    std::function<void(void)> cpu_schedule_nmi;
+    void write(uint16_t addr, uint8_t val) final;
 };
 
 class MissingCartridge {};

@@ -20,10 +20,7 @@ class SystemLogger {
     /// \param ppu PPU instance to use.
     /// \param bus BUS instance to get opcode/operand data from.
     /// Should be the same instance as the one used by the CPU.
-    SystemLogger(NES::CPU &cpu, NES::PPU &ppu, NES::MemoryBus &bus);
-
-    /// Two 8-bit reads on the bus with behaviour same as CPU
-    uint16_t bus_read16(uint16_t addr, bool zp);
+    SystemLogger(NES::CPU &cpu, NES::PPU &ppu, NES::MemoryBusIntf *bus);
 
     /// If set writes every line on each log() call to this stream
     std::optional<std::reference_wrapper<std::ostream>> instr_ostream;
@@ -36,10 +33,13 @@ class SystemLogger {
     /// Dumps the accumulated log to a file.
     void save();
 
+    /// Two 8-bit reads on the bus with behaviour same as CPU
+    uint16_t bus_read16(uint16_t addr, bool zp);
+
    protected:
     NES::CPU &cpu;                  ///< CPU whose state is logged.
     NES::PPU &ppu;                  ///< PPU whose state is logged.
-    NES::MemoryBus &bus;            ///< Bus whose devices are logged.
+    NES::MemoryBusIntf *bus;            ///< Bus whose devices are logged.
     std::vector<std::string> logs;  ///< Contains logs of CPU state
                                     ///< on each `log` call.
 
