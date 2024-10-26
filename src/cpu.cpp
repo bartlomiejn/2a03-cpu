@@ -1123,7 +1123,9 @@ void CPU::ISC(AddressingMode mode) {
 void CPU::SLO(AddressingMode mode) {
     // ASL
     uint16_t addr = operand_addr(mode);
-    uint8_t result = shift_l(read(addr));
+    uint8_t op = read(addr);
+    write(addr, op);
+    uint8_t result = shift_l(op);
     write(addr, result);
 
     // ORA

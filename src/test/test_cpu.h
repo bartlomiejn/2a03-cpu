@@ -133,9 +133,9 @@ template<typename T, typename U>
 bool assert_equal(const T& a, const U& b, const std::string& a_str, 
                   const std::string& b_str) {
     if (!(a == b)) {
-        std::cerr << "ASSERTION FAILED: " << a_str << " == " << b_str << "\n"
-                  << "  " << a_str << " = " << a << "\n"
-                  << "  " << b_str << " = " << b << "\n";
+        std::cerr << std::format("ASSERTION FAILED: {} == {}\n", a_str, b_str)
+                  << std::format("  {} = 0x{:02x}\n", a_str, a)
+                  << std::format("  {} = 0x{:02x}\n", b_str, b);
         return false;
     } 
     return true;
