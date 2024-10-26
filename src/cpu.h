@@ -78,7 +78,7 @@ class CPU {
 
     /// Executes the next instruction.
     /// \return Cycles executed
-    uint8_t execute();
+    uint16_t execute();
 
     /// Schedules a DMA transfer
     /// \value page Page to copy
@@ -399,9 +399,14 @@ class CPU {
     // M = C -> [76543210] -> C,
     // A + M + C -> A, C
     void RRA(AddressingMode mode);
+
+    // Halt execution
+    void JAM(uint8_t opcode);
 };
 
 class InvalidOpcode {};
+class JAM {};
+
 }  // namespace NES
 
 #endif  // INC_2A03_CPU_H

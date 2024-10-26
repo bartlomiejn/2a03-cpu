@@ -107,10 +107,11 @@ void CPU::power() {
 
 void CPU::reset() { interrupt(i_reset); }
 
-uint8_t CPU::execute() {
+uint16_t CPU::execute() {
     uint32_t initial_cyc = cycles;
-    uint16_t initial_pc = PC;
-    switch (read(PC++)) {
+    //uint16_t initial_pc = PC;
+    uint8_t opcode = read(PC++);
+    switch (opcode) {
     case 0x0: BRK(); break;
     case 0x10: BPL(); break;
     case 0x30: BMI(); break;
@@ -359,10 +360,22 @@ uint8_t CPU::execute() {
     case 0x7C:
     case 0xDC:
     case 0xFC: NOP_absx(); break;
+    case 0x02:
+    case 0x12:
+    case 0x22:
+    case 0x32:
+    case 0x42:
+    case 0x52:
+    case 0x62:
+    case 0x72:
+    case 0x92:
+    case 0xB2:
+    case 0xD2:
+    case 0xF2: JAM(opcode); throw NES::JAM(); break;
     default:
         std::cerr << "Unhandled opcode: " << std::hex
-                  << static_cast<int>(read(initial_pc)) << std::endl;
-        throw InvalidOpcode();
+                  << static_cast<int>(opcode) << std::endl;
+        throw NES::InvalidOpcode();
     }
 
     if (NMI) {
@@ -1192,4 +1205,17 @@ void CPU::RRA(AddressingMode mode) {
     case ind_idx_y: cycles += 8; break;
     default: std::cerr << "Invalid addressing mode for RRA." << std::endl;
     }
+}
+
+void CPU::JAM(uint8_t opcode) {
+    read(PC);
+    read(0xffff); 
+    read(0xfffe); 
+    read(0xfffe); 
+    read(0xffff); 
+    read(0xffff); 
+    read(0xffff); 
+    read(0xffff); 
+    read(0xffff); 
+    read(0xffff); 
 }

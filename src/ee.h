@@ -77,12 +77,15 @@ class ExecutionEnvironment {
 
             // TODO: Synchronize CPU and PPU
             try {
-                uint8_t cpu_cycs = cpu.execute();
+                uint16_t cpu_cycs = cpu.execute();
                 if (!disable_ppu)
                     ppu.execute(ntsc_cyc_ratio * cpu_cycs);
                 stop = stop || renderer.poll_quit();
             } catch (NES::InvalidOpcode &e) {
                 std::cerr << "Unhandled opcode executed." << std::endl;
+            } catch (NES::JAM &e) {
+                // TODO: Actually jam and handle reset
+
             }
 
             if (post_step_hook) post_step_hook(*this);
