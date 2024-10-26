@@ -26,6 +26,7 @@ endif(CMAKE_COMPILER_IS_GNUCC)
 
 set(EXTERNAL_DIR external)
 set(NES_TEST_DIR external/nestest)
+set(CPU_TEST_DIR external/nes6502) # Github: SingleStepTests/65x02, MIT License
 set(TEST_ROMS_DIR external/nes-test-roms)
 set(PPU_TESTS_DIR ${TEST_ROMS_DIR}/blargg_ppu_tests_2005.09.15b)
 set(PPU_RDBUF_TESTS_DIR ${TEST_ROMS_DIR}/ppu_read_buffer)
@@ -42,7 +43,7 @@ set(SOURCES
 include_directories(src)
 include_directories(${SDL2_INCLUDE_DIRS})
 
-# Copy test ROMs to output dir
+# Copy test ROMs and data to output dir
 configure_file(${NES_TEST_DIR}/nestest.log nestest.log COPYONLY)
 configure_file(${NES_TEST_DIR}/nestest.nes nestest.nes COPYONLY)
 configure_file(${PPU_TESTS_DIR}/palette_ram.nes palette_ram.nes COPYONLY)
@@ -52,6 +53,15 @@ configure_file(${PPU_RDBUF_TESTS_DIR}/test_ppu_read_buffer.nes test_ppu_read_buf
 configure_file(${EXTERNAL_DIR}/DigitalPrimeFBX.pal DigitalPrimeFBX.pal COPYONLY)
 
 add_executable(2a03 ${SOURCES})
+
+# CPU single instruction test specs
+add_custom_command(
+    TARGET 2a03 POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/${CPU_TEST_DIR}"
+        "${CMAKE_BINARY_DIR}/nes6502"
+    COMMENT "Copying 65x02 nes6502 tests to output directory"
+)
 
 add_custom_target(
     cppcheck
