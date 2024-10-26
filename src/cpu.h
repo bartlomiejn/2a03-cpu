@@ -60,6 +60,7 @@ class CPU {
     bool NMI;  ///< Non-maskable interrupt line. Setting to true will trigger an
                ///< IRQ after next instruction completes.
     uint32_t cycles;  ///< Cycle counter.
+    uint8_t opcode; ///< Current opcode.
 
     CPU(NES::MemoryBusIntf *bus);
 
@@ -399,6 +400,10 @@ class CPU {
     // M = C -> [76543210] -> C,
     // A + M + C -> A, C
     void RRA(AddressingMode mode);
+
+    // AND + set C as ASL
+    // A AND oper, bit(7) -> C
+    void ANC(AddressingMode mode);
 
     // Halt execution
     void JAM(uint8_t opcode);

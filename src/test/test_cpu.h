@@ -75,32 +75,32 @@ std::string get_testspec_name(uint8_t index) {
 
 void print_test_case(const TestCase &tc) {
     std::cout << "TEST CASE: " << tc.name << "\n";
-    std::cout << std::format("Initial CPU: PC=0x{:04x} S=0x{:02x} A=0x{:02x} "
-                             "X=0x{:02x} Y={:02x} P={:02x}\n", tc.initial.pc,
+    std::cout << std::format("Initial CPU: PC=0x{:04X} S=0x{:02X} A=0x{:02X} "
+                             "X=0x{:02X} Y={:02X} P={:02X}\n", tc.initial.pc,
                              tc.initial.s, tc.initial.a, tc.initial.x, 
                              tc.initial.y, tc.initial.p);
 
     std::cout << "Initial RAM:" << "\n";
     for (const auto &ram : tc.initial.ram) {
-        std::cout << std::format("Address: 0x{:04x} Value: 0x{:02x}\n",
+        std::cout << std::format("Address: 0x{:04X} Value: 0x{:02X}\n",
                                  ram.address, ram.value);
     }
 
-    std::cout << std::format("Final CPU: PC=0x{:04x} S=0x{:02x} A=0x{:02x} "
-                             "X=0x{:02x} Y={:02x} P={:02x}\n", tc.final.pc,
+    std::cout << std::format("Final CPU: PC=0x{:04X} S=0x{:02X} A=0x{:02X} "
+                             "X=0x{:02X} Y={:02X} P={:02X}\n", tc.final.pc,
                              tc.final.s, tc.final.a, tc.final.x, 
                              tc.final.y, tc.final.p);
 
     std::cout << "Final RAM:" << "\n";
     for (const auto &ram : tc.final.ram) {
-        std::cout << std::format("Address: 0x{:04x} Value: 0x{:02x}\n",
+        std::cout << std::format("Address: 0x{:04X} Value: 0x{:02X}\n",
                                  ram.address, ram.value);
 
     }
 
     std::cout << "Memory accesses:" << "\n";
     for (const auto &cycle : tc.cycles) {
-        std::cout << std::format("Addr: 0x{:04x} Value: 0x{:02x} Operation: "
+        std::cout << std::format("Addr: 0x{:04X} Value: 0x{:02X} Operation: "
                                  "{}\n", cycle.address, cycle.value, 
                                  cycle.operation);
     }
@@ -110,20 +110,20 @@ void print_actual_state(NES::ExecutionEnvironment &ee,
                         NES::Test::MemoryBus *bus, const TestCase &tc) {
     std::cout << "ACTUAL STATE" << std::endl;
     
-    std::cout << std::format("Actual CPU: PC=0x{:04x} S=0x{:02x} A=0x{:02x} "
-                             "X=0x{:02x} Y={:02x} P={:02x}\n", ee.cpu.PC,
+    std::cout << std::format("Actual CPU: PC=0x{:04X} S=0x{:02X} A=0x{:02X} "
+                             "X=0x{:02X} Y={:02X} P={:02X}\n", ee.cpu.PC,
                              ee.cpu.S, ee.cpu.A, ee.cpu.X, ee.cpu.Y, 
                              ee.cpu.P.status);
 
     std::cout << "Actual RAM:" << std::endl;
     for (const auto &ram : tc.final.ram) {
-        std::cout << std::format("Address: 0x{:04x} Value: 0x{:02x}\n",
+        std::cout << std::format("Address: 0x{:04X} Value: 0x{:02X}\n",
                                  ram.address, bus->mock_read(ram.address));
     }
 
     std::cout << "Actual memory accesses:" << std::endl;
     for (const auto &op : bus->ops) {
-        std::cout << std::format("Addr: 0x{:04x} Value: 0x{:02x} Operation: "
+        std::cout << std::format("Addr: 0x{:04X} Value: 0x{:02X} Operation: "
                                  "{}\n", op.addr, op.val, 
                                  (op.read ? "read" : "write"));
     }
@@ -134,8 +134,8 @@ bool assert_equal(const T& a, const U& b, const std::string& a_str,
                   const std::string& b_str) {
     if (!(a == b)) {
         std::cerr << std::format("ASSERTION FAILED: {} == {}\n", a_str, b_str)
-                  << std::format("  {} = 0x{:02x}\n", a_str, a)
-                  << std::format("  {} = 0x{:02x}\n", b_str, b);
+                  << std::format("  {} = 0x{:02X}\n", a_str, a)
+                  << std::format("  {} = 0x{:02X}\n", b_str, b);
         return false;
     } 
     return true;

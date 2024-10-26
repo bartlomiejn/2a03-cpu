@@ -109,8 +109,7 @@ void CPU::reset() { interrupt(i_reset); }
 
 uint16_t CPU::execute() {
     uint32_t initial_cyc = cycles;
-    //uint16_t initial_pc = PC;
-    uint8_t opcode = read(PC++);
+    opcode = read(PC++);
     switch (opcode) {
     case 0x0: BRK(); break;
     case 0x10: BPL(); break;
@@ -317,6 +316,7 @@ uint16_t CPU::execute() {
     case 0x7B: RRA(abs_y); break;
     case 0x63: RRA(idx_ind_x); break;
     case 0x73: RRA(ind_idx_y); break;
+    case 0x0B: ANC(imm); break;
     /* 1-byte NOPs */
     case 0x1A:
     case 0x3A:
@@ -373,8 +373,6 @@ uint16_t CPU::execute() {
     case 0xD2:
     case 0xF2: JAM(opcode); throw NES::JAM(); break;
     default:
-        std::cerr << "Unhandled opcode: " << std::hex
-                  << static_cast<int>(opcode) << std::endl;
         throw NES::InvalidOpcode();
     }
 
@@ -486,25 +484,36 @@ bool CPU::idx_abs_crossing_cycle(uint8_t opcode) {
 }
 
 uint16_t CPU::operand_addr(AddressingMode mode) {
-    uint8_t opc = 0x0;
-    uint16_t addr = 0x0;
+    uint16_t addr = 0x0; 
+    uint8_t addr_h, addr_l = 0x0;
+    uint8_t i = 0x0;
     switch (mode) {
     case abs:
         addr = read16(PC);
         PC += 2;
         break;
     case abs_x:
-        opc = read(PC - 1);
-        addr = read16(PC) + X;
+        addr_l = read(PC);
+        addr_h = read(PC+1);
+        addr = ((addr_h << 8) | addr_l) + X;
+        if (!is_same_page(addr-X, addr))
+            read((addr_h << 8) | (uint8_t)(addr_l+X));
+        else
+            read(addr);
         PC += 2;
-        if (idx_abs_crossing_cycle(opc) && !is_same_page(addr - X, addr))
+        if (idx_abs_crossing_cycle(opcode) && !is_same_page(addr - X, addr))
             cycles++;
         break;
     case abs_y:
-        opc = read(PC - 1);
-        addr = read16(PC) + Y;
+        addr_l = read(PC);
+        addr_h = read(PC+1);
+        addr = ((addr_h << 8) | addr_l) + Y;
+        if (!is_same_page(addr-Y, addr))
+            read((addr_h << 8) | (uint8_t)(addr_l+Y));
+        else
+            read(addr);
         PC += 2;
-        if (idx_abs_crossing_cycle(opc) && !is_same_page(addr - Y, addr))
+        if (idx_abs_crossing_cycle(opcode) && !is_same_page(addr - Y, addr))
             cycles++;
         break;
     case imm:
@@ -516,25 +525,36 @@ uint16_t CPU::operand_addr(AddressingMode mode) {
         PC++;
         break;
     case zp_x:
-        addr = (read(PC) + X) % 0x100;
+        i = read(PC);
+        read(i);
+        addr = (i + X) % 0x100;
         PC++;
         break;
     case zp_y:
-        addr = (read(PC) + Y) % 0x100;
+        i = read(PC);
+        read(i);
+        addr = (i + Y) % 0x100;
         PC++;
         break;
     case idx_ind_x:
-        uint8_t i;
         i = read(PC);
         read(i);
-        addr = read16((i + X) % 0x100, true);
+        addr_l = read((i+X) % 0x100);
+        addr_h = read((i+X+1) % 0x100);
+        addr = (addr_h << 8) | addr_l;
         PC++;
         break;
     case ind_idx_y:
-        opc = read(PC - 1);
-        addr = read16(read(PC), true) + Y;
+        i = read(PC);
+        addr_l = read(i);
+        addr_h = read((uint16_t)(uint8_t)(i+1));
+        addr = ((addr_h << 8) | addr_l) + Y;
+        if (!is_same_page(addr - Y, addr)) 
+            read((addr_h << 8) | (uint8_t)(addr_l + Y));
+        else 
+            read(addr);
         PC++;
-        if (idx_abs_crossing_cycle(opc) && !is_same_page(addr - Y, addr))
+        if (idx_abs_crossing_cycle(opcode) && !is_same_page(addr - Y, addr))
             cycles++;
         break;
     case ind:
@@ -760,7 +780,9 @@ void CPU::ASL_A() {
 
 void CPU::ASL(AddressingMode mode) {
     uint16_t addr = operand_addr(mode);
-    write(addr, shift_l(read(addr)));
+    uint8_t op = read(addr);
+    write(addr, op);
+    write(addr, shift_l(op));
     switch (mode) {
     case zp: cycles += 5; break;
     case zp_x: cycles += 6; break;
@@ -1016,6 +1038,7 @@ void CPU::PH(uint8_t value) {
 }
 
 void CPU::PH(const StatusRegister &p) {
+    read(PC);
     write((uint16_t)(0x100 + S), (uint8_t)(p.status | 0x10));
     S--;
     cycles += 3;
@@ -1207,6 +1230,11 @@ void CPU::RRA(AddressingMode mode) {
     case ind_idx_y: cycles += 8; break;
     default: std::cerr << "Invalid addressing mode for RRA." << std::endl;
     }
+}
+
+void CPU::ANC(AddressingMode mode) {
+    AND(imm);
+    P.C = (bool)(A & 0x80);
 }
 
 void CPU::JAM(uint8_t opcode) {
