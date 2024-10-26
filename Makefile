@@ -32,7 +32,7 @@ run: binary
 	cd $(OUT_DIR) && ./2a03 $(ARGS)
 
 debug: binary
-	cd $(OUT_DIR) && $(CXX_DEBUG) -ex "b main" --args ./2a03 $(ARGS)
+	cd $(OUT_DIR) && $(CXX_DEBUG) --args ./2a03 $(ARGS)
 
 vg: binary
 	cd $(OUT_DIR) && valgrind --tool=memcheck --leak-check=full -s \

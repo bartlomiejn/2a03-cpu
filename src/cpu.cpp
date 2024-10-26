@@ -380,9 +380,8 @@ uint8_t CPU::execute() {
 }
 
 void CPU::interrupt(NES::Interrupt type) {
-    std::cerr << "CPU::interrupt " << type << std::endl;
     if (type != i_reset) {
-        PH((uint8_t)PC >> 8);
+        PH((uint8_t)(PC >> 8));
         PH((uint8_t)PC);
         PH(type == i_brk ? P.status | 0x10 : P.status);
     } else {
@@ -592,7 +591,7 @@ void CPU::set_NZ(uint8_t value) {
 }
 
 void CPU::BRK() {
-    PC++;
+    read(PC++);
     interrupt(i_brk);
 }
 

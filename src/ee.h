@@ -24,6 +24,8 @@ class ExecutionEnvironment {
 
     bool debug = false;
     bool stop = false;
+    bool disable_ppu = false;
+    bool run_single_step = false;
 
     std::function<void(ExecutionEnvironment &)> pre_step_hook;
     std::function<void(ExecutionEnvironment &)> post_step_hook;
@@ -39,12 +41,14 @@ class ExecutionEnvironment {
           ppu(_ppu),
           logger(_logger) {}
 
-    void power(std::function<void(NES::CPU &, NES::PPU &)> setup_hook) {
+    void power(std::function<void(NES::CPU &, NES::PPU &)> setup_hook) { 
         // PPU /VBL line is connected directly to /NMI
-        ppu.on_nmi_vblank = [&]() { cpu.schedule_nmi(); };
+        if (!disable_ppu)
+            ppu.on_nmi_vblank = [&]() { cpu.schedule_nmi(); };
 
         cpu.power();
-        ppu.power();
+        if (!disable_ppu)
+            ppu.power();
 
         if (setup_hook) setup_hook(cpu, ppu);
     }
@@ -74,13 +78,18 @@ class ExecutionEnvironment {
             // TODO: Synchronize CPU and PPU
             try {
                 uint8_t cpu_cycs = cpu.execute();
-                ppu.execute(ntsc_cyc_ratio * cpu_cycs);
+                if (!disable_ppu)
+                    ppu.execute(ntsc_cyc_ratio * cpu_cycs);
                 stop = stop || renderer.poll_quit();
             } catch (NES::InvalidOpcode &e) {
                 std::cerr << "Unhandled opcode executed." << std::endl;
             }
 
             if (post_step_hook) post_step_hook(*this);
+
+            if (run_single_step) {
+                return;
+            }
 
             if (debug) {
                 char in = 0x0;
