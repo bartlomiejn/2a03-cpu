@@ -19,6 +19,8 @@ public:
     std::array<uint8_t, ram_size> ram = {0}; 
     std::vector<BusAccess> ops;
 
+    ~MemoryBus() = default;
+
     uint8_t read(uint16_t addr) {
         ops.push_back(BusAccess(addr, ram[addr], true)); 
         return ram[addr];

@@ -42,6 +42,7 @@ set(SOURCES
 
 include_directories(src)
 include_directories(${SDL2_INCLUDE_DIRS})
+include_directories(external/nlohmann_json/single_include/nlohmann)
 
 # Copy test ROMs and data to output dir
 configure_file(${NES_TEST_DIR}/nestest.log nestest.log COPYONLY)

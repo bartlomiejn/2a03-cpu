@@ -18,6 +18,8 @@ class MemoryBusIntf {
    public:
     iNESv1::Mapper::Base *mapper = nullptr;    
 
+    virtual ~MemoryBusIntf() = default;
+
     /// Reads 8 bits of memory at the provided address.
     /// \param addr Address to read from.
     /// \return Byte that has been read.
