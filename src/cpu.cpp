@@ -511,7 +511,10 @@ uint16_t CPU::operand_addr(AddressingMode mode) {
         PC++;
         break;
     case idx_ind_x:
-        addr = read16((read(PC) + X) % 0x100, true);
+        uint8_t i;
+        i = read(PC);
+        read(i);
+        addr = read16((i + X) % 0x100, true);
         PC++;
         break;
     case ind_idx_y:

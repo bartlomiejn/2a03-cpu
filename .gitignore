@@ -2,4 +2,5 @@ cmake-build-debug
 .idea
 external/*.nes
 **/*.swp
+**/*.swo
 output
