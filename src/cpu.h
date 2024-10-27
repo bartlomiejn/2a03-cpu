@@ -29,7 +29,7 @@ enum Interrupt { i_irq, i_nmi, i_reset, i_brk };
 
 /// 2A03 status register bitfield union representation.
 bitfield_union(StatusRegister, uint8_t status,
-               bool C : 1;     ///< Carry. Set if the result value is greater
+               bool C : 1;     ///< (bit0) Carry. Set if the result value is greater
                                ///< than 0xFF.
                bool Z : 1;     ///< Zero. Set if result value is 0.
                bool I : 1;     ///< Interrupt disable
@@ -401,9 +401,15 @@ class CPU {
     // A + M + C -> A, C
     void RRA(AddressingMode mode);
 
+    // AND oper + LSR
+    void ALR();
+
+    // AND oper + ROR
+    void ARR();
+
     // AND + set C as ASL
     // A AND oper, bit(7) -> C
-    void ANC(AddressingMode mode);
+    void ANC();
 
     // Halt execution
     void JAM(uint8_t opcode);

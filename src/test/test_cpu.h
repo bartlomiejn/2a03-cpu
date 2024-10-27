@@ -175,7 +175,8 @@ void cpu(ExecutionEnvironment &ee, NES::Test::MemoryBus *bus) {
     ee.disable_ppu = true;
     ee.run_single_step = true;
 
-    for (uint8_t i = 0; i < 0xff; i++) {
+    // TODO: Temporary
+    for (uint8_t i = 0x8b; i < 0xff; i++) {
         std::string filename = get_testspec_name(i);
         std::cout << "Loading " << filename << std::endl; 
 

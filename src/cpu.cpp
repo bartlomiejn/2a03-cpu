@@ -302,13 +302,6 @@ uint16_t CPU::execute() {
     case 0x3B: RLA(abs_y); break;
     case 0x23: RLA(idx_ind_x); break;
     case 0x33: RLA(ind_idx_y); break;
-    case 0x47: SRE(zp); break;
-    case 0x57: SRE(zp_x); break;
-    case 0x4F: SRE(abs); break;
-    case 0x5F: SRE(abs_x); break;
-    case 0x5B: SRE(abs_y); break;
-    case 0x43: SRE(idx_ind_x); break;
-    case 0x53: SRE(ind_idx_y); break;
     case 0x67: RRA(zp); break;
     case 0x77: RRA(zp_x); break;
     case 0x6F: RRA(abs); break;
@@ -316,7 +309,17 @@ uint16_t CPU::execute() {
     case 0x7B: RRA(abs_y); break;
     case 0x63: RRA(idx_ind_x); break;
     case 0x73: RRA(ind_idx_y); break;
-    case 0x0B: ANC(imm); break;
+    case 0x47: SRE(zp); break;
+    case 0x57: SRE(zp_x); break;
+    case 0x4F: SRE(abs); break;
+    case 0x5F: SRE(abs_x); break;
+    case 0x5B: SRE(abs_y); break;
+    case 0x43: SRE(idx_ind_x); break;
+    case 0x53: SRE(ind_idx_y); break;
+    case 0x4B: ALR(); break;
+    case 0x6B: ARR(); break;
+    case 0x0B:
+    case 0x2B: ANC(); break;
     /* 1-byte NOPs */
     case 0x1A:
     case 0x3A:
@@ -691,7 +694,9 @@ void CPU::JMP(AddressingMode mode) {
         l_addr = read16(PC);
         h_addr = (l_addr % 0x100 == 0xFF) ? (uint16_t)(l_addr - l_addr % 0x100)
                                           : (uint16_t)(l_addr + 1);
-        PC = (uint16_t)(read(h_addr)) << 8 | read(l_addr);
+        l_addr = read(l_addr);
+        h_addr = read(h_addr);
+        PC = (uint16_t)h_addr << 8 | l_addr;
         cycles += 5;
         break;
     default:
@@ -701,28 +706,40 @@ void CPU::JMP(AddressingMode mode) {
 
 void CPU::JSR() {
     // JSR return address should be the last byte of the 3-byte JSR instr.
-    auto return_addr = (uint16_t)(PC + 1);
+    uint8_t addr_l, addr_h = 0x0;
+    uint16_t return_addr = (uint16_t)(PC + 1);
+
+    addr_l = read(PC);
+
+    read((uint16_t)(0x100 + S));
     write((uint16_t)(0x100 + S), (uint8_t)(return_addr >> 8));
     S--;
     write((uint16_t)(0x100 + S), (uint8_t)return_addr);
     S--;
-    PC = read16(PC);
+    
+    addr_h = read(PC+1);
+
+    PC = ((uint16_t)addr_h << 8) | addr_l;
     cycles += 6;
 }
 
 void CPU::RTS() {
     uint8_t l_addr, h_addr;
-
+    read(PC);
+    read((uint16_t)(0x100 + S));
     S++;
     l_addr = read((uint16_t)(0x100 + S));
     S++;
     h_addr = read((uint16_t)(0x100 + S));
-    PC = (h_addr << 8 | l_addr) + (uint8_t)0x1;
+    read(h_addr << 8 | l_addr);
+    PC = (h_addr << 8 | l_addr) + 0x1;
     cycles += 6;
 }
 
 void CPU::RTI() {
     uint8_t l_addr, h_addr;
+    read(PC);
+    read((uint16_t)(0x100 + S));
     S++;
     uint8_t newp = read((uint16_t)(0x100 + S));
     P.N = bool(newp & 0x80);
@@ -875,7 +892,9 @@ void CPU::LSR_A() {
 
 void CPU::LSR(AddressingMode mode) {
     uint16_t addr = operand_addr(mode);
-    uint8_t result = shift_r(read(addr));
+    uint8_t op = read(addr);
+    uint8_t result = shift_r(op);
+    write(addr, op);
     write(addr, result);
 
     switch (mode) {
@@ -911,7 +930,9 @@ void CPU::ROL_A() {
 
 void CPU::ROL(AddressingMode mode) {
     uint16_t addr = operand_addr(mode);
-    write(addr, rot_l(read(addr)));
+    uint8_t op = read(addr);
+    write(addr, op);
+    write(addr, rot_l(op));
     switch (mode) {
     case zp: cycles += 5; break;
     case zp_x: cycles += 6; break;
@@ -928,7 +949,9 @@ void CPU::ROR_A() {
 
 void CPU::ROR(AddressingMode mode) {
     uint16_t addr = operand_addr(mode);
-    write(addr, rot_r(read(addr)));
+    uint8_t op = read(addr);
+    write(addr, op);
+    write(addr, rot_r(op));
     switch (mode) {
     case zp: cycles += 5; break;
     case zp_x: cycles += 6; break;
@@ -1032,6 +1055,7 @@ void CPU::IN(uint8_t &reg) {
 // Stack
 
 void CPU::PH(uint8_t value) {
+    read(PC);
     write((uint16_t)(0x100 + S), value);
     S--;
     cycles += 3;
@@ -1045,6 +1069,8 @@ void CPU::PH(const StatusRegister &p) {
 }
 
 void CPU::PL(uint8_t &reg_to) {
+    read(PC);
+    read(0x100 + S);
     S++;
     uint8_t operand = read((uint16_t)(0x100 + S));
     reg_to = operand;
@@ -1053,6 +1079,8 @@ void CPU::PL(uint8_t &reg_to) {
 }
 
 void CPU::PL(StatusRegister &p) {
+    read(PC);
+    read(0x100 + S);
     S++;
     uint8_t newp = read((uint16_t)(0x100 + S));
     p.N = bool(newp & 0x80);
@@ -1061,6 +1089,7 @@ void CPU::PL(StatusRegister &p) {
     p.I = bool(newp & 0x4);
     p.Z = bool(newp & 0x2);
     p.C = bool(newp & 0x1);
+
     cycles += 4;
 }
 
@@ -1147,8 +1176,8 @@ void CPU::SLO(AddressingMode mode) {
     // ASL
     uint16_t addr = operand_addr(mode);
     uint8_t op = read(addr);
-    write(addr, op);
     uint8_t result = shift_l(op);
+    write(addr, op);
     write(addr, result);
 
     // ORA
@@ -1170,7 +1199,9 @@ void CPU::SLO(AddressingMode mode) {
 void CPU::RLA(AddressingMode mode) {
     // ROL
     uint16_t addr = operand_addr(mode);
-    uint8_t result = rot_l(read(addr));
+    uint8_t op = read(addr);
+    uint8_t result = rot_l(op);
+    write(addr, op);
     write(addr, result);
 
     // AND
@@ -1192,7 +1223,9 @@ void CPU::RLA(AddressingMode mode) {
 void CPU::SRE(AddressingMode mode) {
     // LSR
     uint16_t addr = operand_addr(mode);
-    uint8_t result = shift_r(read(addr));
+    uint8_t op = read(addr);
+    uint8_t result = shift_r(op);
+    write(addr, op);
     write(addr, result);
 
     // EOR
@@ -1214,7 +1247,9 @@ void CPU::SRE(AddressingMode mode) {
 void CPU::RRA(AddressingMode mode) {
     // ROR
     uint16_t addr = operand_addr(mode);
-    uint8_t result = rot_r(read(addr));
+    uint8_t op = read(addr);
+    uint8_t result = rot_r(op);
+    write(addr, op);
     write(addr, result);
 
     // ADC
@@ -1232,7 +1267,25 @@ void CPU::RRA(AddressingMode mode) {
     }
 }
 
-void CPU::ANC(AddressingMode mode) {
+void CPU::ALR() {
+    A &= get_operand(imm);
+    P.C = (bool)(A & 0x1);
+    A = shift_r(A);
+    set_NZ(A);
+    cycles += 2;
+}
+
+void CPU::ARR() { 
+    uint8_t op = get_operand(imm);
+    A &= op;
+    A = P.C << 7 | A >> 1;
+    set_NZ(A);
+    P.C = bool((A >> 6) & 0x1);
+    P.V = bool(P.C ^ ((A >> 5) & 0x1));
+    cycles += 2;
+}
+
+void CPU::ANC() {
     AND(imm);
     P.C = (bool)(A & 0x80);
 }
