@@ -176,7 +176,7 @@ void cpu(ExecutionEnvironment &ee, NES::Test::MemoryBus *bus) {
     ee.run_single_step = true;
 
     // TODO: Revert once done
-    for (uint8_t i = 0x0; i < 0xff; i++) {
+    for (uint8_t i = 0x0; i <= 0xff; i++) {
         if (i == 0x93 || i == 0x9b || i == 0x9c || i == 0x9e || i == 0x9f
             || i == 0xbb || i == 0xcb) {
             std::cerr << "Disabled tests for 0x" << std::hex 
