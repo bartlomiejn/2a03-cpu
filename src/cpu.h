@@ -346,7 +346,7 @@ class CPU {
     // Stack
 
     /// Push value to stack.
-    void PH(uint8_t value);
+    void PH(uint8_t value, uint8_t do_read = true);
 
     /// Push P to stack.
     void PH(const StatusRegister &p);

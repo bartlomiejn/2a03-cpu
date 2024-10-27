@@ -404,9 +404,9 @@ uint16_t CPU::execute() {
 
 void CPU::interrupt(NES::Interrupt type) {
     if (type != i_reset) {
-        PH((uint8_t)(PC >> 8));
-        PH((uint8_t)PC);
-        PH(type == i_brk ? P.status | 0x10 : P.status);
+        PH((uint8_t)(PC >> 8), false);
+        PH((uint8_t)PC, false);
+        PH(type == i_brk ? P.status | 0x10 : P.status, false);
     } else {
         P.status |= 0x04;
         // write(0x4015, 0x0);  // All channels disabled
@@ -1067,8 +1067,9 @@ void CPU::IN(uint8_t &reg) {
 
 // Stack
 
-void CPU::PH(uint8_t value) {
-    read(PC);
+void CPU::PH(uint8_t value, uint8_t do_read) {
+    if (do_read)
+        read(PC);
     write((uint16_t)(0x100 + S), value);
     S--;
     cycles += 3;
