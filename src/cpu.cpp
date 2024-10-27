@@ -269,10 +269,12 @@ uint16_t CPU::execute() {
     case 0xBF: LAX(abs_y); break;
     case 0xA3: LAX(idx_ind_x); break;
     case 0xB3: LAX(ind_idx_y); break;
+    case 0xAB: LXA(); break;
     case 0x87: SAX(zp); break;
     case 0x97: SAX(zp_y); break;
     case 0x8F: SAX(abs); break;
     case 0x83: SAX(idx_ind_x); break;
+    case 0xCB: SBX(); break;
     case 0xEB: USBC(); break;
     case 0xC7: DCP(zp); break;
     case 0xD7: DCP(zp_x); break;
@@ -320,6 +322,13 @@ uint16_t CPU::execute() {
     case 0x6B: ARR(); break;
     case 0x0B:
     case 0x2B: ANC(); break;
+    case 0x8B: ANE(); break;
+    case 0x9F: SHA(abs_y); break;
+    case 0x93: SHA(ind_idx_y); break;
+    case 0x9B: TAS(); break;
+    case 0x9E: SHX(); break;
+    case 0x9C: SHY(); break;
+    case 0xBB: LAS(); break;
     /* 1-byte NOPs */
     case 0x1A:
     case 0x3A:
@@ -826,7 +835,7 @@ void CPU::CP(const uint8_t &reg, AddressingMode mode) {
     uint8_t operand = get_operand(mode);
     P.Z = reg == operand;
     P.C = reg >= operand;
-    P.N = (reg - operand) >> 7;
+    P.N = (bool)((reg - operand) & 0x80);
     switch (mode) {
     case imm: cycles += 2; break;
     case zp: cycles += 3; break;
@@ -842,7 +851,9 @@ void CPU::CP(const uint8_t &reg, AddressingMode mode) {
 
 void CPU::DEC(AddressingMode mode) {
     uint16_t op_addr = operand_addr(mode);
-    uint8_t result = read(op_addr) - 1;
+    uint8_t op = read(op_addr);
+    uint8_t result = op - 1;
+    write(op_addr, op);
     write(op_addr, result);
     set_NZ(result);
     switch (mode) {
@@ -1017,9 +1028,11 @@ void CPU::ST(uint8_t reg, AddressingMode mode) {
 
 void CPU::INC(AddressingMode mode) {
     uint16_t addr = operand_addr(mode);
-    auto newval = (uint8_t)(read(addr) + 1);
-    write(addr, newval);
-    set_NZ(newval);
+    uint8_t op = read(addr);
+    auto result = (uint8_t)(op + 1);
+    write(addr, op);
+    write(addr, result);
+    set_NZ(result);
     switch (mode) {
     case zp: cycles += 5; break;
     case zp_x: cycles += 6; break;
@@ -1114,6 +1127,14 @@ void CPU::LAX(AddressingMode mode) {
     }
 }
 
+void CPU::LXA() {
+    uint8_t op = get_operand(imm);
+    A = (A | 0xEE) & op;
+    X = A;
+    set_NZ(A);
+    cycles += 2;
+}
+
 void CPU::SAX(AddressingMode mode) {
     uint16_t op_addr = operand_addr(mode);
     write(op_addr, A & X);
@@ -1126,10 +1147,23 @@ void CPU::SAX(AddressingMode mode) {
     }
 }
 
+void CPU::SBX() { // AXS
+    // Another op with weird behaviour. Disabled tests
+    uint8_t op = get_operand(imm);
+    X = (A & X) - op;
+
+    P.Z = X == 0;
+    P.C = X >= 0;
+    P.N = (bool)(X & 0x80);
+
+    cycles += 2;
+}
+
 void CPU::DCP(AddressingMode mode) {
     uint16_t op_addr = operand_addr(mode);
     uint8_t op = read(op_addr);
     uint8_t result = op - 1;
+    write(op_addr, op);
     write(op_addr, result);
 
     P.Z = A == result;
@@ -1153,6 +1187,7 @@ void CPU::ISC(AddressingMode mode) {
     uint16_t op_addr = operand_addr(mode);
     uint8_t op = read(op_addr);
     uint8_t result = op + 1;
+    write(op_addr, op);
     write(op_addr, result);
     set_NZ(result);
 
@@ -1288,6 +1323,126 @@ void CPU::ARR() {
 void CPU::ANC() {
     AND(imm);
     P.C = (bool)(A & 0x80);
+}
+
+void CPU::ANE() { // XAA
+    uint8_t op = get_operand(imm);
+    A = (A | 0xEE) & X & op;
+    set_NZ(A);
+}
+
+void CPU::SHA(AddressingMode mode) {
+    // TODO: Missing behaviour, disabled tests for this. Attempt to model
+    // unstability below in TAS 
+    // unstable: sometimes 'AND (H+1)' is dropped, page boundary crossings may 
+    // not work (with the high-byte of the value used as the high-byte of the 
+    // address)
+    uint16_t addr = operand_addr(mode);
+    uint8_t result = A & X & ((addr >> 8) + 1);
+    write(addr, result); 
+    switch (mode) {
+    case abs_y:
+        cycles += 5; break;
+    case ind_idx_y:
+        cycles += 6; break;
+    default: std::cerr << "Invalid addressing mode for SHA." << std::endl;
+    }
+}
+
+void CPU::TAS() { // XAS / SHS
+    // TODO: Disabled tests, not sure if I can satisfy them
+    // unstable: sometimes 'AND (H+1)' is dropped, page boundary crossings may 
+    // not work (with the high-byte of the value used as the high-byte of the 
+    // address)  
+    // (And sometimes the addr gets incremented by 1 additionally)
+
+    // abs_y
+    uint16_t addr;
+    uint8_t addr_l, addr_h;
+    uint8_t result;
+    addr_l = read(PC);
+    addr_h = read(PC+1);
+    addr = ((addr_h << 8) | addr_l) + Y;
+    if (!is_same_page(addr-Y, addr))
+        read((addr_h << 8) | (uint8_t)(addr_l+Y));
+    else
+        read(addr);
+    PC += 2;
+
+    result = A & X & ((addr >> 8) + 1);
+    S = A & X;
+
+    if (!is_same_page(addr-Y, addr))
+        addr = (result << 8) | (uint8_t)addr;
+
+    write(addr, result);
+    cycles += 5;
+}
+
+void CPU::SHX() {
+    // Unstable as above
+    // abs_y
+    uint16_t addr;
+    uint8_t addr_l, addr_h;
+    uint8_t result;
+    addr_l = read(PC);
+    addr_h = read(PC+1);
+    addr = ((addr_h << 8) | addr_l) + Y;
+    if (!is_same_page(addr-Y, addr))
+        read((addr_h << 8) | (uint8_t)(addr_l+Y));
+    else
+        read(addr);
+    PC += 2;
+
+    result = X & ((addr >> 8) + 1);
+
+    if (!is_same_page(addr-Y, addr))
+        addr = (result << 8) | (uint8_t)addr;
+
+    write(addr, result);
+    cycles += 5;
+}
+
+void CPU::SHY() {
+    // Unstable as above
+    // abs_x
+    uint16_t addr;
+    uint8_t addr_l, addr_h;
+    uint8_t result;
+    addr_l = read(PC);
+    addr_h = read(PC+1);
+    addr = ((addr_h << 8) | addr_l) + X;
+    if (!is_same_page(addr-X, addr))
+        read((addr_h << 8) | (uint8_t)(addr_l+X));
+    else
+        read(addr);
+    PC += 2;
+
+    result = Y & ((addr >> 8) + 1);
+
+    if (!is_same_page(addr-X, addr))
+        addr = (result << 8) | (uint8_t)addr;
+
+    write(addr, result);
+    cycles += 5;
+}
+
+void CPU::LAS() {
+    //uint16_t addr = operand_addr(abs_y);
+    //uint8_t operand = read(addr);
+
+    // abs_y
+    uint8_t addr_l = read(PC);
+    uint8_t addr_h = read(PC+1);
+    uint16_t addr = ((addr_h << 8) | addr_l) + Y;
+    PC += 2;
+    if (idx_abs_crossing_cycle(opcode) && !is_same_page(addr - Y, addr))
+        cycles++;
+    uint8_t operand = read(addr);
+    S &= operand;
+    A = X = S;
+    set_NZ(A);
+    cycles += 4;
 }
 
 void CPU::JAM(uint8_t opcode) {

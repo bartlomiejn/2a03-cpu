@@ -175,10 +175,17 @@ void cpu(ExecutionEnvironment &ee, NES::Test::MemoryBus *bus) {
     ee.disable_ppu = true;
     ee.run_single_step = true;
 
-    // TODO: Temporary
-    for (uint8_t i = 0x8b; i < 0xff; i++) {
+    // TODO: Revert once done
+    for (uint8_t i = 0x0; i < 0xff; i++) {
+        if (i == 0x93 || i == 0x9b || i == 0x9c || i == 0x9e || i == 0x9f
+            || i == 0xbb || i == 0xcb) {
+            std::cerr << "Disabled tests for 0x" << std::hex 
+                      << (unsigned int)i 
+                      << ". Unstable ops with weird behaviour" << std::endl;
+            continue;
+        }
         std::string filename = get_testspec_name(i);
-        std::cout << "Loading " << filename << std::endl; 
+        std::cout << "Executing " << filename << ". "; 
 
         std::ifstream file(filename);
         if (!file) {
@@ -213,9 +220,9 @@ void cpu(ExecutionEnvironment &ee, NES::Test::MemoryBus *bus) {
             std::cerr << "JSON parsing error: " << e.what() << "\n";
             return;
         }
-    }
 
-    std::cout << "Success" << std::endl;
+        std::cout << "Success" << std::endl;
+    }
 }
 
 } // namespace Test

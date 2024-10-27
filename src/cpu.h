@@ -367,8 +367,14 @@ class CPU {
     // LDA + LDX == MEM -> A -> X
     void LAX(AddressingMode mode);
 
+    // (A OR CONST) AND oper -> A -> X
+    void LXA();
+
     // A AND X -> MEM
     void SAX(AddressingMode mode);
+
+    // (A AND X - oper) -> X
+    void SBX();
 
     // SBC + NOP, effectively same as SBC(imm)
     void USBC();
@@ -410,6 +416,24 @@ class CPU {
     // AND + set C as ASL
     // A AND oper, bit(7) -> C
     void ANC();
+
+    // (A OR CONST/random) AND X AND oper -> A
+    void ANE();
+
+    // A AND X AND (H+1) -> M
+    void SHA(AddressingMode mode);
+
+    // A AND X -> SP, A AND X AND (H+1) -> M
+    void TAS();
+    
+    // X AND (H+1) -> M
+    void SHX();
+
+    // Y AND (H+1) -> M
+    void SHY();
+
+    // M AND SP -> A, X, SP
+    void LAS();
 
     // Halt execution
     void JAM(uint8_t opcode);
