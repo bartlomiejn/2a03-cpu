@@ -101,7 +101,10 @@ int main(int argc, char *argv[]) {
         NES::Test::cpu(ee, mock_bus);
     }
 
-    delete mock_bus;
+    if (bus)
+        delete bus;
+    if (mock_bus)
+        delete mock_bus;
 
     return 0;
 }

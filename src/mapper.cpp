@@ -115,7 +115,9 @@ uint8_t Mapper::NROM::read_ppu(uint16_t addr) {
 }
 
 void Mapper::NROM::write_ppu(uint16_t addr, uint8_t val) {
-    throw std::runtime_error("Write CHR unimplemented");
+    std::cerr << "PPU: Write to CHR 0x" << std::hex << (unsigned int)addr
+              << ", value: 0x" << std::hex << (unsigned int)val 
+              << ", ignored" << std::endl;
 }
 
 // MMC1

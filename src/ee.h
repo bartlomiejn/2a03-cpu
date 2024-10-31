@@ -41,6 +41,12 @@ class ExecutionEnvironment {
           ppu(_ppu),
           logger(_logger) {}
 
+    ~ExecutionEnvironment() {
+        delete bus->mapper;
+        if (cartridge)
+            cartridge.reset();
+    }
+
     void power(std::function<void(NES::CPU &, NES::PPU &)> setup_hook) { 
         // PPU /VBL line is connected directly to /NMI
         if (!disable_ppu)
