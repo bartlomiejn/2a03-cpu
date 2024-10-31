@@ -63,8 +63,8 @@ union PPUVramAddr {
         uint8_t sc_fine_y : 3;  ///< Fine Y scroll
     };
     struct {
-        uint8_t h : 6;  ///< 6-bit VRAM address high bits
-        uint8_t l : 8;  ///< 8-bit VRAM address low bits
+        uint8_t l : 8;  ///< 6-bit VRAM address high bits
+        uint8_t h : 6;  ///< 8-bit VRAM address low bits
     };
     struct {
         uint16_t addr : 14;
@@ -180,7 +180,9 @@ class PPU {
     void cpu_write(uint16_t addr, uint8_t value);
 
     /// Reads value @ addr from CPU bus
-    uint8_t cpu_read(uint16_t addr);
+    /// \param addr Address to read
+    /// \param passive Don't trigger additional behaviour, just read
+    uint8_t cpu_read(uint16_t addr, bool passive=false);
 
    protected:
     /// Write value to addr

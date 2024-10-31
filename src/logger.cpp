@@ -19,8 +19,8 @@ uint16_t SystemLogger::bus_read16(uint16_t addr, bool zp = false) {
     // If we know this is a zero-page addr, wrap the most-significant bit
     // around zero-page bounds
     uint16_t h_addr = zp ? ((addr + 1) % 0x100) : (addr + 1);
-    uint8_t l_data = bus->read(addr);
-    uint8_t h_data = bus->read(h_addr);
+    uint8_t l_data = bus->read(addr, true);
+    uint8_t h_data = bus->read(h_addr, true);
     return (h_data << 8) | l_data;
 }
 
@@ -31,7 +31,7 @@ std::string SystemLogger::log() {
     stringstream ss;
     string op_templ;
     uint8_t op_len;
-    uint8_t opcode = bus->read(cpu.PC);
+    uint8_t opcode = bus->read(cpu.PC, true);
     std::optional<AddressingMode> addr_mode = addr_mode_for_op(opcode);
 
     if (addr_mode.has_value())
@@ -52,7 +52,7 @@ std::string SystemLogger::log() {
     // Fill opcode parameters as 2-char wide hex values.
     if (op_len > 0) {
         for (int i = 0; i < op_len; i++) {
-            uint8_t op8 = bus->read(cpu.PC + (uint8_t)1 + (uint8_t)i);
+            uint8_t op8 = bus->read(cpu.PC + (uint8_t)1 + (uint8_t)i, true);
             ss << setfill('0') << setw(2) << hex << (int)op8 << " ";
             line += string(ss.str());
             ss.str(string());
@@ -78,7 +78,7 @@ std::string SystemLogger::log() {
 
         // Revert endianness.
         for (int i = op_len; i > 0; i--) {
-            uint8_t op8 = bus->read(cpu.PC + (uint8_t)i);
+            uint8_t op8 = bus->read(cpu.PC + (uint8_t)i, true);
             ss << setfill('0') << setw(2) << hex << (int)op8;
             // operand |= op8 << (i - 1) * 8;
         }
@@ -90,7 +90,7 @@ std::string SystemLogger::log() {
         ss.str(string());
 
         if (addr_mode.value() == idx_ind_x) {
-            uint8_t opsum = bus->read(cpu.PC + 1) + cpu.X;
+            uint8_t opsum = bus->read(cpu.PC + 1, true) + cpu.X;
             ss << setfill('0') << setw(2) << hex << (int)opsum;
             op_templ.replace(op_templ.find(sum_pat), sum_pat.length(),
                              ss.str());
@@ -120,7 +120,7 @@ std::string SystemLogger::log() {
                              ss.str());
             ss.str(string());
         } else if (addr_mode.value() == zp_x || addr_mode.value() == zp_y) {
-            uint8_t sum = bus->read(cpu.PC + 1);
+            uint8_t sum = bus->read(cpu.PC + 1, true);
             sum += addr_mode.value() == zp_x ? cpu.X : cpu.Y;
             ss << setfill('0') << setw(2) << hex << (int)sum;
             op_templ.replace(op_templ.find(sum_pat), sum_pat.length(),
@@ -847,7 +847,7 @@ uint16_t SystemLogger::target_value(NES::AddressingMode addr_mode) {
         bool cross;
         uint16_t target;
 
-        rel_op = bus->read(cpu.PC + 1);
+        rel_op = bus->read(cpu.PC + 1, true);
         pc_l = uint8_t((cpu.PC + 2) & 0xFF);
         cross = uint16_t(pc_l) + rel_op >= 0x100;
         pc_l += rel_op;
@@ -860,35 +860,35 @@ uint16_t SystemLogger::target_value(NES::AddressingMode addr_mode) {
         }
 
         return target;
-    case abs: return (uint16_t)bus->read(bus_read16((uint16_t)(cpu.PC + 1)));
+    case abs: return (uint16_t)bus->read(bus_read16((uint16_t)(cpu.PC + 1)), true);
     case abs_x:
     case abs_y:
         uint16_t absaddr;
         absaddr = bus_read16(cpu.PC + 1);
         absaddr += addr_mode == abs_x ? cpu.X : cpu.Y;
-        return (uint16_t)bus->read(absaddr);
+        return (uint16_t)bus->read(absaddr, true);
     case ind:
         uint16_t h_addr, l_addr;
         l_addr = bus_read16((uint16_t)(cpu.PC + 1));
         h_addr = (l_addr % 0x100 == 0xFF) ? (uint16_t)(l_addr - l_addr % 0x100)
                                           : (uint16_t)(l_addr + 1);
-        return (uint16_t)(bus->read(h_addr)) << 8 | bus->read(l_addr);
+        return (uint16_t)(bus->read(h_addr, true)) << 8 | bus->read(l_addr, true);
     case zp:
     case zp_x:
     case zp_y:
         uint8_t zp_addr;
-        zp_addr = bus->read(cpu.PC + 1);
+        zp_addr = bus->read(cpu.PC + 1, true);
         if (addr_mode == zp_x) zp_addr += cpu.X;
         if (addr_mode == zp_y) zp_addr += cpu.Y;
-        return (uint16_t)bus->read(zp_addr);
+        return (uint16_t)bus->read(zp_addr, true);
     case idx_ind_x:
         uint16_t imx_addr;
-        imx_addr = bus_read16((bus->read(cpu.PC + 1) + cpu.X) % 0x100, true);
-        return (uint16_t)bus->read(imx_addr);
+        imx_addr = bus_read16((bus->read(cpu.PC + 1, true) + cpu.X) % 0x100);
+        return (uint16_t)bus->read(imx_addr, true);
     case ind_idx_y:
         uint16_t imy_addr;
-        imy_addr = bus_read16(bus->read(cpu.PC + 1), true) + cpu.Y;
-        return (uint16_t)bus->read(imy_addr);
+        imy_addr = bus_read16(bus->read(cpu.PC + 1, true)) + cpu.Y;
+        return (uint16_t)bus->read(imy_addr, true);
     default: return std::numeric_limits<uint16_t>::max();
     }
 }

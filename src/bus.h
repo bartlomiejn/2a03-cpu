@@ -22,8 +22,9 @@ class MemoryBusIntf {
 
     /// Reads 8 bits of memory at the provided address.
     /// \param addr Address to read from.
+    /// \param passive Don't trigger additional read behaviour
     /// \return Byte that has been read.
-    virtual uint8_t read(uint16_t addr) = 0;
+    virtual uint8_t read(uint16_t addr, bool passive=false) = 0;
 
     /// Writes a value to the provided address.
     /// \param addr Address to write the value to.
@@ -45,8 +46,9 @@ class MemoryBus : public MemoryBusIntf {
 
     /// Reads 8 bits of memory at the provided address.
     /// \param addr Address to read from.
+    /// \param passive Don't trigger additional read behaviour
     /// \return Byte that has been read.
-    uint8_t read(uint16_t addr) final;
+    uint8_t read(uint16_t addr, bool passive=false) final;
 
     /// Writes a value to the provided address.
     /// \param addr Address to write the value to.

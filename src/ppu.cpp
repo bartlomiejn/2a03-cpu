@@ -349,39 +349,47 @@ void PPU::cpu_write(uint16_t addr, uint8_t value) {
     }
 }
 
-uint8_t PPU::cpu_read(uint16_t addr) {
+uint8_t PPU::cpu_read(uint16_t addr, bool passive) {
     switch (addr) {
     case 0x2000:  // Write-only
         return cpu_bus;
     case 0x2001:  // Write-only
         return cpu_bus;
     case 0x2002:
-        w = (bool)0;
-        // TODO: Reads from here should reset vblank flag bit 7
-        cpu_bus = (ppustatus.value & 0xE0) | (cpu_bus & 0x1F);
+        if (!passive) {
+            w = (bool)0;
+            // TODO: Reads from here should reset vblank flag bit 7
+            cpu_bus = (ppustatus.value & 0xE0) | (cpu_bus & 0x1F);
+        }
         return ppustatus.value;
     case 0x2003:  // Write-only
         return cpu_bus;
     case 0x2004:
         // TODO: Reads while rendering should expose internal OAM accesses
-        cpu_bus = oam[oamaddr];
+        if (!passive) {
+            cpu_bus = oam[oamaddr];
+        }
         return oam[oamaddr];
     case 0x2005:
     case 0x2006: return cpu_bus;
     case 0x2007:
         uint8_t ppudata_out;
-        if (v.addr > 0x3EFF) {
-            ppudata_out = read(v.addr);
+        if (!passive) {
+            if (v.addr > 0x3EFF) {
+                ppudata_out = read(v.addr);
+            } else {
+                ppudata_out = ppudata_buf;
+                ppudata_buf = read(v.addr);
+            }
+            if (ppuctrl.v_incr) {
+                v.addr += 0x20;
+            } else {
+                v.addr++;
+            }
+            cpu_bus = ppudata_out;
         } else {
             ppudata_out = ppudata_buf;
-            ppudata_buf = read(v.addr);
         }
-        if (ppuctrl.v_incr) {
-            v.addr += 0x20;
-        } else {
-            v.addr++;
-        }
-        cpu_bus = ppudata_out;
         return ppudata_out;
     default:
         throw std::runtime_error("Invalid/unimplemented PPU write.");

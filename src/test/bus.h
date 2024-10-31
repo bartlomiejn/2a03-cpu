@@ -21,8 +21,9 @@ public:
 
     ~MemoryBus() = default;
 
-    uint8_t read(uint16_t addr) {
-        ops.push_back(BusAccess(addr, ram[addr], true)); 
+    uint8_t read(uint16_t addr, bool passive) {
+        if (!passive)
+            ops.push_back(BusAccess(addr, ram[addr], true)); 
         return ram[addr];
     }
 

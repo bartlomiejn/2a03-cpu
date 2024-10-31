@@ -14,7 +14,7 @@ MemoryBus::MemoryBus(NES::PPU &_ppu, NES::APU &_apu)
     std::fill(ram.begin(), ram.end(), 0x0);
 }
 
-uint8_t MemoryBus::read(uint16_t addr) {
+uint8_t MemoryBus::read(uint16_t addr, bool passive) {
     switch (addr) {
     // Internal RAM
     case 0x0000 ... 0x1FFF:
@@ -24,7 +24,7 @@ uint8_t MemoryBus::read(uint16_t addr) {
         return ram[addr % 0x800];
 
     // PPU registers
-    case 0x2000 ... 0x3FFF: return ppu.cpu_read(addr);
+    case 0x2000 ... 0x3FFF: return ppu.cpu_read(addr, true);
 
     // APU registers
     case 0x4000 ... 0x4017: return apu.read(addr);
