@@ -389,11 +389,11 @@ uint16_t CPU::execute() {
     }
 
     if (NMI) {
-        std::cerr << "Handling NMI" << std::endl;
+        std::cerr << "CPU: Handling NMI" << std::endl;
         interrupt(i_nmi);
     }
     if (IRQ && !P.I) {
-        std::cerr << "Handling IRQ" << std::endl;
+        std::cerr << "CPU: Handling IRQ" << std::endl;
         interrupt(i_irq);
     }
 
@@ -404,10 +404,16 @@ uint16_t CPU::execute() {
 
 void CPU::interrupt(NES::Interrupt type) {
     if (type != i_reset) {
+        std::cerr << "CPU: Push to stack PC " 
+                  << " H: " << std::hex << (unsigned int)(uint8_t)(PC >> 8) 
+                  << " L: " << std::hex << (unsigned int)(uint8_t)PC 
+                  << std::endl;
+        std::cerr << "PC: Push to stack P: " << std::hex << (type == i_brk ? P.status | 0x10 : P.status) << std::endl;
         PH((uint8_t)(PC >> 8), false);
         PH((uint8_t)PC, false);
         PH(type == i_brk ? P.status | 0x10 : P.status, false);
     } else {
+        std::cerr << "CPU: P |= 0x04" << std::endl;
         P.status |= 0x04;
         // write(0x4015, 0x0);  // All channels disabled
     }
@@ -415,12 +421,24 @@ void CPU::interrupt(NES::Interrupt type) {
     P.I = true;
 
     switch (type) {
-    case i_nmi: PC = read16(0xFFFA); break;
-    case i_reset: PC = read16(0xFFFC); break;
+    case i_nmi: 
+        std::cerr << "CPU: Interrupt type NMI" << std::endl;
+        PC = read16(0xFFFA); break;
+    case i_reset: 
+        std::cerr << "CPU: Interrupt type reset" << std::endl;
+        PC = read16(0xFFFC); break;
     case i_irq:
+        std::cerr << "CPU: Interrupt type IRQ" << std::endl;
+        PC = read16(0xFFFE); break;
     case i_brk:
-    default: PC = read16(0xFFFE); break;
+        std::cerr << "CPU: Interupt type BRK" << std::endl;
+        PC = read16(0xFFFE); break;
+    default:
+        std::cerr << "CPU: Unhandled interrupt type" << std::endl;
+        throw std::runtime_error("Invalid interrupt type");
     }
+
+    std::cerr << "CPU: New PC: 0x" << std::hex << (unsigned int)PC << std::endl;
 
     if (type == i_nmi)
         NMI = false;
@@ -428,6 +446,7 @@ void CPU::interrupt(NES::Interrupt type) {
         IRQ = false;
 
     cycles += 7;
+    std::cerr << "CPU: Interrupt finish" << std::endl;
 }
 
 uint8_t CPU::read(uint16_t addr) {
@@ -450,7 +469,7 @@ uint16_t CPU::read16(uint16_t addr, bool zp) {
 void CPU::write(uint16_t addr, uint8_t value) { bus->write(addr, value); }
 
 void CPU::schedule_dma_oam(uint8_t page) {
-    std::cerr << "CPU::schedule_dma_oam page: " << page << std::endl;
+    std::cerr << "CPU::schedule_dma_oam page: " << (unsigned int)page << std::endl;
     dma = DMA_OAM;
     dma_page = page;
 }
@@ -461,18 +480,25 @@ void CPU::handle_dma() {
     if (dma == DMA_PCM) {
         throw std::runtime_error("PCM DMA unimplemented");
     } else if (dma == DMA_OAM) {
+        std::cerr << "DMA OAM: Start, CYC: " << cycles << std::endl;
         // TODO: PCM DMA can interrupt OAM DMA
         if (cycles & 0x1) {
+            std::cerr << "DMA OAM: odd cycle, wait one cycle" << std::endl;
             cycles++;
         }
         uint8_t i = 0;
         do {
             uint8_t data = bus->read((dma_page << 8) | i);
+            std::cerr << "DMA OAM: read at 0x" << std::hex << (unsigned int)((dma_page << 8) | i);
+            std::cerr << ", data: 0x" << std::hex <<  (unsigned int)data;
+            std::cerr << ", write to 0x2004, ";
             cycles++;
             bus->write(0x2004, data);
             cycles++;
+            std::cerr << "CYC: " << std::dec << cycles << std::endl;
             i++;
         } while (i != 0);
+        std::cerr << "DMA OAM: End" << std::endl;
         dma = DMA_Clear;
     }
 }

@@ -174,7 +174,7 @@ class PPU {
 
     /// Executes the PPU logic.
     /// \value cycles PPU cycles to execute
-    void execute(uint8_t cycles);
+    void execute(uint16_t cycles);
 
     /// Writes value @ addr from CPU bus
     void cpu_write(uint16_t addr, uint8_t value);

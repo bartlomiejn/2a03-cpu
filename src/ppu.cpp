@@ -128,7 +128,7 @@ void PPU::draw() {
     bg_h_shift <<= 1;
 }
 
-void PPU::execute(uint8_t cycles) {
+void PPU::execute(uint16_t cycles) {
     while (cycles) {
         switch (scan_y) {
         case 241:
@@ -235,7 +235,7 @@ void PPU::execute(uint8_t cycles) {
             case 205:   case 213:   case 221:   case 229:   case 237:
             case 245:   case 253:   case 325:   case 333:
                 // clang-format on
-                bus.addr = (ppuctrl.spr_pt_addr ? 0x1000 : 0x0000) + nt * 16 +
+                bus.addr = (ppuctrl.bg_pt_addr ? 0x1000 : 0x0000) + nt * 16 +
                            v.sc_fine_y;
                 break;
                 // clang-format off
@@ -259,7 +259,7 @@ void PPU::execute(uint8_t cycles) {
             case 207:   case 215:   case 223:   case 231:   case 239:
             case 247:   case 255:   case 327:   case 335:
                 // clang-format on
-                bus.addr = (ppuctrl.spr_pt_addr ? 0x1000 : 0x0000) + nt * 16 +
+                bus.addr = (ppuctrl.bg_pt_addr ? 0x1000 : 0x0000) + nt * 16 +
                            v.sc_fine_y + 8;
                 break;
                 // clang-format off
