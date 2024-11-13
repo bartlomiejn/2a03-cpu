@@ -59,8 +59,8 @@ void PPU::power() {
     std::fill(oam.begin(), oam.end(), 0x3F);
     std::fill(oam_sec.begin(), oam_sec.end(), 0x3F);
     std::fill(pram.begin(), pram.end(), 0xFF);
-    std::fill(fb.begin(), fb.end(), 0x001100FF);
-    std::fill(fb_sec.begin(), fb_sec.end(), 0x001100FF);
+    std::fill(fb.begin(), fb.end(), 0x000000FF);
+    std::fill(fb_sec.begin(), fb_sec.end(), 0x000000FF);
 }
 
 void PPU::oam_sec_clear() { oam_sec[scan_x - 1] = 0xFF; }
@@ -145,7 +145,7 @@ void PPU::execute(uint16_t cycles) {
             draw();
             if (scan_y == 261 && scan_x == 1) {
                 ppustatus.vblank = false;
-                ppustatus.spr0_hit = false;
+                ppustatus.spr_overflow = false;
             }
             if (scan_y == 261 && scan_x >= 280 && scan_x <= 304) {
                 set_vert(v, t);
@@ -162,7 +162,8 @@ void PPU::execute(uint16_t cycles) {
                     // TODO: Skipped on BG+odd
                     break;
                 case 1 ... 239:
-                    // TODO: BG l address only
+                    bus.addr = (ppuctrl.bg_pt_addr ? 0x1000 : 0x0000) 
+                               + nt * 16 + v.sc_fine_y;
                     break;
                 }
             case 1:
@@ -179,9 +180,9 @@ void PPU::execute(uint16_t cycles) {
             case 129:   case 137:   case 145:   case 153:   case 161:
             case 169:   case 177:   case 185:   case 193:   case 201:
             case 209:   case 217:   case 225:   case 233:   case 241:
-            case 249:   case 257:   case 265:   case 273:   case 281:
-            case 289:   case 297:   case 305:   case 313:   case 321:
-            case 329:   case 337:   case 339:
+            case 249:   case 257:   case 259:   case 265:   case 273:   
+            case 281:   case 289:   case 297:   case 305:   case 313:   
+            case 321:   case 329:   case 337:   case 339:
                 // clang-format on
                 if (scan_x == 257) {
                     set_hori(v, t);
@@ -195,9 +196,9 @@ void PPU::execute(uint16_t cycles) {
             case 122:   case 130:   case 138:   case 146:   case 154:
             case 162:   case 170:   case 178:   case 186:   case 194:
             case 202:   case 210:   case 218:   case 226:   case 234:
-            case 242:   case 250:   case 258:   case 266:   case 274:
-            case 282:   case 290:   case 298:   case 306:   case 314:
-            case 322:   case 330:   case 338:   case 340:
+            case 242:   case 250:   case 258:   case 260:   case 266:   
+            case 274:   case 282:   case 290:   case 298:   case 306:   
+            case 314:   case 322:   case 330:   case 338:   case 340:
                 // clang-format on
                 nt = read(bus.addr);
                 break;

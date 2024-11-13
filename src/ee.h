@@ -42,7 +42,6 @@ class ExecutionEnvironment {
           logger(_logger) {}
 
     ~ExecutionEnvironment() {
-        delete bus->mapper;
         if (cartridge)
             cartridge.reset();
     }

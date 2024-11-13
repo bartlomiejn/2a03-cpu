@@ -5,15 +5,15 @@ CXX_DEBUG ?= gdb
 BIN ?= nestest
 
 ifeq ($(BIN), nestest)
-	ARGS = -ct 
+	ARGS ?= -ct 
 else ifeq ($(BIN), pputest)
-	ARGS = -cp
+	ARGS ?= -cp
 else ifeq ($(BIN), cputest)
-	ARGS = -cu
+	ARGS ?= -cu
 else ifeq ($(BIN), dk)
-	ARGS = -cr DonkeyKong.nes
+	ARGS ?= -cr DonkeyKong.nes
 else
-	ARGS = -cr $(BIN)
+	ARGS ?= -cr $(BIN)
 endif
 
 .PHONY: binary run debug lint clean

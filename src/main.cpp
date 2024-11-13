@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
 
     ee.debug = opts.step_debug;
     if (opts.log_steps_to_cerr) logger.instr_ostream = std::cerr;
-    renderer.setup_window();
+    renderer.setup();
 
     if (!opts.rom.empty()) {
         std::cout << "Running " << opts.rom << std::endl;
