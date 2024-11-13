@@ -6,7 +6,7 @@
 #include <mapper.h>
 #include <palette.h>
 #include <ppu.h>
-#include <render.h>
+#include <gui.h>
 #include <test/test.h>
 #include <test/test_cpu.h>
 #include <test/test_ppu.h>
@@ -63,9 +63,9 @@ struct Options {
 int main(int argc, char *argv[]) {
     Options opts(argc, argv);
 
-    GFX::Renderer renderer(NES::ntsc_fb_x, NES::ntsc_fb_y);
+    GFX::GUI gui(NES::ntsc_fb_x, NES::ntsc_fb_y);
     NES::Palette pal("DigitalPrimeFBX.pal");
-    NES::PPU ppu(renderer, pal);
+    NES::PPU ppu(gui, pal);
     NES::APU apu;
     NES::MemoryBusIntf *bus;
     NES::Test::MemoryBus *mock_bus;
@@ -78,12 +78,12 @@ int main(int argc, char *argv[]) {
     NES::CPU cpu(bus);
     if (!mock_bus)
         ((NES::MemoryBus*)bus)->cpu = &cpu;
-    NES::SystemLogger logger(cpu, ppu, bus);
-    NES::ExecutionEnvironment ee(renderer, bus, cpu, ppu, logger);
+    NES::SystemLogGenerator logger(cpu, ppu, bus);
+    NES::ExecutionEnvironment ee(gui, bus, cpu, ppu, logger);
 
     ee.debug = opts.step_debug;
     if (opts.log_steps_to_cerr) logger.instr_ostream = std::cerr;
-    renderer.setup();
+    gui.setup();
 
     if (!opts.rom.empty()) {
         std::cout << "Running " << opts.rom << std::endl;

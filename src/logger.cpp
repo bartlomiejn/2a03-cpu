@@ -12,10 +12,10 @@ static const std::string target_pat = "{{TARGET}}";
 static const std::string sum_pat = "{{SUM}}";
 static const std::string im_pat = "{{IM}}";
 
-SystemLogger::SystemLogger(CPU &cpu, PPU &ppu, MemoryBusIntf *bus)
+SystemLogGenerator::SystemLogGenerator(CPU &cpu, PPU &ppu, MemoryBusIntf *bus)
     : cpu(cpu), ppu(ppu), bus(bus), logs() {}
 
-uint16_t SystemLogger::bus_read16(uint16_t addr, bool zp = false) {
+uint16_t SystemLogGenerator::bus_read16(uint16_t addr, bool zp = false) {
     // If we know this is a zero-page addr, wrap the most-significant bit
     // around zero-page bounds
     uint16_t h_addr = zp ? ((addr + 1) % 0x100) : (addr + 1);
@@ -24,7 +24,7 @@ uint16_t SystemLogger::bus_read16(uint16_t addr, bool zp = false) {
     return (h_data << 8) | l_data;
 }
 
-std::string SystemLogger::log() {
+std::string SystemLogGenerator::log() {
     using namespace std;
 
     string line;
@@ -176,7 +176,7 @@ std::string SystemLogger::log() {
     return line;
 }
 
-void SystemLogger::save() {
+void SystemLogGenerator::save() {
     std::ofstream fstream;
 
     if (log_filename)
@@ -189,7 +189,7 @@ void SystemLogger::save() {
     fstream.close();
 }
 
-std::string SystemLogger::decode(uint8_t opcode) {
+std::string SystemLogGenerator::decode(uint8_t opcode) {
     switch (opcode) {
     case 0x0: return "BRK";
     case 0x10: return "BPL";
@@ -429,7 +429,7 @@ std::string SystemLogger::decode(uint8_t opcode) {
     }
 }
 
-bool SystemLogger::is_opcode_legal(uint8_t opcode) {
+bool SystemLogGenerator::is_opcode_legal(uint8_t opcode) {
     switch (opcode) {
     /* LAX */
     case 0xA7:
@@ -527,7 +527,7 @@ bool SystemLogger::is_opcode_legal(uint8_t opcode) {
     }
 }
 
-std::optional<AddressingMode> SystemLogger::addr_mode_for_op(uint8_t opcode) {
+std::optional<AddressingMode> SystemLogGenerator::addr_mode_for_op(uint8_t opcode) {
     switch (opcode) {
     // De facto mode is relative for each conditional branch opcode.
     case 0x10: return {AddressingMode::rel};
@@ -775,7 +775,7 @@ std::optional<AddressingMode> SystemLogger::addr_mode_for_op(uint8_t opcode) {
     }
 }
 
-std::string SystemLogger::templ_for_mode(AddressingMode addr_mode,
+std::string SystemLogGenerator::templ_for_mode(AddressingMode addr_mode,
                                          uint8_t opcode) {
     switch (addr_mode) {
     case rel: return "$" + target_pat;
@@ -805,7 +805,7 @@ std::string SystemLogger::templ_for_mode(AddressingMode addr_mode,
     }
 }
 
-uint8_t SystemLogger::operand_len(NES::AddressingMode addr_mode) {
+uint8_t SystemLogGenerator::operand_len(NES::AddressingMode addr_mode) {
     switch (addr_mode) {
     case abs:
     case abs_x:
@@ -822,7 +822,7 @@ uint8_t SystemLogger::operand_len(NES::AddressingMode addr_mode) {
     }
 }
 
-uint8_t SystemLogger::target_len(NES::AddressingMode addr_mode,
+uint8_t SystemLogGenerator::target_len(NES::AddressingMode addr_mode,
                                  uint8_t opcode) {
     switch (addr_mode) {
     case rel:
@@ -839,7 +839,7 @@ uint8_t SystemLogger::target_len(NES::AddressingMode addr_mode,
     }
 }
 
-uint16_t SystemLogger::target_value(NES::AddressingMode addr_mode) {
+uint16_t SystemLogGenerator::target_value(NES::AddressingMode addr_mode) {
     switch (addr_mode) {
     case rel:
         uint8_t rel_op;

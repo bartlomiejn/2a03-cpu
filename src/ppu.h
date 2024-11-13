@@ -4,7 +4,7 @@
 #include <bitfield.h>
 #include <mapper.h>
 #include <palette.h>
-#include <render.h>
+#include <gui.h>
 
 #include <array>
 #include <cstdint>
@@ -112,7 +112,7 @@ static const size_t ntsc_fb_y = 240;  ///< NTSC framebuffer Y size
 class PPU {
    public:
     iNESv1::Mapper::Base *mapper;  ///< Cartridge mapper
-    GFX::Renderer &renderer;       ///< Draws the actual frames
+    GFX::GUI &gui;                 ///< Draws the actual frames
     NES::Palette pal;              ///< Palette file
 
     // Internal memory
@@ -167,7 +167,7 @@ class PPU {
     uint16_t scan_y_end;  ///< Scanline count
     bool scan_short;      ///< Short scanline (340 ticks instead of 341)
 
-    PPU(GFX::Renderer &_renderer, NES::Palette _pal);
+    PPU(GFX::GUI &_gui, NES::Palette _pal);
 
     /// Powers up the PPU
     void power();

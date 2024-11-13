@@ -1,41 +1,58 @@
 #ifndef INC_2A03_EE_H
 #define INC_2A03_EE_H
 
+#include <thread>
+#include <mutex>
+#include <atomic>
+#include <condition_variable>
 #include <bus.h>
 #include <cpu.h>
 #include <load.h>
 #include <logger.h>
 #include <mapper.h>
 #include <ppu.h>
-#include <render.h>
+#include <gui.h>
 
+// NTSC
+// If rendering off, each frame is 341*262 / 3 CPU clocks long
+// Scanline (341 pixels) is 113+(2/3) CPU clocks long
+// HBlank (85 pixels) is 28+(1/3) CPU clocks long
+// Frame is 29780.5 CPU clocks long
+// 3 PPU dots per 1 CPU cycle
+// OAM DMA is 513 CPU cycles + 1 if starting on CPU get cycle
+// Cycle reference:
+// https://www.nesdev.org/wiki/Cycle_reference_chart
+//
 const int ntsc_cyc_ratio = 3;
 
 namespace NES {
 
 class ExecutionEnvironment {
    public:
-    GFX::Renderer &renderer;
+    GFX::GUI &gui;
     NES::MemoryBusIntf *bus;
     NES::CPU &cpu;
     NES::PPU &ppu;
-    NES::SystemLogger &logger;
+    NES::SystemLogGenerator &logger;
     std::optional<NES::iNESv1::Cartridge> cartridge;
+    NES::iNESv1::Mapper::Base *mapper; 
 
-    bool debug = false;
-    bool stop = false;
-    bool disable_ppu = false;
-    bool run_single_step = false;
+    std::thread execThread;
+
+    std::atomic<bool> debug = false;
+    std::atomic<bool> stop = false;
+    std::atomic<bool> disable_ppu = false;
+    std::atomic<bool> run_single_step = false;
 
     std::function<void(ExecutionEnvironment &)> pre_step_hook;
     std::function<void(ExecutionEnvironment &)> post_step_hook;
 
     ExecutionEnvironment() = delete;
-    ExecutionEnvironment(GFX::Renderer &_renderer, 
+    ExecutionEnvironment(GFX::GUI &_gui, 
                          NES::MemoryBusIntf *_bus,
                          NES::CPU &_cpu, NES::PPU &_ppu,
-                         NES::SystemLogger &_logger)
-        : renderer(_renderer),
+                         NES::SystemLogGenerator &_logger)
+        : gui(_gui),
           bus(_bus),
           cpu(_cpu),
           ppu(_ppu),
@@ -60,37 +77,33 @@ class ExecutionEnvironment {
 
     void load_iNESv1(std::string rom) {
         cartridge = NES::iNESv1::load(rom);
-        NES::iNESv1::Mapper::Base *mapper =
-            NES::iNESv1::Mapper::mapper(cartridge.value());
+        mapper = NES::iNESv1::Mapper::mapper(cartridge.value());
         bus->mapper = mapper;
-        ppu.mapper = mapper;
+        ppu.mapper = mapper; 
+        gui.mapper = mapper;
     }
 
     void run() {
-        // NTSC
-        // If rendering off, each frame is 341*262 / 3 CPU clocks long
-        // Scanline (341 pixels) is 113+(2/3) CPU clocks long
-        // HBlank (85 pixels) is 28+(1/3) CPU clocks long
-        // Frame is 29780.5 CPU clocks long
-        // 3 PPU dots per 1 CPU cycle
-        // OAM DMA is 513 CPU cycles + 1 if starting on CPU get cycle
-        // Cycle reference:
-        // https://www.nesdev.org/wiki/Cycle_reference_chart
+        execThread = std::thread(&ExecutionEnvironment::runloop, this);
+        gui.enter_runloop();
+        stop = true;
+        execThread.join();
+    }
 
+private:
+    void runloop() {
         while (!stop) {
             if (pre_step_hook) pre_step_hook(*this);
 
-            // TODO: Synchronize CPU and PPU
+            // TODO: Synchronize execution
             try {
                 uint16_t cpu_cycs = cpu.execute();
                 if (!disable_ppu)
                     ppu.execute(ntsc_cyc_ratio * cpu_cycs);
-                stop = stop || renderer.poll_quit();
             } catch (NES::InvalidOpcode &e) {
                 std::cerr << "Unhandled opcode executed." << std::endl;
             } catch (NES::JAM &e) {
                 // TODO: Actually jam and handle reset
-
             }
 
             if (post_step_hook) post_step_hook(*this);

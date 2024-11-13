@@ -12,15 +12,15 @@
 #include <vector>
 
 namespace NES {
-class SystemLogger {
+class SystemLogGenerator {
    public:
-    /// Instantiates a SystemLogger instance which logs the state of
+    /// Instantiates a SystemLogGenerator instance which logs the state of
     /// the provided CPU.
     /// \param cpu CPU instance to use.
     /// \param ppu PPU instance to use.
     /// \param bus BUS instance to get opcode/operand data from.
     /// Should be the same instance as the one used by the CPU.
-    SystemLogger(NES::CPU &cpu, NES::PPU &ppu, NES::MemoryBusIntf *bus);
+    SystemLogGenerator(NES::CPU &cpu, NES::PPU &ppu, NES::MemoryBusIntf *bus);
 
     /// If set writes every line on each log() call to this stream
     std::optional<std::reference_wrapper<std::ostream>> instr_ostream;

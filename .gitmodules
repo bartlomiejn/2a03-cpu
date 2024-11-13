@@ -4,3 +4,6 @@
 [submodule "external/nlohmann_json"]
 	path = external/nlohmann_json
 	url = git@github.com:nlohmann/json.git
+[submodule "external/imgui"]
+	path = external/imgui
+	url = git@github.com:ocornut/imgui.git

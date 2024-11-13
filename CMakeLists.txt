@@ -20,12 +20,12 @@ else()
     message(FATAL_ERROR "SDL2 not found")
 endif()
 
-find_package(SDL2_ttf REQUIRED)
-if (SDL2_ttf_FOUND)
-    message(STATUS "Found SDL2_ttf, imported target SDL2_ttf::SDL2_ttf")
-else()
-    message(FATAL_ERROR "SDL2TTF not found")
-endif()
+#find_package(SDL2_ttf REQUIRED)
+#if (SDL2_ttf_FOUND)
+#    message(STATUS "Found SDL2_ttf, imported target SDL2_ttf::SDL2_ttf")
+#else()
+#    message(FATAL_ERROR "SDL2TTF not found")
+#endif()
 
 find_program(CPPCHECK_EXECUTABLE NAMES cppcheck)
 if(CPPCHECK_EXECUTABLE)
@@ -38,6 +38,17 @@ if(CMAKE_COMPILER_IS_GNUCC)
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -Werror -Wall")
 endif(CMAKE_COMPILER_IS_GNUCC)
 
+set(IMGUI_DIR ${EXTERNAL_DIR}/imgui)
+set(IMGUI_SOURCES 
+        ${IMGUI_DIR}/imgui.cpp
+        ${IMGUI_DIR}/imgui_demo.cpp
+        ${IMGUI_DIR}/imgui_draw.cpp
+        ${IMGUI_DIR}/imgui_tables.cpp
+        ${IMGUI_DIR}/imgui_widgets.cpp
+        ${IMGUI_DIR}/backends/imgui_impl_sdl2.cpp
+        ${IMGUI_DIR}/backends/imgui_impl_sdlrenderer2.cpp
+        ${IMGUI_DIR}/misc/cpp/imgui_stdlib.cpp)
+
 set(SOURCES
         src/main.cpp
         src/cpu.cpp
@@ -47,9 +58,16 @@ set(SOURCES
         src/mapper.cpp
         src/logger.cpp)
 
-include_directories(src)
-include_directories(${SDL2_INCLUDE_DIRS})
-include_directories(external/nlohmann_json/single_include/nlohmann)
+include_directories(
+        src 
+        ${SDL2_INCLUDE_DIRS} 
+        ${IMGUI_DIR}
+        ${IMGUI_DIR}/backends
+        external/nlohmann_json/single_include/nlohmann)
+
+#include_directories(${SDL2_INCLUDE_DIRS})
+#include_directories(external/nlohmann_json/single_include/nlohmann)
+#include_directories(${IMGUI_DIR}
 
 # Copy various data to output dir
 configure_file(${NES_TEST_DIR}/nestest.log nestest.log COPYONLY)
@@ -67,7 +85,7 @@ configure_file(${EXTERNAL_DIR}/Inter-Italic-VariableFont_opsz,wght.ttf Inter-Ita
 # Copy palette file for PPU
 configure_file(${EXTERNAL_DIR}/DigitalPrimeFBX.pal DigitalPrimeFBX.pal COPYONLY)
 
-add_executable(2a03 ${SOURCES})
+add_executable(2a03 ${SOURCES} ${IMGUI_SOURCES})
 
 # CPU single instruction test specs
 add_custom_command(
@@ -94,4 +112,4 @@ add_custom_target(
     COMMENT "Running cppcheck on source and header files"
 )
 
-target_link_libraries(2a03 ${SDL2_LIBRARIES} SDL2_ttf::SDL2_ttf)
+target_link_libraries(2a03 ${SDL2_LIBRARIES})

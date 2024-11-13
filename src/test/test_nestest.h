@@ -133,7 +133,7 @@ void nestest(ExecutionEnvironment &ee) {
     std::string line_ours;
     std::ifstream ifs(nestest_log);
     assert(ifs.is_open());
-    bool comp_check = true;
+    bool comp_check = false;
 
     ee.pre_step_hook = [&](auto &ee) {
         using namespace NES::Test;

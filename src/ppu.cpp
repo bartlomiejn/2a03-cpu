@@ -1,5 +1,5 @@
 #include <ppu.h>
-#include <render.h>
+#include <gui.h>
 
 #include <cstring>
 
@@ -28,8 +28,8 @@ void set_vert(PPUVramAddr &to, const PPUVramAddr &from) {
     to.sc_fine_y = from.sc_fine_y;
 }
 
-PPU::PPU(GFX::Renderer &_renderer, NES::Palette _pal)
-    : mapper(nullptr), renderer(_renderer), pal(std::move(_pal)) {
+PPU::PPU(GFX::GUI &_gui, NES::Palette _pal)
+    : mapper(nullptr), gui(_gui), pal(std::move(_pal)) {
     power();
 }
 
@@ -286,9 +286,9 @@ void PPU::execute(uint16_t cycles) {
 
         if (scan_y == 239 && scan_x == 320) {
             if (fb_prim)
-                renderer.draw(fb.data());
+                gui.draw_frame(fb.data());
             else
-                renderer.draw(fb_sec.data());
+                gui.draw_frame(fb_sec.data());
             fb_prim = !fb_prim;
         }
 
