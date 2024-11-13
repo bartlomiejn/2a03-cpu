@@ -38,6 +38,16 @@ class Renderer {
           display_x(display_x),
           display_y(display_y) {};
 
+    ~Renderer() {
+        if (tex_main)   SDL_DestroyTexture(tex_main);
+        if (tex_chr)    SDL_DestroyTexture(tex_chr);
+        if (ren_main)   SDL_DestroyRenderer(ren_main);
+        if (ren_chr)    SDL_DestroyRenderer(ren_chr);
+        if (wnd_main)   SDL_DestroyWindow(wnd_main);
+        if (wnd_chr)    SDL_DestroyWindow(wnd_chr);
+        if (gui_font)   TTF_CloseFont(gui_font);
+    };
+
     void setup() {
         if (SDL_Init(SDL_INIT_VIDEO) != 0) {
             std::cerr << "SDL_Init error: " << SDL_GetError() << std::endl;
