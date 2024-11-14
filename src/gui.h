@@ -178,10 +178,11 @@ public:
                     case 3:
                         c = 0xFFFFFFFF; break;
                     }
-                    int c_x = (tile_idx % tiles_on_line)*8 + x;
-                    int c_y = (tile_idx / tiles_on_line)*8 + y;
-                    fb[c_y*fb_x + c_x] = c;
-                    
+                    unsigned int c_x = (tile_idx % tiles_on_line)*8 + x;
+                    unsigned int c_y = (tile_idx / tiles_on_line)*8 + y;
+                    int idx = c_y * fb_x + c_x;
+                    if (idx < fb_x*fb_y)
+                        fb[idx] = c;
                 }
             }
             tile_idx++;

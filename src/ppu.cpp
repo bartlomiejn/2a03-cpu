@@ -75,6 +75,7 @@ void PPU::sprite_eval() {
         return;
     }
 
+    // TODO: Not sure if this makes any sense, rewrite this
     const OA *obj = nullptr;
     size_t stride = sizeof(OA);
     uint8_t tile_y = ppuctrl.spr_size ? 16 : 8;
@@ -113,13 +114,25 @@ void PPU::draw() {
         // non-zero pixel
     }
 
+    uint32_t c;
+    switch (out) {
+    case 0:
+        c = 0x000000FF; break;
+    case 1:
+        c = 0x555555FF; break;
+    case 2:
+        c = 0xAAAAAAFF; break;
+    case 3:
+        c = 0xFFFFFFFF; break;
+    }
     // Write to framebuffer
     if (scan_y <= 239 && scan_x <= 256) {
         int fb_i = scan_y * ntsc_fb_x + scan_x - 1;
         if (fb_prim) {
-            fb[fb_i] = pal.get_rgba(out);
+            // TODO: No palette temporarily, just plane0 and 1
+            fb[fb_i] = c; 
         } else {
-            fb_sec[fb_i] = pal.get_rgba(out);
+            fb_sec[fb_i] = c;
         }
     }
 
@@ -292,13 +305,16 @@ void PPU::execute(uint16_t cycles) {
             fb_prim = !fb_prim;
         }
 
-        if (scan_x == ntsc_x - 1 && scan_y == ntsc_y - 1 && scan_short) {
+        if (scan_x == ntsc_x-2 && scan_y == ntsc_y-1 && scan_short) {
+            // Jump directly from (339,261) to (0,0) on odd frames
             scan_short = !scan_short;
+            scan_x = 0;
+            scan_y = 0;
+        } else {
+            // Increment scanline/pixel counter
+            if (scan_x == (ntsc_x - 1)) scan_y = (scan_y + 1) % ntsc_y;
+            scan_x = (scan_x + 1) % ntsc_x;
         }
-
-        // Increment scanline/pixel counter
-        if (scan_x == (ntsc_x - 1)) scan_y = (scan_y + 1) % ntsc_y;
-        scan_x = (scan_x + 1) % ntsc_x;
 
         cycles--;
     }
