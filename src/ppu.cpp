@@ -166,24 +166,18 @@ void PPU::execute(uint16_t cycles) {
             switch (scan_x) {
             case 0:
                 if (scan_y == 0) {
-                    // NT fetch happens here on odd frame
-                } else if (scan_y != 261) {
-                    // BG l addr
-                }
-                switch (scan_y) {
-                case 0:
-                    // TODO: Skipped on BG+odd
-                    break;
-                case 1 ... 239:
+                    if (!scan_short)
+                        // NT fetch after odd frame ends
+                        nt = read(bus.addr);
+                } else if (scan_y >= 1 && scan_y <= 239) {
+                    // BG lsbit addr only
                     bus.addr = (ppuctrl.bg_pt_addr ? 0x1000 : 0x0000) 
                                + nt * 16 + v.sc_fine_y;
-                    break;
                 }
             case 1:
                 if (scan_y == 261) {
-                    // TODO: Clear vblank flag and spr0 overflow
                     ppustatus.vblank = false;
-                    ppustatus.spr0_hit = false;
+                    ppustatus.spr_overflow = false;
                 }
                 // clang-format off
                 // NT
@@ -286,11 +280,12 @@ void PPU::execute(uint16_t cycles) {
             case 248:   case 256:   case 328:   case 336:
                 // clang-format on
                 bg_h_shift |= read(bus.addr);
-                if (scan_y == 256) {
-                    inc_vert(v);
-                }
+                //if (scan_y == 256) {
+                //    inc_vert(v);
+                //}
                 bg_l_shift <<= 8;
                 bg_h_shift <<= 8;
+                inc_vert(v);
                 inc_hori(v);
                 break;
             }
@@ -311,6 +306,9 @@ void PPU::execute(uint16_t cycles) {
             scan_x = 0;
             scan_y = 0;
         } else {
+            if (scan_x == ntsc_x-1 && scan_y == ntsc_y-1) {
+                scan_short = !scan_short;
+            }
             // Increment scanline/pixel counter
             if (scan_x == (ntsc_x - 1)) scan_y = (scan_y + 1) % ntsc_y;
             scan_x = (scan_x + 1) % ntsc_x;
@@ -460,6 +458,8 @@ void PPU::write(uint16_t addr, uint8_t value) {
         case map_quad: mapper->write_ppu(addr, value); break;
         }
         break;
+    case 0x3000 ... 0x3EFF: 
+        write(addr-0x1000, value); break;
     case 0x3F00 ... 0x3FFF: pram[((addr - 0x3F00) % 0x20)] = value; break;
     default: throw std::runtime_error("Invalid/unimplemented PPU write");
     }
@@ -495,6 +495,8 @@ uint8_t PPU::read(uint16_t addr) {
         case map_quad: return mapper->read_ppu(addr); break;
         }
         break;
+    case 0x3000 ... 0x3EFF:
+        return read(addr-0x1000); break;
     case 0x3F00 ... 0x3FFF: return pram[((addr - 0x3F00) % 0x20)]; break;
     default: break;
     }
