@@ -191,10 +191,10 @@ void PPU::execute(uint16_t cycles) {
             case 281:   case 289:   case 297:   case 305:   case 313:   
             case 321:   case 329:   case 337:   case 339:
                 // clang-format on
+                bus.addr = 0x2000 | (v.addr & 0x0FFF);
                 if (scan_x == 257) {
                     set_hori(v, t);
                 }
-                bus.addr = 0x2000 | (v.addr & 0x0FFF);
                 break;
                 // clang-format off
             case 2:     case 10:    case 18:    case 26:    case 34:
@@ -284,8 +284,8 @@ void PPU::execute(uint16_t cycles) {
                 bg_h_shift <<= 8;
                 if (scan_x == 256) {
                     inc_vert(v);
-                    inc_hori(v);
                 }
+                inc_hori(v);
                 break;
             }
             break;
