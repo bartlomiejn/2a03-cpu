@@ -280,13 +280,12 @@ void PPU::execute(uint16_t cycles) {
             case 248:   case 256:   case 328:   case 336:
                 // clang-format on
                 bg_h_shift |= read(bus.addr);
-                //if (scan_y == 256) {
-                //    inc_vert(v);
-                //}
                 bg_l_shift <<= 8;
                 bg_h_shift <<= 8;
-                inc_vert(v);
-                inc_hori(v);
+                if (scan_x == 256) {
+                    inc_vert(v);
+                    inc_hori(v);
+                }
                 break;
             }
             break;
