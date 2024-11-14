@@ -178,8 +178,8 @@ public:
                     case 3:
                         c = 0xFFFFFFFF; break;
                     }
-                    int c_x = (tile_idx % tiles_on_line) + x;
-                    int c_y = (tile_idx / tiles_on_line) + y;
+                    int c_x = (tile_idx % tiles_on_line)*8 + x;
+                    int c_y = (tile_idx / tiles_on_line)*8 + y;
                     fb[c_y*fb_x + c_x] = c;
                     
                 }
