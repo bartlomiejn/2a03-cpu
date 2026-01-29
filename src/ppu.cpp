@@ -1,8 +1,10 @@
-#include <ppu.h>
 #include <gui.h>
+#include <ppu.h>
 
 #include <cstring>
+#include <iomanip>
 
+using namespace std;
 using namespace NES;
 
 void inc_hori(PPUVramAddr &r) {
@@ -329,9 +331,14 @@ void PPU::cpu_write(uint16_t addr, uint8_t value) {
     case 0x2002:  // PPUSTATUS read-only
         break;
     case 0x2003:  // OAMADDR
+        std::cerr << "PPU cpu_write 0x2003 set oamaddr 0x" << setfill('0')
+                  << setw(2) << hex << (uint16_t)value << endl;
         oamaddr = value;
         break;
     case 0x2004:  // OAMDATA
+        std::cerr << "PPU cpu_write 0x2004 write to oamaddr 0x" << setfill('0')
+                  << setw(2) << hex << oamaddr << " value: 0x" << setfill('0')
+                  << setw(2) << hex << (uint16_t)value << endl;
         oam[oamaddr++] = value;
         break;
     case 0x2005:  // PPUSCROLL

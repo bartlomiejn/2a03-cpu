@@ -491,11 +491,10 @@ void CPU::handle_dma() {
             uint8_t data = bus->read((dma_page << 8) | i);
             std::cerr << "DMA OAM: read at 0x" << std::hex << (unsigned int)((dma_page << 8) | i);
             std::cerr << ", data: 0x" << std::hex <<  (unsigned int)data;
-            std::cerr << ", write to 0x2004, ";
+            std::cerr << ", write to 0x2004" << std::endl;
             cycles++;
             bus->write(0x2004, data);
             cycles++;
-            std::cerr << "CYC: " << std::dec << cycles << std::endl;
             i++;
         } while (i != 0);
         std::cerr << "DMA OAM: End" << std::endl;

@@ -16,7 +16,7 @@ else
 	ARGS ?= -cr $(BIN)
 endif
 
-.PHONY: binary run debug lint clean
+.PHONY: binary run debug vg check lint loc clean
 
 $(OUT_DIR):
 	mkdir -p $@

@@ -1,13 +1,17 @@
 #ifndef INC_2A03_GUI_H
 #define INC_2A03_GUI_H
 
-#include <sstream>
-#include <atomic>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <imgui.h>
 #include <imgui_impl_sdl2.h>
 #include <imgui_impl_sdlrenderer2.h>
+#include <mapper.h>
+
+#include <atomic>
+#include <iostream>
+#include <sstream>
+#include <vector>
 
 namespace GFX {
 
