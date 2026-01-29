@@ -56,7 +56,8 @@ set(SOURCES
         src/bus.cpp
         src/load.cpp
         src/mapper.cpp
-        src/logger.cpp)
+        src/logger.cpp
+        src/gui.cpp)
 
 include_directories(
         src 

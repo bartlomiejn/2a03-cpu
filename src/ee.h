@@ -48,7 +48,7 @@ class ExecutionEnvironment {
     std::function<void(ExecutionEnvironment &)> post_step_hook;
 
     ExecutionEnvironment() = delete;
-    ExecutionEnvironment(GFX::GUI &_gui, 
+    ExecutionEnvironment(GFX::GUI &_gui,
                          NES::MemoryBusIntf *_bus,
                          NES::CPU &_cpu, NES::PPU &_ppu,
                          NES::SystemLogGenerator &_logger)
@@ -56,7 +56,9 @@ class ExecutionEnvironment {
           bus(_bus),
           cpu(_cpu),
           ppu(_ppu),
-          logger(_logger) {}
+          logger(_logger) {
+        gui.ppu = &ppu;
+    }
 
     ~ExecutionEnvironment() {
         if (cartridge)
@@ -79,8 +81,9 @@ class ExecutionEnvironment {
         cartridge = NES::iNESv1::load(rom);
         mapper = NES::iNESv1::Mapper::mapper(cartridge.value());
         bus->mapper = mapper;
-        ppu.mapper = mapper; 
+        ppu.mapper = mapper;
         gui.mapper = mapper;
+        gui.ppu = &ppu;
     }
 
     void run() {

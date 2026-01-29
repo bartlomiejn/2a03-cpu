@@ -148,6 +148,7 @@ void PPU::execute(uint16_t cycles) {
         switch (scan_y) {
         case 241:
             if (scan_x == 1) {
+                cerr << "PPU: on_nmi_vblank" << endl;
                 ppustatus.vblank = true;
                 if (on_nmi_vblank) on_nmi_vblank();
                 break;
