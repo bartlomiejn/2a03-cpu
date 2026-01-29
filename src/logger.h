@@ -22,26 +22,38 @@ class SystemLogGenerator {
     /// Should be the same instance as the one used by the CPU.
     SystemLogGenerator(NES::CPU &cpu, NES::PPU &ppu, NES::MemoryBusIntf *bus);
 
-    /// If set writes every line on each log() call to this stream
+    /// If set writes every CPU log line to this stream
     std::optional<std::reference_wrapper<std::ostream>> instr_ostream;
-    /// If set specifies the output log filename
+    /// If set writes every PPU log line to this stream
+    std::optional<std::reference_wrapper<std::ostream>> ppu_ostream;
+    /// If set specifies the output CPU log filename
     std::optional<std::string> log_filename;
+    /// If set specifies the output PPU log filename
+    std::optional<std::string> ppu_log_filename;
 
     /// Logs a line with CPU state.
     std::string log();
 
-    /// Dumps the accumulated log to a file.
+    /// Logs a line with PPU state.
+    std::string log_ppu();
+
+    /// Dumps the accumulated CPU log to a file.
     void save();
+
+    /// Dumps the accumulated PPU log to a file.
+    void save_ppu();
 
     /// Two 8-bit reads on the bus with behaviour same as CPU
     uint16_t bus_read16(uint16_t addr, bool zp);
 
    protected:
-    NES::CPU &cpu;                  ///< CPU whose state is logged.
-    NES::PPU &ppu;                  ///< PPU whose state is logged.
+    NES::CPU &cpu;                      ///< CPU whose state is logged.
+    NES::PPU &ppu;                      ///< PPU whose state is logged.
     NES::MemoryBusIntf *bus;            ///< Bus whose devices are logged.
-    std::vector<std::string> logs;  ///< Contains logs of CPU state
-                                    ///< on each `log` call.
+    std::vector<std::string> logs;      ///< Contains logs of CPU state
+                                        ///< on each `log` call.
+    std::vector<std::string> ppu_logs;  ///< Contains logs of PPU state
+                                        ///< on each `log_ppu` call.
 
    private:
     /// Decodes an opcode into a readable string form.

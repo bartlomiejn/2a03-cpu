@@ -189,6 +189,82 @@ void SystemLogGenerator::save() {
     fstream.close();
 }
 
+std::string SystemLogGenerator::log_ppu() {
+    using namespace std;
+
+    stringstream ss;
+
+    // Scanline position
+    ss << "SL:" << setfill(' ') << setw(3) << dec << (int)ppu.scan_y;
+    ss << " X:" << setfill(' ') << setw(3) << dec << (int)ppu.scan_x;
+
+    // PPUCTRL
+    ss << " CTRL:" << setfill('0') << setw(2) << hex << (int)ppu.ppuctrl.value;
+
+    // PPUMASK
+    ss << " MASK:" << setfill('0') << setw(2) << hex << (int)ppu.ppumask.value;
+
+    // PPUSTATUS
+    ss << " STAT:" << setfill('0') << setw(2) << hex << (int)ppu.ppustatus.value;
+
+    // Internal v register
+    ss << " v:" << setfill('0') << setw(4) << hex << (int)ppu.v.addr;
+
+    // Internal t register
+    ss << " t:" << setfill('0') << setw(4) << hex << (int)ppu.t.addr;
+
+    // Fine X scroll
+    ss << " x:" << dec << (int)ppu.x.fine;
+
+    // Write latch
+    ss << " w:" << (ppu.w ? "1" : "0");
+
+    // OAMADDR
+    ss << " OAM:" << setfill('0') << setw(2) << hex << (int)(ppu.oamaddr & 0xFF);
+
+    // Nametable byte
+    ss << " NT:" << setfill('0') << setw(2) << hex << (int)ppu.nt;
+
+    // Attribute byte
+    ss << " AT:" << setfill('0') << setw(2) << hex << (int)ppu.at;
+
+    // Background shift registers
+    ss << " BGL:" << setfill('0') << setw(4) << hex << (int)ppu.bg_l_shift;
+    ss << " BGH:" << setfill('0') << setw(4) << hex << (int)ppu.bg_h_shift;
+
+    // VBlank and sprite flags
+    ss << " VBL:" << (ppu.ppustatus.vblank ? "1" : "0");
+    ss << " S0:" << (ppu.ppustatus.spr0_hit ? "1" : "0");
+    ss << " OVF:" << (ppu.ppustatus.spr_overflow ? "1" : "0");
+
+    string line = ss.str();
+
+    // Convert to uppercase
+    transform(line.begin(), line.end(), line.begin(),
+              [](char c) -> char { return (char)toupper(c); });
+
+    // Store log
+    ppu_logs.push_back(line);
+
+    // Write to output stream if set
+    if (ppu_ostream) ppu_ostream.value().get() << line << endl;
+
+    return line;
+}
+
+void SystemLogGenerator::save_ppu() {
+    std::ofstream fstream;
+
+    if (ppu_log_filename)
+        fstream.open(ppu_log_filename.value());
+    else
+        fstream.open("latest_ppu.log");
+
+    for (const auto &str : ppu_logs) fstream << str << std::endl;
+
+    fstream.close();
+}
+
 std::string SystemLogGenerator::decode(uint8_t opcode) {
     switch (opcode) {
     case 0x0: return "BRK";

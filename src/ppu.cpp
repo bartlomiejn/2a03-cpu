@@ -181,6 +181,7 @@ void PPU::execute(uint16_t cycles) {
                 if (scan_y == 261) {
                     ppustatus.vblank = false;
                     ppustatus.spr_overflow = false;
+                    ppustatus.spr0_hit = false;
                 }
                 // clang-format off
                 // NT
