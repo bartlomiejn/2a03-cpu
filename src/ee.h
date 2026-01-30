@@ -115,7 +115,6 @@ private:
 
             if (run_single_step) {
                 stop = true;
-                gui.stop = true;
             }
 
             if (debug) {
@@ -129,6 +128,7 @@ private:
                 }
             }
         }
+        gui.stop = true;
     }
 };
 
