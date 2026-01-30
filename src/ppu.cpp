@@ -128,9 +128,8 @@ void PPU::draw() {
             << " x.fine: 0x" << setw(2) << (uint16_t)x.fine << endl;
 
         for (int i = 0; i < 8; i++) {
-
             bg[i] = ((bg_l_shift << x.fine) & pix_mask) >> (15 - i) |
-                    ((bg_l_shift << x.fine) & pix_mask) >> (14 - i);
+                    ((bg_h_shift << x.fine) & pix_mask) >> (14 - i);
 
             out[i] = bg[i];
             pix_mask >>= 1;
@@ -164,7 +163,7 @@ void PPU::draw() {
 
     for (int i = 0; i < 8; i++) {
         unsigned int y_offset = scan_y * ntsc_fb_x;
-        unsigned int x_offset = scan_x - 1 - (7 - i);
+        unsigned int x_offset = scan_x - 1 - (8 - i);
 
         // Write to framebuffer
         int fb_i = y_offset + x_offset;
@@ -227,14 +226,7 @@ void PPU::execute(uint16_t cycles) {
             case 273:   case 281:   case 289:   case 297:   case 305:
             case 313:   case 321:   case 329:   case 337:   case 339:
                 // clang-format on
-                uint16_t nt_base;
-                switch (ppuctrl.nt_xy_select) {
-                case 0: nt_base = 0x2000;
-                case 1: nt_base = 0x2400;
-                case 2: nt_base = 0x2800;
-                case 3: nt_base = 0x2C00;
-                }
-                bus.addr = nt_base | (v.addr & 0x0FFF);
+                bus.addr = 0x2000 | (v.addr & 0x0FFF);
                 NES_LOG("PPU") << "NT addr: 0x" << hex << setfill('0') << setw(4)
                      << bus.addr << endl;
                 break;
@@ -306,7 +298,9 @@ void PPU::execute(uint16_t cycles) {
             case 206:   case 214:   case 222:   case 230:   case 238:
             case 246:   case 254:   case 326:   case 334:
                 // clang-format on
+                bg_l_shift <<= 8;
                 bg_l_shift |= read(bus.addr);
+
                 NES_LOG("PPU") << "Read BGL@0x" << hex << setfill('0') << setw(4)
                      << bus.addr << ", BGL SR = 0x" << setw(4)
                      << (uint16_t)bg_l_shift << endl;
@@ -336,14 +330,13 @@ void PPU::execute(uint16_t cycles) {
             case 208:   case 216:   case 224:   case 232:   case 240:
             case 248:   case 256:   case 328:   case 336:
                 // clang-format on
+                bg_h_shift <<= 8;
                 bg_h_shift |= read(bus.addr);
 
                 NES_LOG("PPU") << "Read BGH@0x" << hex << setfill('0') << setw(4)
                      << bus.addr << ", BGH SR = 0x" << setw(4)
                      << (uint16_t)bg_h_shift << endl;
 
-                bg_l_shift <<= 8;
-                bg_h_shift <<= 8;
 
                 NES_LOG("PPU")
                     << std::format("shifted BGL: {:04X} BGH: {:04X}\n",
@@ -404,6 +397,8 @@ void PPU::cpu_write(uint16_t addr, uint8_t value) {
     switch (addr) {
     case 0x2000:  // PPUCTRL
         ppuctrl.value = value;
+        t.nt_h = value & 0x1;
+        t.nt_v = (value >> 1) & 0x1;
         break;
     case 0x2001:  // PPUMASK
         ppumask.value = value;

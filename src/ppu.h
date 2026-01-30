@@ -67,7 +67,7 @@ union PPUVramAddr {
         uint8_t h : 7;  ///< 7-bit VRAM address high bits
     };
     struct {
-        uint16_t addr : 14;
+        uint16_t addr : 15;
     };
 };
 
