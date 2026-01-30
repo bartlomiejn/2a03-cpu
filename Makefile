@@ -13,7 +13,7 @@ else ifeq ($(BIN), pputest)
 else ifeq ($(BIN), cputest)
 	ARGS ?= -cebmul cputest_neslog
 else ifeq ($(BIN), dk)
-	ARGS ?= -cr DonkeyKong.nes
+	ARGS ?= -cebmr DonkeyKong.nes -l dk_neslog
 else
 	ARGS ?= -r $(BIN)
 endif

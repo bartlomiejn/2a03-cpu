@@ -58,6 +58,7 @@ class ExecutionEnvironment {
           ppu(_ppu),
           logger(_logger) {
         gui.ppu = &ppu;
+        gui.cpu = &cpu;
     }
 
     ~ExecutionEnvironment() {
@@ -84,6 +85,7 @@ class ExecutionEnvironment {
         ppu.mapper = mapper;
         gui.mapper = mapper;
         gui.ppu = &ppu;
+        gui.cpu = &cpu;
     }
 
     void run() {

@@ -15,7 +15,7 @@
 #include <iomanip>
 
 // Forward declaration
-namespace NES { class PPU; }
+namespace NES { class PPU; class CPU; }
 
 namespace GFX {
 
@@ -89,6 +89,7 @@ public:
     unsigned int chr_addr = 0;
 
     NES::PPU *ppu = nullptr;
+    NES::CPU *cpu = nullptr;
 
     int wnd_w, wnd_h;
 
@@ -142,6 +143,7 @@ public:
 
 private:
     void draw_ppu_state();
+    void draw_cpu_state();
     void draw_chr_viewer(NES::iNESv1::Mapper::Base *mapper);
 };
 
@@ -151,6 +153,7 @@ class GUI {
     DebugWindow *debug;
     NES::iNESv1::Mapper::Base *mapper;
     NES::PPU *ppu = nullptr;
+    NES::CPU *cpu = nullptr;
 
     std::atomic<bool> main_fb_ready = false;
     uint32_t *main_fb = nullptr;
@@ -194,9 +197,11 @@ class GUI {
     void enter_runloop() {
         main->draw_frame(nullptr);
 
-        // Pass PPU reference to the debug window
-        if (debug && ppu)
-            debug->ppu = ppu;
+        // Pass PPU and CPU references to the debug window
+        if (debug) {
+            if (ppu) debug->ppu = ppu;
+            if (cpu) debug->cpu = cpu;
+        }
 
         while (!stop) {
             if (handle_events()) break;

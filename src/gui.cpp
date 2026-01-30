@@ -1,5 +1,6 @@
 #include <gui.h>
 #include <ppu.h>
+#include <cpu.h>
 
 namespace GFX {
 
@@ -10,6 +11,9 @@ void DebugWindow::draw(NES::iNESv1::Mapper::Base *mapper) {
 
     // Draw PPU state panel
     draw_ppu_state();
+
+    // Draw CPU state panel
+    draw_cpu_state();
 
     // Draw CHR viewer panel
     if (mapper)
@@ -143,6 +147,88 @@ void DebugWindow::draw_ppu_state() {
         ImGui::Text("Attribute byte: $%02X", ppu->at);
         ImGui::Text("BG shift low:   $%04X", ppu->bg_l_shift);
         ImGui::Text("BG shift high:  $%04X", ppu->bg_h_shift);
+    }
+
+    ImGui::End();
+}
+
+void DebugWindow::draw_cpu_state() {
+    ImGui::SetNextWindowPos(ImVec2(10, 570), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(380, 350), ImGuiCond_FirstUseEver);
+
+    if (!ImGui::Begin("CPU State")) {
+        ImGui::End();
+        return;
+    }
+
+    if (!cpu) {
+        ImGui::Text("CPU not available");
+        ImGui::End();
+        return;
+    }
+
+    // Registers
+    if (ImGui::CollapsingHeader("Registers", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::Text("A:  $%02X (%3u)", cpu->A, cpu->A);
+        ImGui::Text("X:  $%02X (%3u)", cpu->X, cpu->X);
+        ImGui::Text("Y:  $%02X (%3u)", cpu->Y, cpu->Y);
+    }
+
+    ImGui::Separator();
+
+    // Program Counter
+    if (ImGui::CollapsingHeader("Program Counter", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::Text("PC: $%04X", cpu->PC);
+    }
+
+    ImGui::Separator();
+
+    // Stack Pointer
+    if (ImGui::CollapsingHeader("Stack", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::Text("S:  $%02X", cpu->S);
+        ImGui::Text("Stack addr: $01%02X", cpu->S);
+    }
+
+    ImGui::Separator();
+
+    // Status Register
+    if (ImGui::CollapsingHeader("Status Register (P)", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::Text("Raw: $%02X", cpu->P.status);
+        ImGui::Spacing();
+        ImGui::Text("N V - B D I Z C");
+        ImGui::Text("%c %c %c %c %c %c %c %c",
+                    cpu->P.N ? '1' : '0',
+                    cpu->P.V ? '1' : '0',
+                    '-',
+                    (cpu->P.B & 0x2) ? '1' : '0',
+                    cpu->P.D ? '1' : '0',
+                    cpu->P.I ? '1' : '0',
+                    cpu->P.Z ? '1' : '0',
+                    cpu->P.C ? '1' : '0');
+        ImGui::Spacing();
+        ImGui::Text("N (Negative):  %s", cpu->P.N ? "Set" : "Clear");
+        ImGui::Text("V (Overflow):  %s", cpu->P.V ? "Set" : "Clear");
+        ImGui::Text("B (Break):     %u", cpu->P.B);
+        ImGui::Text("D (Decimal):   %s", cpu->P.D ? "Set" : "Clear");
+        ImGui::Text("I (IRQ Dis.):  %s", cpu->P.I ? "Set" : "Clear");
+        ImGui::Text("Z (Zero):      %s", cpu->P.Z ? "Set" : "Clear");
+        ImGui::Text("C (Carry):     %s", cpu->P.C ? "Set" : "Clear");
+    }
+
+    ImGui::Separator();
+
+    // Interrupt State
+    if (ImGui::CollapsingHeader("Interrupts", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::Text("IRQ line: %s", cpu->IRQ ? "Asserted" : "Clear");
+        ImGui::Text("NMI line: %s", cpu->NMI ? "Asserted" : "Clear");
+    }
+
+    ImGui::Separator();
+
+    // Execution State
+    if (ImGui::CollapsingHeader("Execution", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::Text("Current opcode: $%02X", cpu->opcode);
+        ImGui::Text("Cycle count:    %u", cpu->cycles);
     }
 
     ImGui::End();
