@@ -1,6 +1,7 @@
 #include <log.h>
 #include <mapper.h>
 
+#include <format>
 #include <iostream>
 
 using namespace NES::iNESv1;
@@ -101,16 +102,16 @@ Mapper::NTMirror Mapper::NROM::mirroring() {
 }
 
 uint8_t Mapper::NROM::read_ppu(uint16_t addr) {
-    NES_LOG("NROM") << "read_ppu 0x" << std::hex << addr << " ";
     switch (addr) {
     case 0x0000 ... 0x1FFF:
         if (addr >= cartridge.chr_rom.size()) {
-            NES_LOG("NROM") << "PPU read exceeds CHR ROM size, addr: " << std::hex
-                      << addr << std::endl;
+            NES_LOG("NROM")
+                << std::format("read_ppu@{:04X} exceeds CHR ROM size\n", addr,
+                               (uint16_t)cartridge.chr_rom[addr]);
             return 0x0;
         } else {
-            NES_LOG("NROM") << "value: " << (uint16_t)cartridge.chr_rom[addr]
-                     << std::endl;
+            NES_LOG("NROM") << std::format("read_ppu@{:04X}={:02X}\n", addr,
+                                           (uint16_t)cartridge.chr_rom[addr]);
             return cartridge.chr_rom[addr];
         }
         break;

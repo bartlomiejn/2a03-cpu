@@ -140,17 +140,12 @@ int main(int argc, char *argv[]) {
 
     if (!opts.rom.empty()) {
         std::cout << "Running " << opts.rom << std::endl;
-        ee.logger.log_filename = NES::Test::gen_logname(opts.rom);
-        ee.logger.ppu_log_filename = NES::Test::gen_logname(opts.rom + "_ppu");
         ee.load_iNESv1(opts.rom);
         ee.power(nullptr);
-        ee.pre_step_hook = [](auto &ee) {
-            ee.logger.log();
-            ee.logger.log_ppu();
+        ee.pre_step_hook = [&](auto &ee) {
+            if (opts.log_cpu) NES_LOG("CPU") << ee.logger.log() << std::endl;
         };
         ee.run();
-        ee.logger.save();
-        ee.logger.save_ppu();
     } else if (opts.run_nestest) {
         NES::Test::nestest(ee, opts.run_nestest_i);
     } else if (opts.run_ppu_tests) {

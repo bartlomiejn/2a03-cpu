@@ -74,6 +74,7 @@ include_directories(
 configure_file(${NES_TEST_DIR}/nestest.log nestest.log COPYONLY)
 configure_file(${NES_TEST_DIR}/nestest.nes nestest.nes COPYONLY)
 configure_file(${PPU_TESTS_DIR}/palette_ram.nes palette_ram.nes COPYONLY)
+configure_file(${EXTERNAL_DIR}/color_test.nes color_test.nes COPYONLY)
 configure_file(${PPU_RDBUF_TESTS_DIR}/test_ppu_read_buffer.nes test_ppu_read_buffer.nes COPYONLY)
 
 # Copy GUI fonts to output dir

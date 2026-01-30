@@ -260,7 +260,7 @@ void DebugWindow::draw_chr_viewer(NES::iNESv1::Mapper::Base *mapper) {
 
     size_t chr_rom_size = mapper->cartridge.chr_rom.size();
     size_t tile_idx = 0;
-    for (size_t tile_start = 0x0; tile_start < chr_rom_size;
+    for (size_t tile_start = chr_addr; tile_start < chr_rom_size;
          tile_start += tile_size) {
         for (int y = 0; y < 8; y++) {
             uint8_t p0 = mapper->cartridge.chr_rom[tile_start + y];

@@ -13,7 +13,7 @@
 
 namespace NES {
 
-/// PPUCTRL write register
+/// 2000 PPUCTRL write register
 bitfield_union(
     PPUCTRL, uint8_t value,
     uint8_t nt_xy_select : 2;  ///< Base nametable addr 0=$2000, 1=$2400,
@@ -28,7 +28,7 @@ bitfield_union(
                           ///< interval (1: on).
 );
 
-/// PPUMASK write register
+/// 2001 PPUMASK write register
 bitfield_union(
     PPUMASK, uint8_t value,
     bool grayscale : 1;          ///< Disable colorburst: 1: Grayscale 0: Color
@@ -43,7 +43,7 @@ bitfield_union(
     bool b : 1;                  ///< Emphasize B
 );
 
-/// PPUSTATUS r/o register
+/// 2002 PPUSTATUS r/o register
 bitfield_union(
     PPUSTATUS, uint8_t value,
     bool ppu_open_bus : 5;  ///< Returns stale PPU bus contents.

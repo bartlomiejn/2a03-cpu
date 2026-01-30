@@ -6,7 +6,7 @@
 namespace NES {
 class APU {
    public:
-    uint8_t read(uint8_t addr) { return 0xFF; }
+    uint8_t read(uint8_t addr) { return 0x00; }
 
     void write(uint8_t val) {}
 };

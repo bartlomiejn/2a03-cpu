@@ -128,13 +128,10 @@ void PPU::draw() {
             << " x.fine: 0x" << setw(2) << (uint16_t)x.fine << endl;
 
         for (int i = 0; i < 8; i++) {
-            NES_LOG("PPU") << " pixmask 0x" << hex << setw(4) << setfill('0') <<
-            pix_mask;
 
             bg[i] = ((bg_l_shift << x.fine) & pix_mask) >> (15 - i) |
                     ((bg_l_shift << x.fine) & pix_mask) >> (14 - i);
 
-            NES_LOG("PPU") << " out[" << i << "]: " << (uint16_t)(bg[i]) << endl;
             out[i] = bg[i];
             pix_mask >>= 1;
         }
@@ -169,9 +166,6 @@ void PPU::draw() {
         unsigned int y_offset = scan_y * ntsc_fb_x;
         unsigned int x_offset = scan_x - 1 - (7 - i);
 
-        NES_LOG("PPU") << " y_offset: " << dec << y_offset << " x_offset: " << x_offset
-             << endl;
-
         // Write to framebuffer
         int fb_i = y_offset + x_offset;
         if (fb_prim) {
@@ -186,8 +180,9 @@ void PPU::draw() {
 void PPU::execute(uint16_t cycles) {
     NES_LOG("PPU") << "Run for " << dec << cycles << " cycles" << endl;
     while (cycles) {
-        NES_LOG("PPU") << "X: " << dec << scan_x << " Y: " << dec << scan_y << endl;
-        if (scan_y == 241 && scan_x == 1) {
+        NES_LOG("PPU") << std::format("X: {:d} Y: {:d} v: {:04X}\n", scan_x,
+                                      scan_y, v.addr);
+        if (scan_y == 241 && scan_x == 1 && ppuctrl.vbl_nmi) {
             NES_LOG("PPU") << "set vblank" << endl;
             ppustatus.vblank = true;
             if (on_nmi_vblank) on_nmi_vblank();
@@ -232,7 +227,14 @@ void PPU::execute(uint16_t cycles) {
             case 273:   case 281:   case 289:   case 297:   case 305:
             case 313:   case 321:   case 329:   case 337:   case 339:
                 // clang-format on
-                bus.addr = 0x2000 | (v.addr & 0x0FFF);
+                uint16_t nt_base;
+                switch (ppuctrl.nt_xy_select) {
+                case 0: nt_base = 0x2000;
+                case 1: nt_base = 0x2400;
+                case 2: nt_base = 0x2800;
+                case 3: nt_base = 0x2C00;
+                }
+                bus.addr = nt_base | (v.addr & 0x0FFF);
                 NES_LOG("PPU") << "NT addr: 0x" << hex << setfill('0') << setw(4)
                      << bus.addr << endl;
                 break;
@@ -343,7 +345,9 @@ void PPU::execute(uint16_t cycles) {
                 bg_l_shift <<= 8;
                 bg_h_shift <<= 8;
 
-                NES_LOG("PPU") << "BGL, BGH shifted right by 8" << endl;
+                NES_LOG("PPU")
+                    << std::format("shifted BGL: {:04X} BGH: {:04X}\n",
+                                   bg_l_shift, bg_h_shift);
 
                 if (scan_x == 256) {
                     NES_LOG("PPU") << "Increment vert V" << endl;
@@ -428,6 +432,7 @@ void PPU::cpu_write(uint16_t addr, uint8_t value) {
         else
             v.l = value;
         w = !w;
+        NES_LOG("PPU") << "new v.addr: 0x" << v.addr << endl;
         break;
     case 0x2007:  // PPUDATA
         write(v.addr, value);
@@ -458,12 +463,15 @@ uint8_t PPU::cpu_read(uint16_t addr, bool passive) {
     case 0x2001:  // Write-only
         return cpu_bus;
     case 0x2002:
+        uint8_t out_status;
+        out_status = ppustatus.value;
         if (!passive) {
             w = (bool)0;
             // TODO: Reads from here should reset vblank flag bit 7
             cpu_bus = (ppustatus.value & 0xE0) | (cpu_bus & 0x1F);
         }
-        return ppustatus.value;
+        ppustatus.vblank = 0;
+        return out_status;
     case 0x2003:  // Write-only
         return cpu_bus;
     case 0x2004:
@@ -518,6 +526,8 @@ uint8_t PPU::cpu_read(uint16_t addr, bool passive) {
 void PPU::write(uint16_t addr, uint8_t value) {
     using namespace iNESv1::Mapper;
     NTMirror mirror = mapper->mirroring();
+    NES_LOG("PPU") << std::format("write {:02X} to {:04X}, mirror: {:d}\n",
+                                  value, addr, (int)mirror);
     switch (addr) {
     case 0x0000 ... 0x1FFF: mapper->write_ppu(addr, value); break;
     case 0x2000 ... 0x23FF: vram[addr - 0x2000] = value; break;
@@ -555,6 +565,8 @@ void PPU::write(uint16_t addr, uint8_t value) {
 uint8_t PPU::read(uint16_t addr) {
     using namespace iNESv1::Mapper;
     NTMirror mirror = mapper->mirroring();
+    NES_LOG("PPU") << std::format("read@{:04X}, mirror: {:d}\n", addr,
+                                  (int)mirror);
     switch (addr) {
     case 0x0000 ... 0x1FFF: return mapper->read_ppu(addr); break;
     case 0x2000 ... 0x23FF: return vram[addr - 0x2000]; break;
