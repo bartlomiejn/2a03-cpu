@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
     NES::PPU ppu(gui, pal);
     NES::APU apu;
     NES::MemoryBusIntf *bus;
-    NES::Test::MemoryBus *mock_bus;
+    NES::Test::MemoryBus *mock_bus = nullptr;
     if (opts.run_cpu_tests) {
         mock_bus = new NES::Test::MemoryBus();
         bus = mock_bus;

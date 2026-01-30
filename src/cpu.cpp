@@ -483,7 +483,6 @@ void CPU::handle_dma() {
         throw runtime_error("PCM DMA unimplemented");
     } else if (dma == DMA_OAM) {
         cerr << "DMA OAM: Start, CYC: " << cycles << endl;
-        // TODO: PCM DMA can interrupt OAM DMA
         if (cycles & 0x1) {
             cerr << "DMA OAM: odd cycle, wait one cycle" << endl;
             cycles++;
@@ -501,6 +500,9 @@ void CPU::handle_dma() {
             i++;
         } while (i != 0);
         cerr << "DMA OAM: End" << endl;
+
+        // TODO: PCM DMA can interrupt OAM DMA
+
         dma = DMA_Clear;
     }
 }
