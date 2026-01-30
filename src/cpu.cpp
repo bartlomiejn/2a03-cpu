@@ -6,6 +6,8 @@
 #include <iostream>
 #include <limits>
 
+using namespace std;
+
 // Detailed cycle counting
 // Example 1: LDA (Load Accumulator) Instruction
 //
@@ -389,31 +391,31 @@ uint16_t CPU::execute() {
     }
 
     if (NMI) {
-        std::cerr << "CPU: Handling NMI" << std::endl;
+        cerr << "CPU: Handling NMI" << endl;
         interrupt(i_nmi);
     }
     if (IRQ && !P.I) {
-        std::cerr << "CPU: Handling IRQ" << std::endl;
+        cerr << "CPU: Handling IRQ" << endl;
         interrupt(i_irq);
     }
 
     return cycles > initial_cyc
                ? cycles - initial_cyc
-               : std::numeric_limits<uint32_t>::max() - initial_cyc + cycles;
+               : numeric_limits<uint32_t>::max() - initial_cyc + cycles;
 }
 
 void CPU::interrupt(NES::Interrupt type) {
     if (type != i_reset) {
-        std::cerr << "CPU: Push to stack PC " 
-                  << " H: " << std::hex << (unsigned int)(uint8_t)(PC >> 8) 
-                  << " L: " << std::hex << (unsigned int)(uint8_t)PC 
-                  << std::endl;
-        std::cerr << "PC: Push to stack P: " << std::hex << (type == i_brk ? P.status | 0x10 : P.status) << std::endl;
+        cerr << "CPU: Push to stack PC "
+             << " H: " << hex << (unsigned int)(uint8_t)(PC >> 8)
+             << " L: " << hex << (unsigned int)(uint8_t)PC << endl;
+        cerr << "PC: Push to stack P: " << hex
+             << (type == i_brk ? P.status | 0x10 : P.status) << endl;
         PH((uint8_t)(PC >> 8), false);
         PH((uint8_t)PC, false);
         PH(type == i_brk ? P.status | 0x10 : P.status, false);
     } else {
-        std::cerr << "CPU: P |= 0x04" << std::endl;
+        cerr << "CPU: P |= 0x04" << endl;
         P.status |= 0x04;
         // write(0x4015, 0x0);  // All channels disabled
     }
@@ -421,24 +423,24 @@ void CPU::interrupt(NES::Interrupt type) {
     P.I = true;
 
     switch (type) {
-    case i_nmi: 
-        std::cerr << "CPU: Interrupt type NMI" << std::endl;
+    case i_nmi:
+        cerr << "CPU: Interrupt type NMI" << endl;
         PC = read16(0xFFFA); break;
-    case i_reset: 
-        std::cerr << "CPU: Interrupt type reset" << std::endl;
+    case i_reset:
+        cerr << "CPU: Interrupt type reset" << endl;
         PC = read16(0xFFFC); break;
     case i_irq:
-        std::cerr << "CPU: Interrupt type IRQ" << std::endl;
+        cerr << "CPU: Interrupt type IRQ" << endl;
         PC = read16(0xFFFE); break;
     case i_brk:
-        std::cerr << "CPU: Interupt type BRK" << std::endl;
+        cerr << "CPU: Interupt type BRK" << endl;
         PC = read16(0xFFFE); break;
     default:
-        std::cerr << "CPU: Unhandled interrupt type" << std::endl;
-        throw std::runtime_error("Invalid interrupt type");
+        cerr << "CPU: Unhandled interrupt type" << endl;
+        throw runtime_error("Invalid interrupt type");
     }
 
-    std::cerr << "CPU: New PC: 0x" << std::hex << (unsigned int)PC << std::endl;
+    cerr << "CPU: New PC: 0x" << hex << (unsigned int)PC << endl;
 
     if (type == i_nmi)
         NMI = false;
@@ -446,7 +448,7 @@ void CPU::interrupt(NES::Interrupt type) {
         IRQ = false;
 
     cycles += 7;
-    std::cerr << "CPU: Interrupt finish" << std::endl;
+    cerr << "CPU: Interrupt finish" << endl;
 }
 
 uint8_t CPU::read(uint16_t addr) {
@@ -469,7 +471,7 @@ uint16_t CPU::read16(uint16_t addr, bool zp) {
 void CPU::write(uint16_t addr, uint8_t value) { bus->write(addr, value); }
 
 void CPU::schedule_dma_oam(uint8_t page) {
-    std::cerr << "CPU::schedule_dma_oam page: " << (unsigned int)page << std::endl;
+    cerr << "CPU::schedule_dma_oam page: " << (uint16_t)page << endl;
     dma = DMA_OAM;
     dma_page = page;
 }
@@ -478,26 +480,27 @@ void CPU::schedule_nmi() { NMI = true; }
 
 void CPU::handle_dma() {
     if (dma == DMA_PCM) {
-        throw std::runtime_error("PCM DMA unimplemented");
+        throw runtime_error("PCM DMA unimplemented");
     } else if (dma == DMA_OAM) {
-        std::cerr << "DMA OAM: Start, CYC: " << cycles << std::endl;
+        cerr << "DMA OAM: Start, CYC: " << cycles << endl;
         // TODO: PCM DMA can interrupt OAM DMA
         if (cycles & 0x1) {
-            std::cerr << "DMA OAM: odd cycle, wait one cycle" << std::endl;
+            cerr << "DMA OAM: odd cycle, wait one cycle" << endl;
             cycles++;
         }
         uint8_t i = 0;
         do {
             uint8_t data = bus->read((dma_page << 8) | i);
-            std::cerr << "DMA OAM: read at 0x" << std::hex << (unsigned int)((dma_page << 8) | i);
-            std::cerr << ", data: 0x" << std::hex <<  (unsigned int)data;
-            std::cerr << ", write to 0x2004" << std::endl;
+            cerr << "DMA OAM: read at 0x" << hex
+                 << (unsigned int)((dma_page << 8) | i);
+            cerr << ", data: 0x" << hex << (unsigned int)data;
+            cerr << ", write to 0x2004" << endl;
             cycles++;
             bus->write(0x2004, data);
             cycles++;
             i++;
         } while (i != 0);
-        std::cerr << "DMA OAM: End" << std::endl;
+        cerr << "DMA OAM: End" << endl;
         dma = DMA_Clear;
     }
 }
@@ -517,7 +520,7 @@ bool CPU::idx_abs_crossing_cycle(uint8_t opcode) {
         0x7C, 0xDC, 0xFC, 0xC9, 0xBF, 0xB3, 0xBD, 0xB9, 0xB1,
     };
     size_t size = sizeof(incr_ops) / sizeof(uint8_t);
-    return std::find(incr_ops, incr_ops + size, opcode) != (incr_ops + size);
+    return find(incr_ops, incr_ops + size, opcode) != (incr_ops + size);
 }
 
 uint16_t CPU::operand_addr(AddressingMode mode) {
@@ -595,9 +598,7 @@ uint16_t CPU::operand_addr(AddressingMode mode) {
             cycles++;
         break;
     case ind:
-    default:
-        std::cerr << "Invalid addressing mode: " << std::hex << int(mode)
-                  << std::endl;
+    default: cerr << "Invalid addressing mode: " << hex << int(mode) << endl;
     }
     return addr;
 }
@@ -733,8 +734,7 @@ void CPU::JMP(AddressingMode mode) {
         PC = (uint16_t)h_addr << 8 | l_addr;
         cycles += 5;
         break;
-    default:
-        std::cerr << "Invalid addressing mode for JMP: " << mode << std::endl;
+    default: cerr << "Invalid addressing mode for JMP: " << mode << endl;
     }
 }
 
@@ -804,7 +804,7 @@ void CPU::ADC(AddressingMode mode) {
     case abs_y: cycles += 4; break;
     case idx_ind_x: cycles += 6; break;
     case ind_idx_y: cycles += 5; break;
-    default: std::cerr << "Invalid addressing mode for ADC." << std::endl;
+    default: cerr << "Invalid addressing mode for ADC." << endl;
     }
 }
 
@@ -820,7 +820,7 @@ void CPU::AND(AddressingMode mode) {
     case abs_y: cycles += 4; break;
     case idx_ind_x: cycles += 6; break;
     case ind_idx_y: cycles += 5; break;
-    default: std::cerr << "Invalid addressing mode for AND." << std::endl;
+    default: cerr << "Invalid addressing mode for AND." << endl;
     }
 }
 
@@ -839,7 +839,7 @@ void CPU::ASL(AddressingMode mode) {
     case zp_x: cycles += 6; break;
     case abs: cycles += 6; break;
     case abs_x: cycles += 7; break;
-    default: std::cerr << "Invalid addressing mode for ASL." << std::endl;
+    default: cerr << "Invalid addressing mode for ASL." << endl;
     }
 }
 
@@ -870,7 +870,7 @@ void CPU::CP(const uint8_t &reg, AddressingMode mode) {
     case abs_y: cycles += 4; break;
     case idx_ind_x: cycles += 6; break;
     case ind_idx_y: cycles += 5; break;
-    default: std::cerr << "Invalid addressing mode for CPx." << std::endl;
+    default: cerr << "Invalid addressing mode for CPx." << endl;
     }
 }
 
@@ -886,7 +886,7 @@ void CPU::DEC(AddressingMode mode) {
     case zp_x: cycles += 6; break;
     case abs: cycles += 6; break;
     case abs_x: cycles += 7; break;
-    default: std::cerr << "Invalid addressing mode for DEC." << std::endl;
+    default: cerr << "Invalid addressing mode for DEC." << endl;
     }
 }
 
@@ -903,7 +903,7 @@ void CPU::EOR(AddressingMode mode) {
     case abs_y: cycles += 4; break;
     case idx_ind_x: cycles += 6; break;
     case ind_idx_y: cycles += 5; break;
-    default: std::cerr << "Invalid addressing mode for EOR." << std::endl;
+    default: cerr << "Invalid addressing mode for EOR." << endl;
     }
 }
 
@@ -938,7 +938,7 @@ void CPU::LSR(AddressingMode mode) {
     case zp_x: cycles += 6; break;
     case abs: cycles += 6; break;
     case abs_x: cycles += 7; break;
-    default: std::cerr << "Invalid addressing mode for LSR." << std::endl;
+    default: cerr << "Invalid addressing mode for LSR." << endl;
     }
 }
 
@@ -955,7 +955,7 @@ void CPU::ORA(AddressingMode mode) {
     case abs_y: cycles += 4; break;
     case idx_ind_x: cycles += 6; break;
     case ind_idx_y: cycles += 5; break;
-    default: std::cerr << "Invalid addressing mode for CPx." << std::endl;
+    default: cerr << "Invalid addressing mode for CPx." << endl;
     }
 }
 
@@ -974,7 +974,7 @@ void CPU::ROL(AddressingMode mode) {
     case zp_x: cycles += 6; break;
     case abs: cycles += 6; break;
     case abs_x: cycles += 7; break;
-    default: std::cerr << "Invalid addressing mode for ROL." << std::endl;
+    default: cerr << "Invalid addressing mode for ROL." << endl;
     }
 }
 
@@ -993,7 +993,7 @@ void CPU::ROR(AddressingMode mode) {
     case zp_x: cycles += 6; break;
     case abs: cycles += 6; break;
     case abs_x: cycles += 7; break;
-    default: std::cerr << "Invalid addressing mode for ROR." << std::endl;
+    default: cerr << "Invalid addressing mode for ROR." << endl;
     }
 }
 
@@ -1009,7 +1009,7 @@ void CPU::SBC(AddressingMode mode) {
     case abs_y: cycles += 4; break;
     case idx_ind_x: cycles += 6; break;
     case ind_idx_y: cycles += 5; break;
-    default: std::cerr << "Invalid addressing mode for SBC." << std::endl;
+    default: cerr << "Invalid addressing mode for SBC." << endl;
     }
 }
 
@@ -1031,7 +1031,7 @@ void CPU::LD(uint8_t &reg, AddressingMode mode) {
     case abs_y: cycles += 4; break;
     case idx_ind_x: cycles += 6; break;
     case ind_idx_y: cycles += 5; break;
-    default: std::cerr << "Invalid addressing mode for LDx." << std::endl;
+    default: cerr << "Invalid addressing mode for LDx." << endl;
     }
 }
 
@@ -1047,7 +1047,7 @@ void CPU::ST(uint8_t reg, AddressingMode mode) {
     case abs_y: cycles += 5; break;
     case idx_ind_x: cycles += 6; break;
     case ind_idx_y: cycles += 6; break;
-    default: std::cerr << "Invalid addressing mode for STx." << std::endl;
+    default: cerr << "Invalid addressing mode for STx." << endl;
     }
 }
 
@@ -1063,7 +1063,7 @@ void CPU::INC(AddressingMode mode) {
     case zp_x: cycles += 6; break;
     case abs: cycles += 6; break;
     case abs_x: cycles += 7; break;
-    default: std::cerr << "Invalid addressing mode for INC." << std::endl;
+    default: cerr << "Invalid addressing mode for INC." << endl;
     }
 }
 
@@ -1072,8 +1072,8 @@ void CPU::INC(AddressingMode mode) {
 void CPU::T(uint8_t &reg_from, uint8_t &reg_to) {
     reg_to = reg_from;
     cycles += 2;
-    if (std::addressof(reg_from) == std::addressof(X) &&
-        std::addressof(reg_to) == std::addressof(S))
+    if (addressof(reg_from) == addressof(X) &&
+        addressof(reg_to) == addressof(S))
         return;
     set_NZ(reg_from);
 }
@@ -1149,7 +1149,7 @@ void CPU::LAX(AddressingMode mode) {
     case abs_y: cycles += 4; break;
     case idx_ind_x: cycles += 6; break;
     case ind_idx_y: cycles += 5; break;
-    default: std::cerr << "Invalid addressing mode for LAX." << std::endl;
+    default: cerr << "Invalid addressing mode for LAX." << endl;
     }
 }
 
@@ -1169,7 +1169,7 @@ void CPU::SAX(AddressingMode mode) {
     case zp_y: cycles += 4; break;
     case abs: cycles += 4; break;
     case idx_ind_x: cycles += 6; break;
-    default: std::cerr << "Invalid addressing mode for SAX." << std::endl;
+    default: cerr << "Invalid addressing mode for SAX." << endl;
     }
 }
 
@@ -1204,7 +1204,7 @@ void CPU::DCP(AddressingMode mode) {
     case abs_y: cycles += 7; break;
     case idx_ind_x: cycles += 8; break;
     case ind_idx_y: cycles += 8; break;
-    default: std::cerr << "Invalid addressing mode for DCP." << std::endl;
+    default: cerr << "Invalid addressing mode for DCP." << endl;
     }
 }
 
@@ -1228,8 +1228,7 @@ void CPU::ISC(AddressingMode mode) {
     case abs_y: cycles += 7; break;
     case idx_ind_x: cycles += 8; break;
     case ind_idx_y: cycles += 8; break;
-    default:
-        std::cerr << "Invalid addressing mode for ISC (ISB, INS)." << std::endl;
+    default: cerr << "Invalid addressing mode for ISC (ISB, INS)." << endl;
     }
 }
 
@@ -1253,7 +1252,7 @@ void CPU::SLO(AddressingMode mode) {
     case abs_y: cycles += 7; break;
     case idx_ind_x: cycles += 8; break;
     case ind_idx_y: cycles += 8; break;
-    default: std::cerr << "Invalid addressing mode for SLO/ASO." << std::endl;
+    default: cerr << "Invalid addressing mode for SLO/ASO." << endl;
     }
 }
 
@@ -1277,7 +1276,7 @@ void CPU::RLA(AddressingMode mode) {
     case abs_y: cycles += 7; break;
     case idx_ind_x: cycles += 8; break;
     case ind_idx_y: cycles += 8; break;
-    default: std::cerr << "Invalid addressing mode for SLO/ASO." << std::endl;
+    default: cerr << "Invalid addressing mode for SLO/ASO." << endl;
     }
 }
 
@@ -1301,7 +1300,7 @@ void CPU::SRE(AddressingMode mode) {
     case abs_y: cycles += 7; break;
     case idx_ind_x: cycles += 8; break;
     case ind_idx_y: cycles += 8; break;
-    default: std::cerr << "Invalid addressing mode for SRE." << std::endl;
+    default: cerr << "Invalid addressing mode for SRE." << endl;
     }
 }
 
@@ -1324,7 +1323,7 @@ void CPU::RRA(AddressingMode mode) {
     case abs_y: cycles += 7; break;
     case idx_ind_x: cycles += 8; break;
     case ind_idx_y: cycles += 8; break;
-    default: std::cerr << "Invalid addressing mode for RRA." << std::endl;
+    default: cerr << "Invalid addressing mode for RRA." << endl;
     }
 }
 
@@ -1371,7 +1370,7 @@ void CPU::SHA(AddressingMode mode) {
         cycles += 5; break;
     case ind_idx_y:
         cycles += 6; break;
-    default: std::cerr << "Invalid addressing mode for SHA." << std::endl;
+    default: cerr << "Invalid addressing mode for SHA." << endl;
     }
 }
 

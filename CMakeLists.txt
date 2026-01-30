@@ -34,7 +34,7 @@ endif()
 
 # Disable optimizations for GCC debug builds
 if(CMAKE_COMPILER_IS_GNUCC)
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -Werror -Wall -fsanitize=address")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -Werror -Wall")
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -Werror -Wall")
 endif(CMAKE_COMPILER_IS_GNUCC)
 

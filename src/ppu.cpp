@@ -8,15 +8,30 @@ using namespace std;
 using namespace NES;
 
 void inc_hori(PPUVramAddr &r) {
-    r.sc_x++;
-    if (!r.sc_x)
-        r.nt_h = !r.nt_h;  // Not sure if the nametable switch is correct here
+    if (r.sc_x == 0x1F) {
+        r.sc_x = 0;
+        r.nt_h ^= 1;  // Switch H nametable
+    } else {
+        r.sc_x++;
+    }
 }
 
 void inc_vert(PPUVramAddr &r) {
-    r.sc_fine_y++;
-    if (!r.sc_fine_y) r.sc_y++;
-    if (!r.sc_y) r.nt_v = !r.nt_v;
+    // https://www.nesdev.org/wiki/PPU_scrolling#Wrapping_around
+    if (r.sc_fine_y < 7) {
+        r.sc_fine_y++;
+    } else {
+        r.sc_fine_y = 0;
+
+        if (r.sc_y == 29) {
+            r.sc_y = 0;
+            r.nt_v ^= 1;  // Switch V nametable
+        } else if (r.sc_y == 31) {
+            r.sc_y = 0;
+        } else {
+            r.sc_y++;
+        }
+    }
 }
 
 void set_hori(PPUVramAddr &to, const PPUVramAddr &from) {
@@ -127,78 +142,65 @@ void PPU::draw() {
     case 3:
         c = 0xFFFFFFFF; break;
     }
+
     // Write to framebuffer
     if (scan_y <= 239 && scan_x <= 256) {
         int fb_i = scan_y * ntsc_fb_x + scan_x - 1;
         if (fb_prim) {
             // TODO: No palette temporarily, just plane0 and 1
-            fb[fb_i] = c; 
+            fb[fb_i] = c;
         } else {
             fb_sec[fb_i] = c;
         }
     }
-
-    // Shift tile
-    bg_l_shift <<= 1;
-    bg_h_shift <<= 1;
 }
 
 void PPU::execute(uint16_t cycles) {
     while (cycles) {
-        switch (scan_y) {
-        case 241:
-            if (scan_x == 1) {
-                cerr << "PPU: on_nmi_vblank" << endl;
-                ppustatus.vblank = true;
-                if (on_nmi_vblank) on_nmi_vblank();
-                break;
-            }
-        case 0 ... 239:
-        case 261:
-            if (scan_x >= 1 && scan_x <= 64) oam_sec_clear();
-            if (scan_x >= 65 && scan_x <= 256) sprite_eval();
-            if (scan_x >= 257 && scan_x <= 320) oamaddr = 0x0;
+        if (scan_y == 241 && scan_x == 1) {
+            cerr << "PPU: set vblank" << endl;
+            ppustatus.vblank = true;
+            if (on_nmi_vblank) on_nmi_vblank();
+        }
+        if (scan_y <= 240 && scan_x == 0) {
+            // BG lsbit addr only
+            bus.addr =
+                (ppuctrl.bg_pt_addr ? 0x1000 : 0x0000) + nt * 16 + v.sc_fine_y;
+        }
+        if (scan_y <= 239 || scan_y == 261) {
             draw();
+
+            bg_l_shift <<= 1;
+            bg_h_shift <<= 1;
+
+            // Clear flags
             if (scan_y == 261 && scan_x == 1) {
                 ppustatus.vblank = false;
                 ppustatus.spr_overflow = false;
+                ppustatus.spr0_hit = false;
             }
-            if (scan_y == 261 && scan_x >= 280 && scan_x <= 304) {
-                set_vert(v, t);
-            }
+
+            // Sprite operations
+            if (scan_x >= 1 && scan_x <= 64) oam_sec_clear();
+            if (scan_x >= 65 && scan_x <= 256) sprite_eval();
+
+            // Clear oamaddr (I don't remember anymore why)
+            if (scan_x >= 257 && scan_x <= 320) oamaddr = 0x0;
+
             switch (scan_x) {
-            case 0:
-                if (scan_y == 0) {
-                    if (!scan_short)
-                        // NT fetch after odd frame ends
-                        nt = read(bus.addr);
-                } else if (scan_y >= 1 && scan_y <= 239) {
-                    // BG lsbit addr only
-                    bus.addr = (ppuctrl.bg_pt_addr ? 0x1000 : 0x0000) 
-                               + nt * 16 + v.sc_fine_y;
-                }
-            case 1:
-                if (scan_y == 261) {
-                    ppustatus.vblank = false;
-                    ppustatus.spr_overflow = false;
-                    ppustatus.spr0_hit = false;
-                }
                 // clang-format off
                 // NT
-            case 9:     case 17:    case 25:    case 33:    case 41:    
-            case 49:    case 57:    case 65:    case 73:    case 81:
-            case 89:    case 97:    case 105:   case 113:   case 121:
-            case 129:   case 137:   case 145:   case 153:   case 161:
-            case 169:   case 177:   case 185:   case 193:   case 201:
-            case 209:   case 217:   case 225:   case 233:   case 241:
-            case 249:   case 257:   case 259:   case 265:   case 273:   
-            case 281:   case 289:   case 297:   case 305:   case 313:   
-            case 321:   case 329:   case 337:   case 339:
+            case 1:     case 9:     case 17:    case 25:    case 33:
+            case 41:    case 49:    case 57:    case 65:    case 73:
+            case 81:    case 89:    case 97:    case 105:   case 113:
+            case 121:   case 129:   case 137:   case 145:   case 153:
+            case 161:   case 169:   case 177:   case 185:   case 193:
+            case 201:   case 209:   case 217:   case 225:   case 233:
+            case 241:   case 249:   case 257:   case 259:   case 265:
+            case 273:   case 281:   case 289:   case 297:   case 305:
+            case 313:   case 321:   case 329:   case 337:   case 339:
                 // clang-format on
                 bus.addr = 0x2000 | (v.addr & 0x0FFF);
-                if (scan_x == 257) {
-                    set_hori(v, t);
-                }
                 break;
                 // clang-format off
             case 2:     case 10:    case 18:    case 26:    case 34:
@@ -207,13 +209,14 @@ void PPU::execute(uint16_t cycles) {
             case 122:   case 130:   case 138:   case 146:   case 154:
             case 162:   case 170:   case 178:   case 186:   case 194:
             case 202:   case 210:   case 218:   case 226:   case 234:
-            case 242:   case 250:   case 258:   case 260:   case 266:   
-            case 274:   case 282:   case 290:   case 298:   case 306:   
+            case 242:   case 250:   case 258:   case 260:   case 266:
+            case 274:   case 282:   case 290:   case 298:   case 306:
             case 314:   case 322:   case 330:   case 338:   case 340:
                 // clang-format on
                 nt = read(bus.addr);
                 break;
                 // clang-format off
+
                 // AT
             case 3:     case 11:    case 19:    case 27:    case 35:
             case 43:    case 51:    case 59:    case 67:    case 75:
@@ -247,8 +250,8 @@ void PPU::execute(uint16_t cycles) {
             case 205:   case 213:   case 221:   case 229:   case 237:
             case 245:   case 253:   case 325:   case 333:
                 // clang-format on
-                bus.addr = (ppuctrl.bg_pt_addr ? 0x1000 : 0x0000) + nt * 16 +
-                           v.sc_fine_y;
+                bus.addr = (ppuctrl.bg_pt_addr ? 0x1000 : 0x0000) | (nt << 4) |
+                           (v.addr >> 12);
                 break;
                 // clang-format off
             case 6:     case 14:    case 22:    case 30:    case 38:
@@ -271,8 +274,9 @@ void PPU::execute(uint16_t cycles) {
             case 207:   case 215:   case 223:   case 231:   case 239:
             case 247:   case 255:   case 327:   case 335:
                 // clang-format on
-                bus.addr = (ppuctrl.bg_pt_addr ? 0x1000 : 0x0000) + nt * 16 +
-                           v.sc_fine_y + 8;
+                bus.addr = ((ppuctrl.bg_pt_addr ? 0x1000 : 0x0000) | (nt << 4) |
+                            (v.addr >> 12)) +
+                           8;
                 break;
                 // clang-format off
             case 8:     case 16:    case 24:    case 32:    case 40:
@@ -284,15 +288,21 @@ void PPU::execute(uint16_t cycles) {
             case 248:   case 256:   case 328:   case 336:
                 // clang-format on
                 bg_h_shift |= read(bus.addr);
-                bg_l_shift <<= 8;
-                bg_h_shift <<= 8;
+
                 if (scan_x == 256) {
                     inc_vert(v);
                 }
                 inc_hori(v);
                 break;
             }
-            break;
+
+            if (scan_x == 257) {
+                set_hori(v, t);
+            }
+
+            if (scan_y == 261 && scan_x >= 280 && scan_x <= 304) {
+                set_vert(v, t);
+            }
         }
 
         if (scan_y == 239 && scan_x == 320) {
@@ -333,17 +343,18 @@ void PPU::cpu_write(uint16_t addr, uint8_t value) {
     case 0x2002:  // PPUSTATUS read-only
         break;
     case 0x2003:  // OAMADDR
-        std::cerr << "PPU cpu_write 0x2003 set oamaddr 0x" << setfill('0')
-                  << setw(2) << hex << (uint16_t)value << endl;
+        std::cerr << "PPU cpu_write OAMADDR 0x" << setfill('0') << setw(2)
+                  << hex << (uint16_t)value << endl;
         oamaddr = value;
         break;
     case 0x2004:  // OAMDATA
-        std::cerr << "PPU cpu_write 0x2004 write to oamaddr 0x" << setfill('0')
-                  << setw(2) << hex << oamaddr << " value: 0x" << setfill('0')
-                  << setw(2) << hex << (uint16_t)value << endl;
+        std::cerr << "PPU cpu_write OAMDATA 0x" << setfill('0') << setw(2)
+                  << hex << oamaddr << " value: 0x" << setfill('0') << setw(2)
+                  << hex << (uint16_t)value << endl;
         oam[oamaddr++] = value;
         break;
     case 0x2005:  // PPUSCROLL
+        cerr << "PPU cpu_write PPUSCROLL" << endl;
         if (!w) {
             t.sc_x = ((value & 0xF8) >> 3);
             x.fine = (value & 0x7);
@@ -354,6 +365,7 @@ void PPU::cpu_write(uint16_t addr, uint8_t value) {
         w = !w;
         break;
     case 0x2006:  // PPUADDR
+        cerr << "PPU cpu_write PPUADDR" << endl;
         if (!w)
             v.h = value & 0x3F;
         else
@@ -361,6 +373,7 @@ void PPU::cpu_write(uint16_t addr, uint8_t value) {
         w = !w;
         break;
     case 0x2007:  // PPUDATA
+        cerr << "PPU cpu_write PPUDATA" << endl;
         write(v.addr, value);
         if (ppuctrl.v_incr) {
             v.addr += 0x20;

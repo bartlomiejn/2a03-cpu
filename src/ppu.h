@@ -63,8 +63,8 @@ union PPUVramAddr {
         uint8_t sc_fine_y : 3;  ///< Fine Y scroll
     };
     struct {
-        uint8_t l : 8;  ///< 6-bit VRAM address high bits
-        uint8_t h : 6;  ///< 8-bit VRAM address low bits
+        uint8_t l : 8;  ///< 8-bit VRAM address low bits
+        uint8_t h : 7;  ///< 7-bit VRAM address high bits
     };
     struct {
         uint16_t addr : 14;
