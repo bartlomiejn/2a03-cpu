@@ -183,7 +183,6 @@ void cpu(ExecutionEnvironment &ee, NES::Test::MemoryBus *bus) {
     ee.run_single_step = true;
     ee.gui.mapper = nullptr;
 
-    // TODO: Revert once done
     for (uint16_t i = 0x0; i <= 0xff; i++) {
         if (i == 0x93 || i == 0x9b || i == 0x9c || i == 0x9e || i == 0x9f
             || i == 0xbb || i == 0xcb) {
@@ -209,9 +208,6 @@ void cpu(ExecutionEnvironment &ee, NES::Test::MemoryBus *bus) {
 
             for (const TestCase &tc : test_cases) {
                 NES_LOG("cputest") << std::format("Running {}\n", tc.name);
-                if (tc.name == "01 b3 87") {
-                    NES_LOG("cputest") << "hehe\n";
-                }
                 ee.power([&](NES::CPU &cpu, NES::PPU &ppu) {
                     cpu.PC = tc.initial.pc;
                     cpu.A = tc.initial.a;
