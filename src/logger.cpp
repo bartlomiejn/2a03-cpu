@@ -97,7 +97,7 @@ std::string SystemLogGenerator::log() {
             ss.str(string());
 
             uint16_t imval =
-                bus_read16((bus->read(cpu.PC + 1) + cpu.X) % 0x100, true);
+                bus_read16((bus->read(cpu.PC + 1, true) + cpu.X) % 0x100, true);
             ss << setfill('0') << setw(4) << hex << imval;
             op_templ.replace(op_templ.find(im_pat), im_pat.length(), ss.str());
             ss.str(string());

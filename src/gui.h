@@ -159,6 +159,8 @@ class GUI {
     const std::string main_font_name = "Inter-VariableFont.ttf";
     const float main_font_size = 18.0f;
 
+    bool stop = false;
+
     GUI(int fb_x, int fb_y) : fb_x(fb_x), fb_y(fb_y) {};
 
     ~GUI() {
@@ -196,7 +198,7 @@ class GUI {
         if (debug && ppu)
             debug->ppu = ppu;
 
-        while (true) {
+        while (!stop) {
             if (handle_events()) break;
 
             if (main_fb_ready) {

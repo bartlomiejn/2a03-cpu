@@ -3,6 +3,7 @@
 #include <ppu.h>
 
 #include <cstring>
+#include <format>
 #include <iomanip>
 
 using namespace std;
@@ -52,6 +53,7 @@ PPU::PPU(GFX::GUI &_gui, NES::Palette _pal)
 }
 
 void PPU::power() {
+    NES_LOG("PPU") << "Power on" << std::endl;
     v.addr = 0;
     t.addr = 0;
     x.fine = 0;
@@ -392,6 +394,8 @@ void PPU::execute(uint16_t cycles) {
 }
 
 void PPU::cpu_write(uint16_t addr, uint8_t value) {
+    NES_LOG("PPU") << std::format("cpu_write@{:04X} value={:02X}\n", addr,
+                                  value);
     cpu_bus = value;
     switch (addr) {
     case 0x2000:  // PPUCTRL
@@ -403,18 +407,12 @@ void PPU::cpu_write(uint16_t addr, uint8_t value) {
     case 0x2002:  // PPUSTATUS read-only
         break;
     case 0x2003:  // OAMADDR
-        NES_LOG("PPU") << "cpu_write OAMADDR 0x" << setfill('0') << setw(2)
-                  << hex << (uint16_t)value << endl;
         oamaddr = value;
         break;
     case 0x2004:  // OAMDATA
-        NES_LOG("PPU") << "cpu_write OAMDATA 0x" << setfill('0') << setw(2)
-                  << hex << oamaddr << " value: 0x" << setfill('0') << setw(2)
-                  << hex << (uint16_t)value << endl;
         oam[oamaddr++] = value;
         break;
     case 0x2005:  // PPUSCROLL
-        NES_LOG("PPU") << "cpu_write PPUSCROLL" << endl;
         if (!w) {
             t.sc_x = ((value & 0xF8) >> 3);
             x.fine = (value & 0x7);
@@ -425,7 +423,6 @@ void PPU::cpu_write(uint16_t addr, uint8_t value) {
         w = !w;
         break;
     case 0x2006:  // PPUADDR
-        NES_LOG("PPU") << "cpu_write PPUADDR" << endl;
         if (!w)
             v.h = value & 0x3F;
         else
@@ -433,8 +430,6 @@ void PPU::cpu_write(uint16_t addr, uint8_t value) {
         w = !w;
         break;
     case 0x2007:  // PPUDATA
-        NES_LOG("PPU") << "cpu_write PPUDATA, v.addr: 0x" << setfill('0') << setw(2)
-             << hex << v.addr << " value: 0x" << (uint16_t)value << endl;
         write(v.addr, value);
         if ((ppumask.bg_show || ppumask.spr_show) &&
             (scan_y == 261 || scan_y <= 239)) {
@@ -455,6 +450,8 @@ void PPU::cpu_write(uint16_t addr, uint8_t value) {
 }
 
 uint8_t PPU::cpu_read(uint16_t addr, bool passive) {
+    NES_LOG("PPU") << std::format("cpu_read@{:04x} passive={}\n", addr,
+                                  passive);
     switch (addr) {
     case 0x2000:  // Write-only
         return cpu_bus;

@@ -113,7 +113,10 @@ int main(int argc, char *argv[]) {
     ee.debug = opts.step_debug;
 
     // Enable debug logging handles
-    if (opts.log_cpu) NES::Log::instance().enable("CPU");
+    if (opts.log_cpu) {
+        NES::Log::instance().enable("CPU");
+        NES::Log::instance().enable("cputest");
+    }
     if (opts.log_ppu) NES::Log::instance().enable("PPU");
     if (opts.log_bus) NES::Log::instance().enable("Bus");
     if (opts.log_nrom) NES::Log::instance().enable("NROM");
@@ -153,10 +156,10 @@ int main(int argc, char *argv[]) {
         NES::Test::cpu(ee, mock_bus);
     }
 
-    if (bus)
-        delete bus;
-    if (mock_bus)
-        delete mock_bus;
+    // if (bus)
+    //     delete bus;
+    // if (mock_bus)
+    //     delete mock_bus;
 
     return 0;
 }

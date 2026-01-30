@@ -87,6 +87,8 @@ class ExecutionEnvironment {
     }
 
     void run() {
+        stop = false;
+        gui.stop = false;
         execThread = std::thread(&ExecutionEnvironment::runloop, this);
         gui.enter_runloop();
         stop = true;
@@ -112,7 +114,8 @@ private:
             if (post_step_hook) post_step_hook(*this);
 
             if (run_single_step) {
-                return;
+                stop = true;
+                gui.stop = true;
             }
 
             if (debug) {

@@ -73,59 +73,63 @@ std::string get_testspec_name(uint8_t index) {
     return std::format("nes6502/{:02x}.json", static_cast<unsigned int>(index));
 }
 
-void print_test_case(const TestCase &tc) {
-    std::cout << "TEST CASE: " << tc.name << "\n";
-    std::cout << std::format("Initial CPU: PC=0x{:04X} S=0x{:02X} A=0x{:02X} "
-                             "X=0x{:02X} Y={:02X} P={:02X}\n", tc.initial.pc,
-                             tc.initial.s, tc.initial.a, tc.initial.x, 
-                             tc.initial.y, tc.initial.p);
+void print_test_case(const TestCase &tc, std::ostream &os) {
+    os << "FAILED ON TEST CASE: " << tc.name << "\n";
+    os << std::format(
+        "Initial CPU: PC=0x{:04X} S=0x{:02X} A=0x{:02X} "
+        "X=0x{:02X} Y={:02X} P={:02X}\n",
+        tc.initial.pc, tc.initial.s, tc.initial.a, tc.initial.x, tc.initial.y,
+        tc.initial.p);
 
-    std::cout << "Initial RAM:" << "\n";
+    os << "Initial RAM:" << "\n";
     for (const auto &ram : tc.initial.ram) {
-        std::cout << std::format("Address: 0x{:04X} Value: 0x{:02X}\n",
-                                 ram.address, ram.value);
+        os << std::format("Address: 0x{:04X} Value: 0x{:02X}\n", ram.address,
+                          ram.value);
     }
 
-    std::cout << std::format("Final CPU: PC=0x{:04X} S=0x{:02X} A=0x{:02X} "
-                             "X=0x{:02X} Y={:02X} P={:02X}\n", tc.final.pc,
-                             tc.final.s, tc.final.a, tc.final.x, 
-                             tc.final.y, tc.final.p);
+    os << std::format(
+        "Final CPU: PC=0x{:04X} S=0x{:02X} A=0x{:02X} "
+        "X=0x{:02X} Y={:02X} P={:02X}\n",
+        tc.final.pc, tc.final.s, tc.final.a, tc.final.x, tc.final.y,
+        tc.final.p);
 
-    std::cout << "Final RAM:" << "\n";
+    os << "Final RAM:" << "\n";
     for (const auto &ram : tc.final.ram) {
-        std::cout << std::format("Address: 0x{:04X} Value: 0x{:02X}\n",
-                                 ram.address, ram.value);
-
+        os << std::format("Address: 0x{:04X} Value: 0x{:02X}\n", ram.address,
+                          ram.value);
     }
 
-    std::cout << "Memory accesses:" << "\n";
+    os << "Memory accesses:" << "\n";
     for (const auto &cycle : tc.cycles) {
-        std::cout << std::format("Addr: 0x{:04X} Value: 0x{:02X} Operation: "
-                                 "{}\n", cycle.address, cycle.value, 
-                                 cycle.operation);
+        os << std::format(
+            "Addr: 0x{:04X} Value: 0x{:02X} Operation: "
+            "{}\n",
+            cycle.address, cycle.value, cycle.operation);
     }
 }
 
-void print_actual_state(NES::ExecutionEnvironment &ee, 
-                        NES::Test::MemoryBus *bus, const TestCase &tc) {
-    std::cout << "ACTUAL STATE" << std::endl;
-    
-    std::cout << std::format("Actual CPU: PC=0x{:04X} S=0x{:02X} A=0x{:02X} "
-                             "X=0x{:02X} Y={:02X} P={:02X}\n", ee.cpu.PC,
-                             ee.cpu.S, ee.cpu.A, ee.cpu.X, ee.cpu.Y, 
-                             ee.cpu.P.status);
+void print_actual_state(NES::ExecutionEnvironment &ee,
+                        NES::Test::MemoryBus *bus, const TestCase &tc,
+                        std::ostream &os) {
+    os << "ACTUAL STATE" << std::endl;
 
-    std::cout << "Actual RAM:" << std::endl;
+    os << std::format(
+        "Actual CPU: PC=0x{:04X} S=0x{:02X} A=0x{:02X} "
+        "X=0x{:02X} Y={:02X} P={:02X}\n",
+        ee.cpu.PC, ee.cpu.S, ee.cpu.A, ee.cpu.X, ee.cpu.Y, ee.cpu.P.status);
+
+    os << "Actual RAM:" << std::endl;
     for (const auto &ram : tc.final.ram) {
-        std::cout << std::format("Address: 0x{:04X} Value: 0x{:02X}\n",
-                                 ram.address, bus->mock_read(ram.address));
+        os << std::format("Address: 0x{:04X} Value: 0x{:02X}\n", ram.address,
+                          bus->mock_read(ram.address));
     }
 
-    std::cout << "Actual memory accesses:" << std::endl;
+    os << "Actual memory accesses:" << std::endl;
     for (const auto &op : bus->ops) {
-        std::cout << std::format("Addr: 0x{:04X} Value: 0x{:02X} Operation: "
-                                 "{}\n", op.addr, op.val, 
-                                 (op.read ? "read" : "write"));
+        os << std::format(
+            "Addr: 0x{:04X} Value: 0x{:02X} Operation: "
+            "{}\n",
+            op.addr, op.val, (op.read ? "read" : "write"));
     }
 }
 
@@ -133,7 +137,7 @@ template<typename T, typename U>
 bool assert_equal(const T& a, const U& b, const std::string& a_str, 
                   const std::string& b_str) {
     if (!(a == b)) {
-        std::cerr << std::format("ASSERTION FAILED: {} == {}\n", a_str, b_str)
+        std::cerr << std::format("\nASSERTION FAILED: {} == {}\n", a_str, b_str)
                   << std::format("  {} = 0x{:02X}\n", a_str, a)
                   << std::format("  {} = 0x{:02X}\n", b_str, b);
         return false;
@@ -141,16 +145,17 @@ bool assert_equal(const T& a, const U& b, const std::string& a_str,
     return true;
 }
 
-#define ASSERT_EQUAL(a, b) \
-    if (!assert_equal(a, b, #a, #b)) { \
-        print_test_case(tc); \
-        print_actual_state(ee, bus, tc); \
-        std::abort(); \
-    } 
+#define ASSERT_EQUAL(a, b)                                   \
+    if (!assert_equal(a, b, #a, #b)) {                       \
+        print_test_case(tc, std::cout);                      \
+        print_test_case(tc, NES_LOG("cputest"));             \
+        print_actual_state(ee, bus, tc, std::cout);          \
+        print_actual_state(ee, bus, tc, NES_LOG("cputest")); \
+        return false;                                        \
+    }
 
-void assert_final_state(NES::ExecutionEnvironment &ee, 
-                        NES::Test::MemoryBus *bus, 
-                        const TestCase &tc) {
+bool assert_final_state(NES::ExecutionEnvironment &ee,
+                        NES::Test::MemoryBus *bus, const TestCase &tc) {
     ASSERT_EQUAL(ee.cpu.PC, tc.final.pc);
     ASSERT_EQUAL(ee.cpu.S, tc.final.s);
     ASSERT_EQUAL(ee.cpu.A, tc.final.a);
@@ -169,14 +174,17 @@ void assert_final_state(NES::ExecutionEnvironment &ee,
         ASSERT_EQUAL(tc.cycles[i].value, bus->ops[i].val);
         ASSERT_EQUAL((tc.cycles[i].operation == "read"), bus->ops[i].read);
     }
+
+    return true;
 }
 
 void cpu(ExecutionEnvironment &ee, NES::Test::MemoryBus *bus) {
     ee.disable_ppu = true;
     ee.run_single_step = true;
+    ee.gui.mapper = nullptr;
 
     // TODO: Revert once done
-    for (uint8_t i = 0x0; i <= 0xff; i++) {
+    for (uint16_t i = 0x0; i <= 0xff; i++) {
         if (i == 0x93 || i == 0x9b || i == 0x9c || i == 0x9e || i == 0x9f
             || i == 0xbb || i == 0xcb) {
             std::cerr << "Disabled tests for 0x" << std::hex 
@@ -200,6 +208,10 @@ void cpu(ExecutionEnvironment &ee, NES::Test::MemoryBus *bus) {
             auto test_cases = j.get<std::vector<TestCase>>();
 
             for (const TestCase &tc : test_cases) {
+                NES_LOG("cputest") << std::format("Running {}\n", tc.name);
+                if (tc.name == "01 b3 87") {
+                    NES_LOG("cputest") << "hehe\n";
+                }
                 ee.power([&](NES::CPU &cpu, NES::PPU &ppu) {
                     cpu.PC = tc.initial.pc;
                     cpu.A = tc.initial.a;
@@ -210,18 +222,24 @@ void cpu(ExecutionEnvironment &ee, NES::Test::MemoryBus *bus) {
                     cpu.cycles = 0;
                 });
                 bus->mock_clear_ops();
+                ee.pre_step_hook = [&](auto &ee) {
+                    NES_LOG("CPU") << ee.logger.log() << std::endl;
+                };
                 for (const auto &ram : tc.initial.ram) {
                     bus->mock_write(ram.address, ram.value);
                 }
                 ee.run();
-                assert_final_state(ee, bus, tc);
+                if (!assert_final_state(ee, bus, tc)) {
+                    i = 0x101;
+                    break;
+                }
             }
         } catch (json::exception &e) {
             std::cerr << "JSON parsing error: " << e.what() << "\n";
             return;
         }
 
-        std::cout << "Success" << std::endl;
+        if (i != 0x101) std::cout << "Success" << std::endl;
     }
 }
 

@@ -9,9 +9,9 @@ ifeq ($(BIN), nestest)
 else ifeq ($(BIN), nestesti)
 	ARGS ?= -ti
 else ifeq ($(BIN), pputest)
-	ARGS ?= -p
+	ARGS ?= -cebmyl pputest_neslog
 else ifeq ($(BIN), cputest)
-	ARGS ?= -u
+	ARGS ?= -cebmul cputest_neslog
 else ifeq ($(BIN), dk)
 	ARGS ?= -cr DonkeyKong.nes
 else

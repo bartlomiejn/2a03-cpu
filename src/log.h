@@ -70,9 +70,7 @@ class Log {
     std::ostream null_stream{&null_buffer};
 };
 
-// Convenience macros for logging
-#define NES_LOG(handle) \
-    if (NES::Log::instance().is_enabled(handle)) NES::Log::instance().stream(handle)
+#define NES_LOG(handle) NES::Log::instance().stream(handle)
 
 #define NES_LOG_ENABLED(handle) NES::Log::instance().is_enabled(handle)
 
