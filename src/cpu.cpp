@@ -1,12 +1,16 @@
 #include <bus.h>
 #include <cpu.h>
+#include <log.h>
 
 #include <cstdlib>
 #include <cstring>
+#include <iomanip>
 #include <iostream>
 #include <limits>
 
 using namespace std;
+
+#define LOG NES_LOG("CPU")
 
 // Detailed cycle counting
 // Example 1: LDA (Load Accumulator) Instruction
@@ -391,11 +395,11 @@ uint16_t CPU::execute() {
     }
 
     if (NMI) {
-        cerr << "CPU: Handling NMI" << endl;
+        NES_LOG("CPU") << "Handling NMI" << endl;
         interrupt(i_nmi);
     }
     if (IRQ && !P.I) {
-        cerr << "CPU: Handling IRQ" << endl;
+        NES_LOG("CPU") << "Handling IRQ" << endl;
         interrupt(i_irq);
     }
 
@@ -406,16 +410,16 @@ uint16_t CPU::execute() {
 
 void CPU::interrupt(NES::Interrupt type) {
     if (type != i_reset) {
-        cerr << "CPU: Push to stack PC "
+        NES_LOG("CPU") << "Push to stack PC"
              << " H: " << hex << (unsigned int)(uint8_t)(PC >> 8)
              << " L: " << hex << (unsigned int)(uint8_t)PC << endl;
-        cerr << "PC: Push to stack P: " << hex
+        NES_LOG("CPU") << "Push to stack P: " << hex
              << (type == i_brk ? P.status | 0x10 : P.status) << endl;
         PH((uint8_t)(PC >> 8), false);
         PH((uint8_t)PC, false);
         PH(type == i_brk ? P.status | 0x10 : P.status, false);
     } else {
-        cerr << "CPU: P |= 0x04" << endl;
+        NES_LOG("CPU") << "P |= 0x04" << endl;
         P.status |= 0x04;
         // write(0x4015, 0x0);  // All channels disabled
     }
@@ -424,23 +428,23 @@ void CPU::interrupt(NES::Interrupt type) {
 
     switch (type) {
     case i_nmi:
-        cerr << "CPU: Interrupt type NMI" << endl;
+        NES_LOG("CPU") << "Interrupt type NMI" << endl;
         PC = read16(0xFFFA); break;
     case i_reset:
-        cerr << "CPU: Interrupt type reset" << endl;
+        NES_LOG("CPU") << "Interrupt type reset" << endl;
         PC = read16(0xFFFC); break;
     case i_irq:
-        cerr << "CPU: Interrupt type IRQ" << endl;
+        NES_LOG("CPU") << "Interrupt type IRQ" << endl;
         PC = read16(0xFFFE); break;
     case i_brk:
-        cerr << "CPU: Interupt type BRK" << endl;
+        NES_LOG("CPU") << "Interrupt type BRK" << endl;
         PC = read16(0xFFFE); break;
     default:
-        cerr << "CPU: Unhandled interrupt type" << endl;
+        NES_LOG("CPU") << "Unhandled interrupt type" << endl;
         throw runtime_error("Invalid interrupt type");
     }
 
-    cerr << "CPU: New PC: 0x" << hex << (unsigned int)PC << endl;
+    NES_LOG("CPU") << "New PC: 0x" << hex << (unsigned int)PC << endl;
 
     if (type == i_nmi)
         NMI = false;
@@ -448,7 +452,7 @@ void CPU::interrupt(NES::Interrupt type) {
         IRQ = false;
 
     cycles += 7;
-    cerr << "CPU: Interrupt finish" << endl;
+    NES_LOG("CPU") << "Interrupt handler finish" << endl;
 }
 
 uint8_t CPU::read(uint16_t addr) {
@@ -471,7 +475,7 @@ uint16_t CPU::read16(uint16_t addr, bool zp) {
 void CPU::write(uint16_t addr, uint8_t value) { bus->write(addr, value); }
 
 void CPU::schedule_dma_oam(uint8_t page) {
-    cerr << "CPU::schedule_dma_oam page: " << (uint16_t)page << endl;
+    NES_LOG("CPU") << "schedule_dma_oam page: " << (uint16_t)page << endl;
     dma = DMA_OAM;
     dma_page = page;
 }
@@ -482,24 +486,24 @@ void CPU::handle_dma() {
     if (dma == DMA_PCM) {
         throw runtime_error("PCM DMA unimplemented");
     } else if (dma == DMA_OAM) {
-        cerr << "DMA OAM: Start, CYC: " << cycles << endl;
+        NES_LOG("CPU") << "DMA OAM: Start, CYC: " << cycles << endl;
         if (cycles & 0x1) {
-            cerr << "DMA OAM: odd cycle, wait one cycle" << endl;
+            NES_LOG("CPU") << "DMA OAM: odd cycle, wait one cycle" << endl;
             cycles++;
         }
         uint8_t i = 0;
         do {
             uint8_t data = bus->read((dma_page << 8) | i);
-            cerr << "DMA OAM: read at 0x" << hex
-                 << (unsigned int)((dma_page << 8) | i);
-            cerr << ", data: 0x" << hex << (unsigned int)data;
-            cerr << ", write to 0x2004" << endl;
+            NES_LOG("CPU") << "DMA OAM: read at 0x" << hex
+                 << (unsigned int)((dma_page << 8) | i)
+                 << ", data: 0x" << hex << (unsigned int)data
+                 << ", write to OAMDATA" << endl;
             cycles++;
             bus->write(0x2004, data);
             cycles++;
             i++;
         } while (i != 0);
-        cerr << "DMA OAM: End" << endl;
+        NES_LOG("CPU") << "DMA OAM: End" << endl;
 
         // TODO: PCM DMA can interrupt OAM DMA
 
@@ -600,7 +604,7 @@ uint16_t CPU::operand_addr(AddressingMode mode) {
             cycles++;
         break;
     case ind:
-    default: cerr << "Invalid addressing mode: " << hex << int(mode) << endl;
+    default: NES_LOG("CPU") << "Invalid addressing mode: " << hex << int(mode) << endl;
     }
     return addr;
 }
@@ -736,7 +740,7 @@ void CPU::JMP(AddressingMode mode) {
         PC = (uint16_t)h_addr << 8 | l_addr;
         cycles += 5;
         break;
-    default: cerr << "Invalid addressing mode for JMP: " << mode << endl;
+    default: NES_LOG("CPU") << "Invalid addressing mode for JMP: " << mode << endl;
     }
 }
 
@@ -806,7 +810,7 @@ void CPU::ADC(AddressingMode mode) {
     case abs_y: cycles += 4; break;
     case idx_ind_x: cycles += 6; break;
     case ind_idx_y: cycles += 5; break;
-    default: cerr << "Invalid addressing mode for ADC." << endl;
+    default: NES_LOG("CPU") << "Invalid addressing mode for ADC" << endl;
     }
 }
 
@@ -822,7 +826,7 @@ void CPU::AND(AddressingMode mode) {
     case abs_y: cycles += 4; break;
     case idx_ind_x: cycles += 6; break;
     case ind_idx_y: cycles += 5; break;
-    default: cerr << "Invalid addressing mode for AND." << endl;
+    default: NES_LOG("CPU") << "Invalid addressing mode for AND" << endl;
     }
 }
 
@@ -841,7 +845,7 @@ void CPU::ASL(AddressingMode mode) {
     case zp_x: cycles += 6; break;
     case abs: cycles += 6; break;
     case abs_x: cycles += 7; break;
-    default: cerr << "Invalid addressing mode for ASL." << endl;
+    default: NES_LOG("CPU") << "Invalid addressing mode for ASL" << endl;
     }
 }
 
@@ -872,7 +876,7 @@ void CPU::CP(const uint8_t &reg, AddressingMode mode) {
     case abs_y: cycles += 4; break;
     case idx_ind_x: cycles += 6; break;
     case ind_idx_y: cycles += 5; break;
-    default: cerr << "Invalid addressing mode for CPx." << endl;
+    default: NES_LOG("CPU") << "Invalid addressing mode for CPx" << endl;
     }
 }
 
@@ -888,7 +892,7 @@ void CPU::DEC(AddressingMode mode) {
     case zp_x: cycles += 6; break;
     case abs: cycles += 6; break;
     case abs_x: cycles += 7; break;
-    default: cerr << "Invalid addressing mode for DEC." << endl;
+    default: NES_LOG("CPU") << "Invalid addressing mode for DEC" << endl;
     }
 }
 
@@ -905,7 +909,7 @@ void CPU::EOR(AddressingMode mode) {
     case abs_y: cycles += 4; break;
     case idx_ind_x: cycles += 6; break;
     case ind_idx_y: cycles += 5; break;
-    default: cerr << "Invalid addressing mode for EOR." << endl;
+    default: NES_LOG("CPU") << "Invalid addressing mode for EOR" << endl;
     }
 }
 
@@ -940,7 +944,7 @@ void CPU::LSR(AddressingMode mode) {
     case zp_x: cycles += 6; break;
     case abs: cycles += 6; break;
     case abs_x: cycles += 7; break;
-    default: cerr << "Invalid addressing mode for LSR." << endl;
+    default: NES_LOG("CPU") << "Invalid addressing mode for LSR" << endl;
     }
 }
 
@@ -957,7 +961,7 @@ void CPU::ORA(AddressingMode mode) {
     case abs_y: cycles += 4; break;
     case idx_ind_x: cycles += 6; break;
     case ind_idx_y: cycles += 5; break;
-    default: cerr << "Invalid addressing mode for CPx." << endl;
+    default: NES_LOG("CPU") << "Invalid addressing mode for CPx" << endl;
     }
 }
 
@@ -976,7 +980,7 @@ void CPU::ROL(AddressingMode mode) {
     case zp_x: cycles += 6; break;
     case abs: cycles += 6; break;
     case abs_x: cycles += 7; break;
-    default: cerr << "Invalid addressing mode for ROL." << endl;
+    default: NES_LOG("CPU") << "Invalid addressing mode for ROL" << endl;
     }
 }
 
@@ -995,7 +999,7 @@ void CPU::ROR(AddressingMode mode) {
     case zp_x: cycles += 6; break;
     case abs: cycles += 6; break;
     case abs_x: cycles += 7; break;
-    default: cerr << "Invalid addressing mode for ROR." << endl;
+    default: NES_LOG("CPU") << "Invalid addressing mode for ROR" << endl;
     }
 }
 
@@ -1011,7 +1015,7 @@ void CPU::SBC(AddressingMode mode) {
     case abs_y: cycles += 4; break;
     case idx_ind_x: cycles += 6; break;
     case ind_idx_y: cycles += 5; break;
-    default: cerr << "Invalid addressing mode for SBC." << endl;
+    default: NES_LOG("CPU") << "Invalid addressing mode for SBC" << endl;
     }
 }
 
@@ -1033,7 +1037,7 @@ void CPU::LD(uint8_t &reg, AddressingMode mode) {
     case abs_y: cycles += 4; break;
     case idx_ind_x: cycles += 6; break;
     case ind_idx_y: cycles += 5; break;
-    default: cerr << "Invalid addressing mode for LDx." << endl;
+    default: NES_LOG("CPU") << "Invalid addressing mode for LDx" << endl;
     }
 }
 
@@ -1049,7 +1053,7 @@ void CPU::ST(uint8_t reg, AddressingMode mode) {
     case abs_y: cycles += 5; break;
     case idx_ind_x: cycles += 6; break;
     case ind_idx_y: cycles += 6; break;
-    default: cerr << "Invalid addressing mode for STx." << endl;
+    default: NES_LOG("CPU") << "Invalid addressing mode for STx" << endl;
     }
 }
 
@@ -1065,7 +1069,7 @@ void CPU::INC(AddressingMode mode) {
     case zp_x: cycles += 6; break;
     case abs: cycles += 6; break;
     case abs_x: cycles += 7; break;
-    default: cerr << "Invalid addressing mode for INC." << endl;
+    default: NES_LOG("CPU") << "Invalid addressing mode for INC" << endl;
     }
 }
 
@@ -1151,7 +1155,7 @@ void CPU::LAX(AddressingMode mode) {
     case abs_y: cycles += 4; break;
     case idx_ind_x: cycles += 6; break;
     case ind_idx_y: cycles += 5; break;
-    default: cerr << "Invalid addressing mode for LAX." << endl;
+    default: NES_LOG("CPU") << "Invalid addressing mode for LAX" << endl;
     }
 }
 
@@ -1171,7 +1175,7 @@ void CPU::SAX(AddressingMode mode) {
     case zp_y: cycles += 4; break;
     case abs: cycles += 4; break;
     case idx_ind_x: cycles += 6; break;
-    default: cerr << "Invalid addressing mode for SAX." << endl;
+    default: NES_LOG("CPU") << "Invalid addressing mode for SAX" << endl;
     }
 }
 
@@ -1206,7 +1210,7 @@ void CPU::DCP(AddressingMode mode) {
     case abs_y: cycles += 7; break;
     case idx_ind_x: cycles += 8; break;
     case ind_idx_y: cycles += 8; break;
-    default: cerr << "Invalid addressing mode for DCP." << endl;
+    default: NES_LOG("CPU") << "Invalid addressing mode for DCP" << endl;
     }
 }
 
@@ -1230,7 +1234,7 @@ void CPU::ISC(AddressingMode mode) {
     case abs_y: cycles += 7; break;
     case idx_ind_x: cycles += 8; break;
     case ind_idx_y: cycles += 8; break;
-    default: cerr << "Invalid addressing mode for ISC (ISB, INS)." << endl;
+    default: NES_LOG("CPU") << "Invalid addressing mode for ISC (ISB, INS)" << endl;
     }
 }
 
@@ -1254,7 +1258,7 @@ void CPU::SLO(AddressingMode mode) {
     case abs_y: cycles += 7; break;
     case idx_ind_x: cycles += 8; break;
     case ind_idx_y: cycles += 8; break;
-    default: cerr << "Invalid addressing mode for SLO/ASO." << endl;
+    default: NES_LOG("CPU") << "Invalid addressing mode for SLO/ASO" << endl;
     }
 }
 
@@ -1278,7 +1282,7 @@ void CPU::RLA(AddressingMode mode) {
     case abs_y: cycles += 7; break;
     case idx_ind_x: cycles += 8; break;
     case ind_idx_y: cycles += 8; break;
-    default: cerr << "Invalid addressing mode for SLO/ASO." << endl;
+    default: NES_LOG("CPU") << "Invalid addressing mode for SLO/ASO" << endl;
     }
 }
 
@@ -1302,7 +1306,7 @@ void CPU::SRE(AddressingMode mode) {
     case abs_y: cycles += 7; break;
     case idx_ind_x: cycles += 8; break;
     case ind_idx_y: cycles += 8; break;
-    default: cerr << "Invalid addressing mode for SRE." << endl;
+    default: NES_LOG("CPU") << "Invalid addressing mode for SRE" << endl;
     }
 }
 
@@ -1325,7 +1329,7 @@ void CPU::RRA(AddressingMode mode) {
     case abs_y: cycles += 7; break;
     case idx_ind_x: cycles += 8; break;
     case ind_idx_y: cycles += 8; break;
-    default: cerr << "Invalid addressing mode for RRA." << endl;
+    default: NES_LOG("CPU") << "Invalid addressing mode for RRA" << endl;
     }
 }
 
@@ -1372,7 +1376,7 @@ void CPU::SHA(AddressingMode mode) {
         cycles += 5; break;
     case ind_idx_y:
         cycles += 6; break;
-    default: cerr << "Invalid addressing mode for SHA." << endl;
+    default: NES_LOG("CPU") << "Invalid addressing mode for SHA" << endl;
     }
 }
 

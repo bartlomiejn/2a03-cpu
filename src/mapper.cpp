@@ -1,3 +1,4 @@
+#include <log.h>
 #include <mapper.h>
 
 #include <iostream>
@@ -9,13 +10,13 @@ Mapper::Base *Mapper::mapper(NES::iNESv1::Cartridge &cartridge) {
                  (cartridge.header.flags_6.nib_l);
     switch (id) {
     case Mapper::type_NROM:
-        std::cerr << "Mapper type NROM" << std::endl;
+        NES_LOG("NROM") << "Mapper type NROM" << std::endl;
         return new NES::iNESv1::Mapper::NROM(cartridge);
     case Mapper::type_MMC1:
-        std::cerr << "Mapper type MMC1" << std::endl;
+        NES_LOG("MMC1") << "Mapper type MMC1" << std::endl;
         return new NES::iNESv1::Mapper::MMC1(cartridge);
     default:
-        std::cerr << "Unimplemented mapper type: " << std::hex << id << "."
+        NES_LOG("Mapper") << "Unimplemented mapper type: " << std::hex << id << "."
                   << std::endl;
         throw UnimplementedType();
     }
@@ -28,12 +29,12 @@ Mapper::NROM::NROM(Cartridge &cartridge) : Mapper::Base(cartridge) {}
 uint8_t Mapper::NROM::read_prg(uint16_t addr) {
     switch (addr) {
     case 0x4020 ... 0x5FFF:
-        std::cerr << "PRG read from unmapped space: " << std::hex << addr
+        NES_LOG("NROM") << "PRG read from unmapped space: " << std::hex << addr
                   << std::endl;
         return 0x0;
     case 0x6000 ... 0x7FFF:
         if ((size_t)(addr - 0x6000) >= cartridge.prg_ram.size()) {
-            std::cerr << "PRG read exceeds PRG RAM size, addr: $" << std::hex
+            NES_LOG("NROM") << "PRG read exceeds PRG RAM size, addr: $" << std::hex
                       << addr - 0x6000 << " prg_ram size: 0x"
                       << cartridge.prg_ram.size() << std::endl;
             return 0x0;
@@ -43,7 +44,7 @@ uint8_t Mapper::NROM::read_prg(uint16_t addr) {
     case 0x8000 ... 0xBFFF:
         // Low 16KB PRG ROM
         if ((size_t)(addr - 0x8000) >= cartridge.prg_rom.size()) {
-            std::cerr << "PRG read exceeds PRG ROM size, addr: " << std::hex
+            NES_LOG("NROM") << "PRG read exceeds PRG ROM size, addr: " << std::hex
                       << addr - 0x8000 << std::endl;
             return 0x0;
         } else {
@@ -58,7 +59,7 @@ uint8_t Mapper::NROM::read_prg(uint16_t addr) {
             base = 0x8000;
 
         if ((size_t)(addr - base) >= cartridge.prg_rom.size()) {
-            std::cerr << "PRG read exceeds PRG ROM size, addr: " << std::hex
+            NES_LOG("NROM") << "PRG read exceeds PRG ROM size, addr: " << std::hex
                       << addr - base << std::endl;
             return 0x0;
         } else {
@@ -66,7 +67,7 @@ uint8_t Mapper::NROM::read_prg(uint16_t addr) {
         }
 
     default:
-        std::cout << "Invalid NROM Mapper memory access: $" << std::hex
+        NES_LOG("NROM") << "Invalid NROM Mapper memory access: $" << std::hex
                   << static_cast<int>(addr) << std::endl;
         throw std::runtime_error("Invalid PRG memory access.");
     }
@@ -75,7 +76,7 @@ uint8_t Mapper::NROM::read_prg(uint16_t addr) {
 void Mapper::NROM::write_prg(uint16_t addr, uint8_t val) {
     switch (addr) {
     case 0x4020 ... 0x5FFF:
-        std::cerr << "PRG write to unmapped space: " << std::hex << addr
+        NES_LOG("NROM") << "PRG write to unmapped space: " << std::hex << addr
                   << std::endl;
         break;
     case 0x6000 ... 0x7FFF:
@@ -83,7 +84,7 @@ void Mapper::NROM::write_prg(uint16_t addr, uint8_t val) {
             cartridge.prg_ram[addr - 0x6000] = val;
         break;
     case 0x8000 ... 0xFFFF:
-        std::cerr << "PRG write to R/O space: " << std::hex << addr
+        NES_LOG("NROM") << "PRG write to R/O space: " << std::hex << addr
                   << std::endl;
         break;
     default: throw std::runtime_error("Invalid PRG write addr");
@@ -100,13 +101,16 @@ Mapper::NTMirror Mapper::NROM::mirroring() {
 }
 
 uint8_t Mapper::NROM::read_ppu(uint16_t addr) {
+    NES_LOG("NROM") << "read_ppu 0x" << std::hex << addr << " ";
     switch (addr) {
     case 0x0000 ... 0x1FFF:
         if (addr >= cartridge.chr_rom.size()) {
-            std::cerr << "PPU read exceeds CHR ROM size, addr: " << std::hex
+            NES_LOG("NROM") << "PPU read exceeds CHR ROM size, addr: " << std::hex
                       << addr << std::endl;
             return 0x0;
         } else {
+            NES_LOG("NROM") << "value: " << (uint16_t)cartridge.chr_rom[addr]
+                     << std::endl;
             return cartridge.chr_rom[addr];
         }
         break;
@@ -115,9 +119,9 @@ uint8_t Mapper::NROM::read_ppu(uint16_t addr) {
 }
 
 void Mapper::NROM::write_ppu(uint16_t addr, uint8_t val) {
-    std::cerr << "PPU: Write to CHR 0x" << std::hex << (unsigned int)addr
-              << ", value: 0x" << std::hex << (unsigned int)val 
-              << ", ignored" << std::endl;
+    NES_LOG("NROM") << "write_ppu to CHR 0x" << std::hex << (unsigned int)addr
+              << ", value: 0x" << std::hex << (unsigned int)val << ", ignored"
+              << std::endl;
 }
 
 // MMC1
@@ -149,7 +153,7 @@ uint8_t Mapper::MMC1::read_prg(uint16_t addr) {
         else
             return read_h_16k_prg_bank(addr);
     default:
-        std::cout << "Invalid MMC1 Mapper memory access: $"
+        NES_LOG("MMC1") << "Invalid MMC1 Mapper memory access: $"
                   << static_cast<int>(addr) << std::endl;
         return 0x0;
     }
@@ -166,7 +170,7 @@ void Mapper::MMC1::write_prg(uint16_t addr, uint8_t val) {
         // TODO: Should we reset bank state as well?
         break;
     default:
-        std::cerr << "Invalid address passed to MMC1: $" << std::hex
+        NES_LOG("MMC1") << "Invalid address passed to MMC1: $" << std::hex
                   << static_cast<int>(addr) << "." << std::endl;
         throw InvalidAddress();
     }
@@ -201,7 +205,7 @@ int Mapper::MMC1::reg_number(uint16_t addr) {
     case 0xC000 ... 0xDFFF: return reg_h_chr_rom;
     case 0xE000 ... 0xFFFF: return reg_prg_bank;
     default:
-        std::cerr << "Invalid address passed to MMC1: $" << std::hex
+        NES_LOG("MMC1") << "Invalid address passed to MMC1: $" << std::hex
                   << static_cast<int>(addr) << "." << std::endl;
         throw InvalidAddress();
     }
@@ -212,13 +216,13 @@ void Mapper::MMC1::set_reg(int reg_number) {
     case reg_main_ctrl: set_main_ctrl_reg(shift_reg); break;
     case reg_l_chr_rom:
         // TODO: L CHR ROM register.
-        std::cerr << "Unimplemented L CHR ROM Bank Register "
+        NES_LOG("MMC1") << "Unimplemented L CHR ROM Bank Register "
                      "access."
                   << std::endl;
         break;
     case reg_h_chr_rom:
         // TODO: R CHR ROM register.
-        std::cerr << "Unimplemented R CHR ROM Bank Register "
+        NES_LOG("MMC1") << "Unimplemented R CHR ROM Bank Register "
                      "access."
                   << std::endl;
         break;

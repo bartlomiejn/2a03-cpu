@@ -143,10 +143,10 @@ std::string SystemLogGenerator::log() {
         line += op_templ;
 
         // Add whitespace to fill 30 chars in total
-        int wspace_len = 30 - (int)op_templ.length();
+        int wspace_len = 28 - (int)op_templ.length();
         for (int j = 0; j < wspace_len; j++) line += " ";
     } else
-        for (int j = 0; j < 30; j++) line += " ";
+        for (int j = 0; j < 28; j++) line += " ";
 
     // CPU register status as 2-char wide hex.
     ss << "A:" << setfill('0') << setw(2) << hex << (int)cpu.A << " ";
@@ -958,13 +958,21 @@ uint16_t SystemLogGenerator::target_value(NES::AddressingMode addr_mode) {
         if (addr_mode == zp_y) zp_addr += cpu.Y;
         return (uint16_t)bus->read(zp_addr, true);
     case idx_ind_x:
+        uint8_t imx_ptr, imx_l_addr, imx_h_addr;
         uint16_t imx_addr;
-        imx_addr = bus_read16((bus->read(cpu.PC + 1, true) + cpu.X) % 0x100);
+        imx_ptr = (uint8_t)(bus->read(cpu.PC + 1, true) + cpu.X);
+        imx_l_addr = bus->read(imx_ptr, true);
+        imx_h_addr = bus->read((uint8_t)(imx_ptr + 1), true);
+        imx_addr = ((uint16_t)imx_h_addr << 8) | imx_l_addr;
         return (uint16_t)bus->read(imx_addr, true);
     case ind_idx_y:
+        uint8_t ptr, imy_l, imy_h;
         uint16_t imy_addr;
-        imy_addr = bus_read16(bus->read(cpu.PC + 1, true)) + cpu.Y;
-        return (uint16_t)bus->read(imy_addr, true);
+        ptr = bus->read(cpu.PC + 1, true);
+        imy_l = bus->read(ptr, true);
+        imy_h = bus->read((uint8_t)(ptr + 1), true);
+        imy_addr = ((uint16_t)imy_h << 8) | imy_l;
+        return (uint16_t)bus->read((uint16_t)(imy_addr + cpu.Y), true);
     default: return std::numeric_limits<uint16_t>::max();
     }
 }

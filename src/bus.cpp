@@ -1,6 +1,7 @@
 #include <apu.h>
 #include <bus.h>
 #include <cpu.h>
+#include <log.h>
 #include <ppu.h>
 
 #include <cstring>
@@ -21,6 +22,10 @@ uint8_t MemoryBus::read(uint16_t addr, bool passive) {
         // 0x0000 - 0x00FF is zero page
         // 0x0100 - 0x01FF is stack memory
         // 0x0200 - 0x07FF is RAM
+        NES_LOG("Bus") << "Read internal RAM @ 0x" << std::hex << std::setw(4)
+                       << std::setfill('0') << addr % 0x800 << ", value: 0x"
+                       << std::setw(2) << std::setfill('0')
+                       << (uint16_t)ram[addr % 0x800] << std::endl;
         return ram[addr % 0x800];
 
     // PPU registers
@@ -31,7 +36,7 @@ uint8_t MemoryBus::read(uint16_t addr, bool passive) {
 
     // CPU test mode APU/IO functionality (disabled)
     case 0x4018 ... 0x401F:
-        std::cerr << "CPU test mode memory access at $" << std::hex << (int)addr
+        NES_LOG("Bus") << "CPU test mode memory access at $" << std::hex << (int)addr
                   << "." << std::endl;
         throw std::range_error("Unhandled CPU test mode read");
 
@@ -43,7 +48,7 @@ uint8_t MemoryBus::read(uint16_t addr, bool passive) {
             throw MissingCartridge();
 
     default:
-        std::cerr << "Unhandled memory access: $" << std::hex << (int)addr
+        NES_LOG("Bus") << "Unhandled memory access: $" << std::hex << (int)addr
                   << std::endl;
         throw std::range_error("Unhandled memory access");
     }
@@ -51,7 +56,13 @@ uint8_t MemoryBus::read(uint16_t addr, bool passive) {
 
 void MemoryBus::write(uint16_t addr, uint8_t val) {
     switch (addr) {
-    case 0x0000 ... 0x1FFF: ram[addr % 0x800] = val; break;
+    case 0x0000 ... 0x1FFF:
+        NES_LOG("Bus") << "Write to internal RAM @ 0x" << std::hex
+                       << std::setw(4) << std::setfill('0') << addr % 0x800
+                       << " value: 0x" << std::setw(2) << std::setfill('0')
+                       << (uint16_t)val << std::endl;
+        ram[addr % 0x800] = val;
+        break;
     case 0x2000 ... 0x3FFF:
         ppu.cpu_write(0x2000 + ((addr - 0x2000) % 8), val);
         break;
@@ -67,7 +78,7 @@ void MemoryBus::write(uint16_t addr, uint8_t val) {
             throw MissingCartridge();
         break;
     default:
-        std::cerr << "Unhandled write to $" << std::hex << (int)addr
+        NES_LOG("Bus") << "Unhandled write to $" << std::hex << (int)addr
                   << " with value: " << std::hex << (int)val << "."
                   << std::endl;
         throw std::range_error("Unhandled write");

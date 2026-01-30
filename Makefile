@@ -5,15 +5,17 @@ CXX_DEBUG ?= gdb
 BIN ?= nestest
 
 ifeq ($(BIN), nestest)
-	ARGS ?= -ct 
+	ARGS ?= -cebmtl nestest_neslog
+else ifeq ($(BIN), nestesti)
+	ARGS ?= -ti
 else ifeq ($(BIN), pputest)
-	ARGS ?= -cp
+	ARGS ?= -p
 else ifeq ($(BIN), cputest)
-	ARGS ?= -cu
+	ARGS ?= -u
 else ifeq ($(BIN), dk)
 	ARGS ?= -cr DonkeyKong.nes
 else
-	ARGS ?= -cr $(BIN)
+	ARGS ?= -r $(BIN)
 endif
 
 .PHONY: binary run debug vg check lint loc clean

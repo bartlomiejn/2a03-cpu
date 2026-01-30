@@ -1,6 +1,8 @@
 #ifndef INC_2A03_TEST_NESTEST_H
 #define INC_2A03_TEST_NESTEST_H
 
+#include <log.h>
+
 #include <cassert>
 #include <fstream>
 #include <iostream>
@@ -106,7 +108,7 @@ void nestest_diff_log(std::string &logname) {
     std::cout << "Success" << std::endl;
 }
 
-void nestest(ExecutionEnvironment &ee) {
+void nestest(ExecutionEnvironment &ee, bool interactive) {
     using namespace NES::iNESv1;
 
     std::string nestest_rom = "nestest.nes";
@@ -115,13 +117,16 @@ void nestest(ExecutionEnvironment &ee) {
     std::cout << "Running " << nestest_rom << std::endl;
     std::cout << "Saving logs to: " << ee.logger.log_filename.value()
               << std::endl;
-    std::cout << "Setting up, PC=0xC000, cycles=7, scan_x=21" << std::endl;
+    if (!interactive)
+        std::cout << "Setting up, PC=0xC000, cycles=7, scan_x=21" << std::endl;
 
     ee.load_iNESv1(nestest_rom);
-    ee.power([](NES::CPU &cpu, NES::PPU &ppu) {
-        cpu.PC = 0xC000;
-        cpu.cycles = 7;
-        ppu.scan_x = 21;
+    ee.power([&](NES::CPU &cpu, NES::PPU &ppu) {
+        if (!interactive) {
+            cpu.PC = 0xC000;
+            cpu.cycles = 7;
+            ppu.scan_x = 21;
+        }
     });
 
     std::cout << "Entering runloop." << std::endl;
@@ -138,14 +143,16 @@ void nestest(ExecutionEnvironment &ee) {
     ee.pre_step_hook = [&](auto &ee) {
         using namespace NES::Test;
         line_ours = ee.logger.log();
+        NES_LOG("CPU") << line_ours << std::endl;
         if (!comp_check) {
             return;
         }
         line++;
         if (!std::getline(ifs, line_nestest)) {
-            std::cerr << "Nestest.log ended. Check successful. "
-                         "Continuing execution."
-                      << std::endl;
+            NES_LOG("Nestest") << "Nestest.log ended. Check successful. "
+                                  "Ending execution."
+                               << std::endl;
+            ee.stop = true;
             comp_check = false;
             return;
         }
@@ -154,10 +161,10 @@ void nestest(ExecutionEnvironment &ee) {
         std::string trimmed_nestest = trim(line_nestest);
 
         if (trimmed_ours != trimmed_nestest) {
-            std::cerr << "Ours:    " << trimmed_ours << std::endl;
-            std::cerr << "Nestest: " << trimmed_nestest << std::endl;
-            std::cerr << "Line " << line << std::endl;
-            std::cerr << "Continue with y, stop with n" << std::endl;
+            NES_LOG("Nestest") << "Ours:    " << trimmed_ours << std::endl;
+            NES_LOG("Nestest") << "Nestest: " << trimmed_nestest << std::endl;
+            NES_LOG("Nestest") << "Line " << line << std::endl;
+            NES_LOG("Nestest") << "Continue with y, stop with n" << std::endl;
             in = 0x0;
             while (in != 'y' && in != 'n') {
                 std::cin.get(in);
@@ -170,9 +177,9 @@ void nestest(ExecutionEnvironment &ee) {
     ee.post_step_hook = [&](auto &ee) {
         if (ee.bus->read(0x02) != 0x0)  // Some sort of error occured:
         {
-            std::cerr << "Nestest failure code: " << std::hex
-                      << ee.bus->read(0x02) << "." << std::endl;
-            std::cerr << "Continue with y, stop with n" << std::endl;
+            NES_LOG("Nestest") << "Nestest failure code: " << std::hex
+                               << ee.bus->read(0x02) << "." << std::endl;
+            NES_LOG("Nestest") << "Continue with y, stop with n" << std::endl;
             in = 0x0;
             while (in != 'y' && in != 'n') {
                 std::cin.get(in);
