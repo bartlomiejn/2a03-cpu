@@ -80,21 +80,20 @@ class DebugWindow {
 public:
     SDL_Window *wnd;
     SDL_Renderer *ren;
-    SDL_Texture *chr_tex;
+    SDL_Texture *chr_tex_0;  // CHR table at 0x0000
+    SDL_Texture *chr_tex_1;  // CHR table at 0x1000
 
-    std::vector<uint32_t> chr_fb;
-    int chr_fb_x, chr_fb_y;
-
-    char chr_addr_input[8] = "0";
-    unsigned int chr_addr = 0;
+    std::vector<uint32_t> chr_fb_0;  // Framebuffer for 0x0000
+    std::vector<uint32_t> chr_fb_1;  // Framebuffer for 0x1000
+    static constexpr int chr_fb_size = 128;  // 16 tiles × 8 pixels
 
     NES::PPU *ppu = nullptr;
     NES::CPU *cpu = nullptr;
 
     int wnd_w, wnd_h;
 
-    DebugWindow(int chr_fb_x, int chr_fb_y, int wnd_w = 800, int wnd_h = 600)
-        : chr_fb_x(chr_fb_x), chr_fb_y(chr_fb_y), wnd_w(wnd_w), wnd_h(wnd_h) {
+    DebugWindow(int wnd_w = 800, int wnd_h = 600)
+        : wnd_w(wnd_w), wnd_h(wnd_h) {
         wnd = SDL_CreateWindow("Debugger", SDL_WINDOWPOS_CENTERED,
                                SDL_WINDOWPOS_CENTERED, wnd_w, wnd_h,
                                SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
@@ -114,10 +113,13 @@ public:
             throw std::runtime_error("SDL_CreateRenderer error");
         }
 
-        chr_tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGBA8888,
-                                    SDL_TEXTUREACCESS_STREAMING, chr_fb_x,
-                                    chr_fb_y);
-        if (!chr_tex) {
+        chr_tex_0 = SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGBA8888,
+                                      SDL_TEXTUREACCESS_STREAMING,
+                                      chr_fb_size, chr_fb_size);
+        chr_tex_1 = SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGBA8888,
+                                      SDL_TEXTUREACCESS_STREAMING,
+                                      chr_fb_size, chr_fb_size);
+        if (!chr_tex_0 || !chr_tex_1) {
             std::cerr << "SDL_CreateTexture error: " << SDL_GetError()
                       << std::endl;
             SDL_DestroyRenderer(ren);
@@ -129,14 +131,17 @@ public:
         ImGui_ImplSDL2_InitForSDLRenderer(wnd, ren);
         ImGui_ImplSDLRenderer2_Init(ren);
 
-        chr_fb.resize(chr_fb_x * chr_fb_y);
-        memset(chr_fb.data(), 0, sizeof(uint32_t) * chr_fb_x * chr_fb_y);
+        chr_fb_0.resize(chr_fb_size * chr_fb_size);
+        chr_fb_1.resize(chr_fb_size * chr_fb_size);
+        memset(chr_fb_0.data(), 0, sizeof(uint32_t) * chr_fb_size * chr_fb_size);
+        memset(chr_fb_1.data(), 0, sizeof(uint32_t) * chr_fb_size * chr_fb_size);
     }
 
     ~DebugWindow() {
-        if (chr_tex)  SDL_DestroyTexture(chr_tex);
-        if (ren)      SDL_DestroyRenderer(ren);
-        if (wnd)      SDL_DestroyWindow(wnd);
+        if (chr_tex_0) SDL_DestroyTexture(chr_tex_0);
+        if (chr_tex_1) SDL_DestroyTexture(chr_tex_1);
+        if (ren)       SDL_DestroyRenderer(ren);
+        if (wnd)       SDL_DestroyWindow(wnd);
     }
 
     void draw(NES::iNESv1::Mapper::Base *mapper);
@@ -145,6 +150,9 @@ private:
     void draw_ppu_state();
     void draw_cpu_state();
     void draw_chr_viewer(NES::iNESv1::Mapper::Base *mapper);
+    void render_chr_table(std::vector<uint32_t> &fb,
+                          NES::iNESv1::Mapper::Base *mapper,
+                          unsigned int base_addr);
 };
 
 class GUI {
@@ -191,7 +199,7 @@ class GUI {
         ImGui::StyleColorsDark();
 
         main = new MainWindow(fb_x, fb_y);
-        debug = new DebugWindow(fb_x, fb_y);
+        debug = new DebugWindow();
     }
 
     void enter_runloop() {

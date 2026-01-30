@@ -181,7 +181,7 @@ void PPU::execute(uint16_t cycles) {
     NES_LOG("PPU") << "Run for " << dec << cycles << " cycles" << endl;
     while (cycles) {
         NES_LOG("PPU") << std::format("X: {:d} Y: {:d} v: {:04X}\n", scan_x,
-                                      scan_y, v.addr);
+                                      scan_y, (uint16_t)v.addr);
         if (scan_y == 241 && scan_x == 1 && ppuctrl.vbl_nmi) {
             NES_LOG("PPU") << "set vblank" << endl;
             ppustatus.vblank = true;

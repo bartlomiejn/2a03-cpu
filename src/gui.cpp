@@ -234,34 +234,20 @@ void DebugWindow::draw_cpu_state() {
     ImGui::End();
 }
 
-void DebugWindow::draw_chr_viewer(NES::iNESv1::Mapper::Base *mapper) {
-    ImGui::SetNextWindowPos(ImVec2(400, 10), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(ImVec2(380, 300), ImGuiCond_FirstUseEver);
-
-    if (!ImGui::Begin("CHR ROM Viewer")) {
-        ImGui::End();
-        return;
-    }
-
-    ImGui::InputText("CHR start address", chr_addr_input,
-                     IM_ARRAYSIZE(chr_addr_input),
-                     ImGuiInputTextFlags_CharsHexadecimal);
-    if (chr_addr_input[0]) {
-        std::stringstream ss;
-        ss << std::hex << chr_addr_input;
-        ss >> chr_addr;
-    }
-
-    // Render CHR tiles to framebuffer
-    const unsigned int plane_size = 8;
-    const unsigned int tile_size = plane_size * 2;
-    const unsigned int tiles_on_line = chr_fb_x / 8;
-    const unsigned int tiles_count_y = chr_fb_y / 8;
+void DebugWindow::render_chr_table(std::vector<uint32_t> &fb,
+                                    NES::iNESv1::Mapper::Base *mapper,
+                                    unsigned int base_addr) {
+    const unsigned int tile_size = 16;  // 8 bytes plane 0 + 8 bytes plane 1
+    const unsigned int tiles_per_row = 16;
+    const unsigned int total_tiles = 256;
 
     size_t chr_rom_size = mapper->cartridge.chr_rom.size();
-    size_t tile_idx = 0;
-    for (size_t tile_start = chr_addr; tile_start < chr_rom_size;
-         tile_start += tile_size) {
+
+    for (unsigned int tile_idx = 0; tile_idx < total_tiles; tile_idx++) {
+        size_t tile_start = base_addr + tile_idx * tile_size;
+        if (tile_start + tile_size > chr_rom_size)
+            break;
+
         for (int y = 0; y < 8; y++) {
             uint8_t p0 = mapper->cartridge.chr_rom[tile_start + y];
             uint8_t p1 = mapper->cartridge.chr_rom[tile_start + y + 8];
@@ -272,36 +258,51 @@ void DebugWindow::draw_chr_viewer(NES::iNESv1::Mapper::Base *mapper) {
 
                 uint32_t c;
                 switch (c_idx) {
-                case 0:
-                    c = 0x000000FF;
-                    break;
-                case 1:
-                    c = 0x555555FF;
-                    break;
-                case 2:
-                    c = 0xAAAAAAFF;
-                    break;
-                case 3:
-                    c = 0xFFFFFFFF;
-                    break;
+                case 0:  c = 0x000000FF; break;
+                case 1:  c = 0x555555FF; break;
+                case 2:  c = 0xAAAAAAFF; break;
+                case 3:  c = 0xFFFFFFFF; break;
                 }
-                unsigned int c_x = (tile_idx % tiles_on_line) * 8 + x;
-                unsigned int c_y = (tile_idx / tiles_on_line) * 8 + y;
-                int idx = c_y * chr_fb_x + c_x;
-                if (idx < chr_fb_x * chr_fb_y)
-                    chr_fb[idx] = c;
+
+                unsigned int px_x = (tile_idx % tiles_per_row) * 8 + x;
+                unsigned int px_y = (tile_idx / tiles_per_row) * 8 + y;
+                int idx = px_y * chr_fb_size + px_x;
+                fb[idx] = c;
             }
         }
-        tile_idx++;
-        if (tile_idx >= tiles_on_line * tiles_count_y)
-            break;
+    }
+}
+
+void DebugWindow::draw_chr_viewer(NES::iNESv1::Mapper::Base *mapper) {
+    ImGui::SetNextWindowPos(ImVec2(400, 10), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(300, 350), ImGuiCond_FirstUseEver);
+
+    if (!ImGui::Begin("CHR ROM Viewer")) {
+        ImGui::End();
+        return;
     }
 
-    // Update texture and display as image
-    SDL_UpdateTexture(chr_tex, NULL, chr_fb.data(), chr_fb_x * sizeof(uint32_t));
+    // Render both CHR tables
+    render_chr_table(chr_fb_0, mapper, 0x0000);
+    render_chr_table(chr_fb_1, mapper, 0x1000);
 
-    // Display the CHR texture as an ImGui image
-    ImGui::Image((ImTextureID)(intptr_t)chr_tex, ImVec2((float)chr_fb_x, (float)chr_fb_y));
+    // Update textures
+    SDL_UpdateTexture(chr_tex_0, NULL, chr_fb_0.data(),
+                      chr_fb_size * sizeof(uint32_t));
+    SDL_UpdateTexture(chr_tex_1, NULL, chr_fb_1.data(),
+                      chr_fb_size * sizeof(uint32_t));
+
+    // Display CHR table 0 ($0000-$0FFF)
+    ImGui::Text("Pattern Table 0 ($0000-$0FFF)");
+    ImGui::Image((ImTextureID)(intptr_t)chr_tex_0,
+                 ImVec2((float)chr_fb_size, (float)chr_fb_size));
+
+    ImGui::Spacing();
+
+    // Display CHR table 1 ($1000-$1FFF)
+    ImGui::Text("Pattern Table 1 ($1000-$1FFF)");
+    ImGui::Image((ImTextureID)(intptr_t)chr_tex_1,
+                 ImVec2((float)chr_fb_size, (float)chr_fb_size));
 
     ImGui::End();
 }
