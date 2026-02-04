@@ -54,8 +54,9 @@ bitfield_union(
 );
 
 /// Internal PPU VRAM register
+#pragma pack(push, 1)
 union PPUVramAddr {
-    struct {
+    struct __attribute__((packed)) {
         uint8_t sc_x : 5;       ///< Coarse X scroll
         uint8_t sc_y : 5;       ///< Coarse Y scroll
         bool nt_h : 1;          ///< Nametable select horizontal
@@ -150,7 +151,7 @@ class PPU {
     // $2006 PPUADDR
     // $2007 PPUDATA
 
-    uint16_t oamaddr;     ///< 8-bit (?) OAM address register
+    uint8_t oamaddr;      ///< 8-bit (?) OAM address register
     uint8_t oamdata;      ///< 8-bit OAM data buffer
     uint8_t ppudata_buf;  ///< 8-bit PPUADDR read buffer
 

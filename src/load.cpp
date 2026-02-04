@@ -1,9 +1,12 @@
 #include <load.h>
+#include <log.h>
 
 #include <fstream>
 #include <iostream>
 
 using namespace NES::iNESv1;
+
+#define NES_LOG_CART NES_LOG("Cartridge")
 
 /// Checks if magic number is valid. Increments the input iterator by 4 bytes.
 static bool is_magic_valid(std::string::iterator &iter) {
@@ -40,8 +43,8 @@ Cartridge NES::iNESv1::load(std::string &filename) {
     // Attempt to open the file
     std::ifstream fstream(filename);
     if (!fstream) {
-        std::cerr << "Invalid cartridge filename to load: " << filename << "."
-                  << std::endl;
+        NES_LOG_CART << "Invalid cartridge filename to load: " << filename
+                     << "." << std::endl;
         throw InvalidFile();
     }
 
@@ -53,8 +56,8 @@ Cartridge NES::iNESv1::load(std::string &filename) {
 
     // Verify the iNES magic number
     if (!is_magic_valid(fstr_iter)) {
-        std::cerr << "Invalid magic number in " << filename
-                  << " header. Probably not an iNES ROM." << std::endl;
+        NES_LOG_CART << "Invalid magic number in " << filename
+                     << " header. Probably not an iNES ROM." << std::endl;
         throw InvalidMagicNumber();
     }
 
@@ -91,7 +94,7 @@ Cartridge NES::iNESv1::load(std::string &filename) {
         ++fstr_iter;
     }
 
-    std::cout << filename << " ROM loaded successfully." << std::endl;
+    NES_LOG_CART << filename << " ROM loaded successfully." << std::endl;
 
     return cart;
 }
