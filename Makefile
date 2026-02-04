@@ -7,7 +7,7 @@ BIN ?= nestest
 ifeq ($(BIN), nestest)
 	ARGS ?= -cebmtl nestest_neslog
 else ifeq ($(BIN), nestesti)
-	ARGS ?= -ti
+	ARGS ?= -cebmtil nestesti_neslog
 else ifeq ($(BIN), pputest)
 	ARGS ?= -cebmyl pputest_neslog
 else ifeq ($(BIN), cputest)

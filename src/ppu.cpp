@@ -116,16 +116,15 @@ void PPU::draw() {
     // uint8_t bg = 0;
     // uint8_t spr = 0;
 
-    NES_LOG("PPU") << "Draw 8 px" << endl;
-
     // Background
     if (ppumask.bg_show) {
         uint8_t bg[8] = {0};
         uint16_t pix_mask = 0x8000;
 
-        NES_LOG("PPU") << "BG: BGL: 0x" << setfill('0') << setw(4) << bg_l_shift
-            << " BGH: 0x" << setfill('0') << setw(4) << bg_h_shift
-            << " x.fine: 0x" << setw(2) << (uint16_t)x.fine << endl;
+        NES_LOG("PPU") << "Draw BG: BGL: 0x" << setfill('0') << setw(4)
+                       << bg_l_shift << " BGH: 0x" << setfill('0') << setw(4)
+                       << bg_h_shift << " x.fine: 0x" << setw(2)
+                       << (uint16_t)x.fine << endl;
 
         for (int i = 0; i < 8; i++) {
             bg[i] = ((bg_l_shift << x.fine) & pix_mask) >> (15 - i) |
@@ -186,7 +185,8 @@ void PPU::execute(uint16_t cycles) {
             ppustatus.vblank = true;
             if (ppuctrl.vbl_nmi && on_nmi_vblank) on_nmi_vblank();
         }
-        if (scan_y <= 240 && scan_x == 0) {
+        if (scan_y <= 240 && scan_x == 0 &&
+            (ppumask.bg_show || ppumask.spr_show)) {
             NES_LOG("PPU") << "bus set to BS lbit addr" << endl;
             // BG lsbit addr only
             bus.addr =
@@ -212,6 +212,12 @@ void PPU::execute(uint16_t cycles) {
 
             // Clear oamaddr (I don't remember anymore why)
             if (scan_x >= 257 && scan_x <= 320) oamaddr = 0x0;
+
+            if ((scan_x >= 1 && scan_x <= 256) ||
+                (scan_x >= 321 && scan_x <= 336)) {
+                bg_l_shift <<= 1;
+                bg_h_shift <<= 1;
+            }
 
             switch (scan_x) {
                 // clang-format off
@@ -290,7 +296,7 @@ void PPU::execute(uint16_t cycles) {
                 // clang-format on
                 if (!ppumask.bg_show && !ppumask.spr_show) break;
                 bus.addr = (ppuctrl.bg_pt_addr ? 0x1000 : 0x0000) | (nt << 4) |
-                           (v.addr >> 12);
+                           (v.sc_fine_y);
                 NES_LOG("PPU") << "BGL addr: 0x" << hex << setfill('0') << setw(4)
                      << bus.addr << endl;
                 break;
@@ -304,7 +310,6 @@ void PPU::execute(uint16_t cycles) {
             case 246:   case 254:   case 326:   case 334:
                 // clang-format on
                 if (!ppumask.bg_show && !ppumask.spr_show) break;
-                bg_l_shift <<= 8;
                 bg_l_shift |= read(bus.addr);
 
                 NES_LOG("PPU") << "Read BGL@0x" << hex << setfill('0') << setw(4)
@@ -323,7 +328,7 @@ void PPU::execute(uint16_t cycles) {
                 // clang-format on
                 if (!ppumask.bg_show && !ppumask.spr_show) break;
                 bus.addr = ((ppuctrl.bg_pt_addr ? 0x1000 : 0x0000) | (nt << 4) |
-                            (v.addr >> 12)) +
+                            (v.sc_fine_y)) +
                            8;
                 NES_LOG("PPU") << "BGH addr: 0x" << hex << setfill('0') << setw(4)
                      << bus.addr << endl;
@@ -339,7 +344,6 @@ void PPU::execute(uint16_t cycles) {
                 // clang-format on
                 if (!ppumask.bg_show && !ppumask.spr_show) break;
 
-                bg_h_shift <<= 8;
                 bg_h_shift |= read(bus.addr);
 
                 NES_LOG("PPU") << "Read BGH@0x" << hex << setfill('0') << setw(4)
@@ -544,7 +548,7 @@ void PPU::write(uint16_t addr, uint8_t value) {
     case 0x2000 ... 0x23FF: vram[addr - 0x2000] = value; break;
     case 0x2400 ... 0x27FF:
         switch (mirror) {
-        case map_hori: vram[addr - 0x2400] = value; break;
+        case map_hori: vram[addr - 0x2000] = value; break;
         case map_quad: vram[addr - 0x2000] = value; break;
         case map_vert: vram[addr - 0x2000] = value; break;
         case map_single: vram[addr - 0x2400] = value; break;
