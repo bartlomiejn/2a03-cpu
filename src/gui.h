@@ -149,6 +149,7 @@ public:
 private:
     void draw_ppu_state();
     void draw_cpu_state();
+    void draw_rom_info(NES::iNESv1::Mapper::Base *mapper);
     void draw_chr_viewer(NES::iNESv1::Mapper::Base *mapper);
     void render_chr_table(std::vector<uint32_t> &fb,
                           NES::iNESv1::Mapper::Base *mapper,

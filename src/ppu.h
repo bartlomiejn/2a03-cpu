@@ -54,8 +54,9 @@ bitfield_union(
 );
 
 /// Internal PPU VRAM register
+#pragma pack(push, 1)
 union PPUVramAddr {
-    struct {
+    struct __attribute__((packed)) {
         uint8_t sc_x : 5;       ///< Coarse X scroll
         uint8_t sc_y : 5;       ///< Coarse Y scroll
         bool nt_h : 1;          ///< Nametable select horizontal

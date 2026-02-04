@@ -15,6 +15,10 @@ void DebugWindow::draw(NES::iNESv1::Mapper::Base *mapper) {
     // Draw CPU state panel
     draw_cpu_state();
 
+    // Draw ROM info panel
+    if (mapper)
+        draw_rom_info(mapper);
+
     // Draw CHR viewer panel
     if (mapper)
         draw_chr_viewer(mapper);
@@ -271,6 +275,44 @@ void DebugWindow::render_chr_table(std::vector<uint32_t> &fb,
             }
         }
     }
+}
+
+void DebugWindow::draw_rom_info(NES::iNESv1::Mapper::Base *mapper) {
+    ImGui::SetNextWindowPos(ImVec2(400, 370), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(300, 220), ImGuiCond_FirstUseEver);
+
+    if (!ImGui::Begin("ROM Info")) {
+        ImGui::End();
+        return;
+    }
+
+    const auto &cart = mapper->cartridge;
+    const auto &hdr = cart.header;
+
+    // Header info
+    if (ImGui::CollapsingHeader("Header", ImGuiTreeNodeFlags_DefaultOpen)) {
+        uint8_t mapper_num = (hdr.flags_7.nib_h << 4) | hdr.flags_6.nib_l;
+        ImGui::Text("Mapper:       %u", mapper_num);
+        ImGui::Text("PRG ROM banks: %u (x16KB)", hdr.prg_rom_banks);
+        ImGui::Text("CHR ROM banks: %u (x8KB)", hdr.chr_rom_banks);
+        ImGui::Text("PRG RAM size:  %u bytes", hdr.prg_ram_banks);
+        ImGui::Text("Mirroring:    %s", hdr.flags_6.mirror ? "Vertical" : "Horizontal");
+        ImGui::Text("Battery:      %s", hdr.flags_6.prg_ram ? "Yes" : "No");
+        ImGui::Text("Trainer:      %s", hdr.flags_6.has_trainer ? "Yes" : "No");
+        ImGui::Text("TV System:    %s", hdr.flags_9.tv_sys ? "PAL" : "NTSC");
+    }
+
+    ImGui::Separator();
+
+    // Actual data sizes
+    if (ImGui::CollapsingHeader("Data Sizes", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::Text("Trainer:  %zu bytes", cart.trainer.size());
+        ImGui::Text("PRG ROM:  %zu bytes (%zu KB)", cart.prg_rom.size(), cart.prg_rom.size() / 1024);
+        ImGui::Text("CHR ROM:  %zu bytes (%zu KB)", cart.chr_rom.size(), cart.chr_rom.size() / 1024);
+        ImGui::Text("PRG RAM:  %zu bytes (%zu KB)", cart.prg_ram.size(), cart.prg_ram.size() / 1024);
+    }
+
+    ImGui::End();
 }
 
 void DebugWindow::draw_chr_viewer(NES::iNESv1::Mapper::Base *mapper) {

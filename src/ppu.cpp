@@ -178,8 +178,9 @@ void PPU::draw() {
 void PPU::execute(uint16_t cycles) {
     NES_LOG("PPU") << "Run for " << dec << cycles << " cycles" << endl;
     while (cycles) {
-        NES_LOG("PPU") << std::format("X: {:d} Y: {:d} v: {:04X}\n", scan_x,
-                                      scan_y, (uint16_t)v.addr);
+        NES_LOG("PPU") << std::format(
+            "X: {:d} Y: {:d} v: {:04X} t: {:04X} w: {:d}\n", scan_x, scan_y,
+            (uint16_t)v.addr, (uint16_t)t.addr, w);
         if (scan_y == 241 && scan_x == 1) {
             NES_LOG("PPU") << "set vblank" << endl;
             ppustatus.vblank = true;
@@ -356,22 +357,17 @@ void PPU::execute(uint16_t cycles) {
                                    bg_l_shift, bg_h_shift);
 
                 if (scan_x == 256) {
-                    NES_LOG("PPU") << "Increment vert V" << endl;
                     inc_vert(v);
                 }
-
-                NES_LOG("PPU") << "Increment hori V" << endl;
                 inc_hori(v);
             }
 
             if (scan_x == 257 && (ppumask.bg_show || ppumask.spr_show)) {
-                NES_LOG("PPU") << "hori V = hori T" << endl;
                 set_hori(v, t);
             }
 
             if (scan_y == 261 && scan_x >= 280 && scan_x <= 304 &&
                 (ppumask.bg_show || ppumask.spr_show)) {
-                NES_LOG("PPU") << "vert V = vert T" << endl;
                 set_vert(v, t);
             }
         }
@@ -426,13 +422,25 @@ void PPU::cpu_write(uint16_t addr, uint8_t value) {
         oam[oamaddr++] = value;
         break;
     case 0x2005:  // PPUSCROLL
+        NES_LOG("PPU") << std::format("PPUSCROLL before t: {:04X}\n",
+                                      (uint16_t)t.addr);
         if (!w) {
+            NES_LOG("PPU") << std::format("PPUSCROLL w == 0\n");
             t.sc_x = ((value & 0xF8) >> 3);
             x.fine = (value & 0x7);
         } else {
+            NES_LOG("PPU") << std::format("PPUSCROLL w == 1\n");
+
+            NES_LOG("PPU") << std::format(
+                "PPUSCROLL (value & 0xF8) >> 3: {:02X}\n", (value & 0xF8) >> 3);
             t.sc_y = ((value & 0xF8) >> 3);
+            NES_LOG("PPU") << std::format("PPUSCROLL t.sc_y: {:02X}\n",
+                                          (uint8_t)t.sc_y);
+
             t.sc_fine_y = (value & 0x7);
         }
+        NES_LOG("PPU") << std::format("PPUSCROLL after t: {:04X}\n",
+                                      (uint16_t)t.addr);
         w = !w;
         break;
     case 0x2006:  // PPUADDR
