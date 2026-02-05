@@ -41,8 +41,8 @@ endif()
 
 # Disable optimizations for GCC debug builds
 if(CMAKE_COMPILER_IS_GNUCC)
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O1 -fno-omit-frame-pointer -Werror -Wall")
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O1 -fno-omit-frame-pointer -Werror -Wall")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O3 -g -fno-omit-frame-pointer -Werror -Wall")
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O3 -g -fno-omit-frame-pointer -Werror -Wall")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -fno-omit-frame-pointer -Werror -Wall")
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -fno-omit-frame-pointer -Werror -Wall")
 endif(CMAKE_COMPILER_IS_GNUCC)
@@ -91,7 +91,7 @@ configure_file(${EXTERNAL_DIR}/Inter-VariableFont_opsz,wght.ttf Inter-VariableFo
 configure_file(${EXTERNAL_DIR}/Inter-Italic-VariableFont_opsz,wght.ttf Inter-Italic-VariableFont.ttf COPYONLY)
 # Inter - designed by Rasmus Andersson rsms.me/inter
 # Licensed under the SIL Open Font License 1.1 (https://openfontlicense.org)
-# Free for personal and commercial use at the time of writing this
+# Free for personal and commercial use
 
 # Copy palette file for PPU
 configure_file(${EXTERNAL_DIR}/DigitalPrimeFBX.pal DigitalPrimeFBX.pal COPYONLY)

@@ -24,13 +24,16 @@ else ifeq ($(BIN), dk_debug)
 	ARGS ?= -cebmr DonkeyKong.nes -l dk_neslog
 else ifeq ($(BIN), dk_cg)
 	EN_LOGGING := -DENABLE_LOGGING=OFF
-	ARGS ?= -r DonkeyKong.nes -h 20
+	ARGS ?= -r DonkeyKong.nes -h 50
+	PERFARGS ?= -r DonkeyKong.nes -h 10000
 else
 	ARGS ?= -r $(BIN)
 endif
 
 ifeq ($(BLD_TYPE), Debug)
 	EN_CALLGRIND := -DENABLE_CALLGRIND=ON
+else ifeq ($(BIN), Release)
+	EN_LOGGING := -DENABLE_LOGGING=OFF
 endif
 
 .PHONY: binary run debug vg check lint loc clean
@@ -60,10 +63,12 @@ vg: binary
 
 cg: binary
 	cd $(OUT_DIR) && valgrind --tool=callgrind --instr-atstart=no \
-		--callgrind-out-file=cg.$(BIN) ./2a03 $(ARGS)
+		--callgrind-out-file=cg.$(BIN) --cache-sim=yes --branch-sim=yes \
+		--dump-instr=yes ./2a03 $(ARGS)
+	cd $(OUT_DIR) && perf stat ./2a03 $(PERFARGS) > perf.$(BIN)
 	cd $(OUT_DIR) && gprof2dot $(GPROF2DOT_ARGS) -o cg.$(BIN).dot cg.$(BIN)
 	cd $(OUT_DIR) && dot -Tpng -o cg.$(BIN).graph.png cg.$(BIN).dot
-	cd $(OUT_DIR) &&  eog cg.$(BIN).graph.png
+	cd $(OUT_DIR) && kcachegrind cg.$(BIN)
 
 check:
 	$(MAKE) cppcheck -C $(OUT_DIR)

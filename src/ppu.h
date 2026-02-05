@@ -101,6 +101,7 @@ static const size_t ntsc_y = 262;  ///< NTSC scanline count
 
 static const size_t ntsc_fb_x = 256;  ///< NTSC framebuffer X size
 static const size_t ntsc_fb_y = 240;  ///< NTSC framebuffer Y size
+static const size_t ntsc_fb_sz = ntsc_fb_x * ntsc_fb_y;
 
 /// Ricoh 2C02 NTSC PPU emulator
 class PPU {
@@ -153,8 +154,8 @@ class PPU {
     uint8_t ppudata_buf;  ///< 8-bit PPUADDR read buffer
 
     // Output
-    std::array<uint32_t, ntsc_fb_x * ntsc_fb_y> fb;  ///< Framebuffer
-    std::array<uint32_t, ntsc_fb_x * ntsc_fb_y> fb_sec;
+    alignas(16) std::array<uint32_t, ntsc_fb_sz> fb;      ///< Framebuffer
+    alignas(16) std::array<uint32_t, ntsc_fb_sz> fb_sec;  ///< Secondary
     bool fb_prim = true;
 
     std::function<void()> on_nmi_vblank;  ///< Issues a VBlank NMI

@@ -93,6 +93,7 @@ void PPU::oam_sec_clear() {
 }
 
 void PPU::sprite_eval() {
+    return;
     if (!ppumask.bg_show && !ppumask.spr_show) {
         return;
     }
@@ -183,24 +184,12 @@ void PPU::draw() {
         // non-zero pixel
     }
 
-    for (int i = 0; i < 8; i++) {
-        int y_offset, x_offset;
-
-        y_offset = scan_y * ntsc_fb_x;
-        x_offset = scan_x + 7 - (8 - i);
-
-        NES_LOG("PPU") << std::format(
-            "Draw: {:08X} at x_offset: {:d} y_offset {:d}\n", bg_out[i],
-            x_offset, y_offset / ntsc_fb_x);
-
-        // Write to framebuffer
-        int fb_i = y_offset + x_offset;
-        if (fb_prim) {
-            fb[fb_i] = bg_out[i];
-        } else {
-            fb_sec[fb_i] = bg_out[i];
-        }
-    }
+    int y_offset, x_offset;
+    y_offset = scan_y * ntsc_fb_x;
+    x_offset = scan_x - 1;
+    int offset = y_offset + x_offset;
+    uint32_t *fb_ptr = fb_prim ? fb.data() : fb_sec.data();
+    std::memcpy(fb_ptr + offset, bg_out, sizeof(uint32_t) * 8);
 }
 
 void PPU::execute(uint16_t cycles) {
@@ -409,10 +398,8 @@ void PPU::execute(uint16_t cycles) {
 
         if (scan_y == 239 && scan_x == 320) {
             if (!headless) {
-                if (fb_prim)
-                    gui.draw_frame(fb.data());
-                else
-                    gui.draw_frame(fb_sec.data());
+                uint32_t *fbptr = fb_prim ? fb.data() : fb_sec.data();
+                gui.draw_frame(fbptr);
             }
             fb_prim = !fb_prim;
             frame_count++;
