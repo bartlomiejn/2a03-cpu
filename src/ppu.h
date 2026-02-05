@@ -71,6 +71,7 @@ union PPUVramAddr {
         uint16_t addr : 15;
     };
 };
+#pragma pack(pop)
 
 /// Object attributes model for sprites
 struct OA {

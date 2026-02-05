@@ -113,8 +113,6 @@ void PPU::sprite_eval() {
 
 void PPU::draw() {
     uint8_t out[8] = {0};
-    // uint8_t bg = 0;
-    // uint8_t spr = 0;
 
     // Background
     if (ppumask.bg_show) {
@@ -133,10 +131,6 @@ void PPU::draw() {
             out[i] = bg[i];
             pix_mask >>= 1;
         }
-
-        // uint8_t bg = (((bg_l_shift << x.fine) & 0x8000) >> 15) |
-        //              (((bg_h_shift << x.fine) & 0x8000) >> 14);
-        // out = bg;
     }
 
     // Sprites
@@ -150,6 +144,7 @@ void PPU::draw() {
         // non-zero pixel
     }
 
+    // TODO: No palette temporarily, just plane0 and 1
     uint32_t c[8];
     for (int i = 0; i < 8; i++) {
         switch (out[i]) {
@@ -161,13 +156,18 @@ void PPU::draw() {
     }
 
     for (int i = 0; i < 8; i++) {
-        unsigned int y_offset = scan_y * ntsc_fb_x;
-        unsigned int x_offset = scan_x - 1 - (8 - i);
+        int y_offset, x_offset;
+
+        y_offset = scan_y * ntsc_fb_x;
+        x_offset = scan_x + 7 - (8 - i);
+
+        NES_LOG("PPU") << std::format(
+            "Draw: {:08X} at x_offset: {:d} y_offset {:d}\n", c[i], x_offset,
+            y_offset / ntsc_fb_x);
 
         // Write to framebuffer
         int fb_i = y_offset + x_offset;
         if (fb_prim) {
-            // TODO: No palette temporarily, just plane0 and 1
             fb[fb_i] = c[i];
         } else {
             fb_sec[fb_i] = c[i];
@@ -182,23 +182,23 @@ void PPU::execute(uint16_t cycles) {
             "X: {:d} Y: {:d} v: {:04X} t: {:04X} w: {:d}\n", scan_x, scan_y,
             (uint16_t)v.addr, (uint16_t)t.addr, w);
         if (scan_y == 241 && scan_x == 1) {
-            NES_LOG("PPU") << "set vblank" << endl;
+            NES_LOG("PPU") << "set vblank" << std::endl;
             ppustatus.vblank = true;
             if (ppuctrl.vbl_nmi && on_nmi_vblank) on_nmi_vblank();
         }
         if (scan_y <= 240 && scan_x == 0 &&
             (ppumask.bg_show || ppumask.spr_show)) {
-            NES_LOG("PPU") << "bus set to BS lbit addr" << endl;
-            // BG lsbit addr only
-            bus.addr =
-                (ppuctrl.bg_pt_addr ? 0x1000 : 0x0000) + nt * 16 + v.sc_fine_y;
+            bus.addr = (ppuctrl.bg_pt_addr ? 0x1000 : 0x0000) | (nt << 4) |
+                       v.sc_fine_y;
         }
+
         if (scan_y <= 239 || scan_y == 261) {
             // Draw 8 pixels
-            if (scan_y <= 239 && scan_x >= 8 && scan_x <= 257) {
-                if (!((scan_x - 1) % 8)) draw();
+            if (scan_y <= 239) {
+                if (scan_x >= 1 && scan_x <= 249) {
+                    if (!((scan_x - 1) % 8)) draw();
+                }
             }
-
             // Clear flags
             if (scan_y == 261 && scan_x == 1) {
                 NES_LOG("PPU") << "clear flags" << endl;
@@ -214,11 +214,8 @@ void PPU::execute(uint16_t cycles) {
             // Clear oamaddr (I don't remember anymore why)
             if (scan_x >= 257 && scan_x <= 320) oamaddr = 0x0;
 
-            if ((scan_x >= 1 && scan_x <= 256) ||
-                (scan_x >= 321 && scan_x <= 336)) {
-                bg_l_shift <<= 1;
-                bg_h_shift <<= 1;
-            }
+            bg_l_shift <<= 1;
+            bg_h_shift <<= 1;
 
             switch (scan_x) {
                 // clang-format off
