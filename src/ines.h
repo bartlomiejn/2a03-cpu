@@ -29,22 +29,6 @@ bitfield_union(
     uint8_t nib_l : 4;  ///< Lower nibble of mapper number
 );
 
-// bitfield_union(
-//     Byte6, uint8_t byte,
-//     uint8_t nib_l : 4;      ///< Lower nibble of mapper number
-//     bool ignore_mctrl : 1;  ///< Ignore mirroring control or above mirroring
-//     bit bool
-//         has_trainer : 1;  ///< 512-byte trainer at $7000-$71FF (before PRG
-//         data)
-//     bool prg_ram : 1;     ///< Contains battery-backed PRG RAM ($6000-$7FFF)
-//     or
-//                           ///< other persistent memory
-//     bool mirror : 1;      ///< Mirroring  0 : horizontal (CIRAM A10 == PPU
-//     A11)
-//                           ///< 		1 : vertical (CIRAM A10 == PPU
-//                           A10)
-//);
-
 bitfield_union(Byte7, uint8_t byte,
                bool vs_unisys : 1;  ///< Is VS Unisystem.
                bool pc_10 : 1;  ///< Is PlayChoice-10 (8KB hint screen stored

@@ -194,7 +194,7 @@ void PPU::execute(uint16_t cycles) {
 
         // Draw 8 pixels
         if (scan_y <= 239) {
-            if (scan_x >= 1 && scan_x <= 241) {
+            if (scan_x >= 1 && scan_x <= 249) {
                 if (!((scan_x - 1) % 8)) draw();
             }
         }

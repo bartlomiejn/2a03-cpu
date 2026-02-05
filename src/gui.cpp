@@ -299,7 +299,9 @@ void DebugWindow::draw_rom_info(NES::iNESv1::Mapper::Base *mapper) {
         ImGui::Text("Mirroring:    %s", hdr.flags_6.mirror ? "Vertical" : "Horizontal");
         ImGui::Text("Battery:      %s", hdr.flags_6.prg_ram ? "Yes" : "No");
         ImGui::Text("Trainer:      %s", hdr.flags_6.has_trainer ? "Yes" : "No");
-        ImGui::Text("TV System:    %s", hdr.flags_9.tv_sys ? "PAL" : "NTSC");
+        ImGui::Text("iNESv2:       %s",
+                    hdr.flags_7.ines_v2 == 2 ? "Yes" : "No");
+        ImGui::Text("System (v1):  %s", hdr.flags_9.tv_sys ? "PAL" : "NTSC");
     }
 
     ImGui::Separator();
