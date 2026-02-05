@@ -9,8 +9,10 @@
 
 using namespace NES;
 
-MemoryBus::MemoryBus(NES::PPU &_ppu, NES::APU &_apu)
-    : ppu(_ppu), apu(_apu), cpu(nullptr) {
+MemoryBus::MemoryBus(NES::PPU &_ppu, NES::APU &_apu,
+                     NES::Controller &_ctrl1, NES::Controller &_ctrl2)
+    : ppu(_ppu), apu(_apu), cpu(nullptr),
+      controller1(_ctrl1), controller2(_ctrl2) {
     // Ram state is not consistent on a real machine
     std::fill(ram.begin(), ram.end(), 0x0);
 }
@@ -35,8 +37,8 @@ uint8_t MemoryBus::read(uint16_t addr, bool passive) {
     case 0x4000 ... 0x4015: return apu.read(addr);
 
     // Controller registers
-    // TODO: Implement controller support
-    case 0x4016 ... 0x4017: return 0x0;
+    case 0x4016: return controller1.read();
+    case 0x4017: return controller2.read();
 
     // CPU test mode APU/IO functionality (disabled)
     case 0x4018 ... 0x401F:
@@ -73,7 +75,11 @@ void MemoryBus::write(uint16_t addr, uint8_t val) {
     case 0x4000 ... 0x4017:
         if (addr == 0x4014)
             return cpu->schedule_dma_oam(val);
-        else
+        else if (addr == 0x4016) {
+            controller1.write(val);
+            controller2.write(val);
+            return;
+        } else
             return apu.write(val);
     case 0x4020 ... 0xFFFF:
         if (mapper)

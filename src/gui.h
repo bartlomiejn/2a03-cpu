@@ -3,16 +3,19 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <controller.h>
 #include <imgui.h>
 #include <imgui_impl_sdl2.h>
 #include <imgui_impl_sdlrenderer2.h>
+#include <log.h>
 #include <mapper.h>
 
 #include <atomic>
+#include <format>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include <iomanip>
 
 // Forward declaration
 namespace NES { class PPU; class CPU; }
@@ -163,6 +166,7 @@ class GUI {
     NES::iNESv1::Mapper::Base *mapper;
     NES::PPU *ppu = nullptr;
     NES::CPU *cpu = nullptr;
+    NES::Controller *controller1 = nullptr;
 
     std::atomic<bool> main_fb_ready = false;
     uint32_t *main_fb = nullptr;
@@ -230,19 +234,35 @@ class GUI {
         main_fb_ready = true;
     }
 
-    static bool handle_events() {
+    bool handle_events() {
         bool quit = false;
         SDL_Event event;
-        SDL_PollEvent(&event);
 
-        ImGui_ImplSDL2_ProcessEvent(&event);
+        while (SDL_PollEvent(&event)) {
+            ImGui_ImplSDL2_ProcessEvent(&event);
 
-        if (event.type == SDL_WINDOWEVENT
-            && event.window.event == SDL_WINDOWEVENT_CLOSE)
-            // TODO: Close only when event comes from main window
-            quit = true;
-        if (event.type == SDL_QUIT)
-            quit = true;
+            if (event.type == SDL_WINDOWEVENT
+                && event.window.event == SDL_WINDOWEVENT_CLOSE)
+                quit = true;
+            if (event.type == SDL_QUIT)
+                quit = true;
+
+            // Handle keyboard input for controller 1
+            if (controller1 && (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)) {
+                bool pressed = (event.type == SDL_KEYDOWN);
+                switch (event.key.keysym.sym) {
+                case SDLK_w: controller1->set_button(NES::Controller::BTN_UP, pressed); break;
+                case SDLK_s: controller1->set_button(NES::Controller::BTN_DOWN, pressed); break;
+                case SDLK_a: controller1->set_button(NES::Controller::BTN_LEFT, pressed); break;
+                case SDLK_d: controller1->set_button(NES::Controller::BTN_RIGHT, pressed); break;
+                case SDLK_i: controller1->set_button(NES::Controller::BTN_START, pressed); break;
+                case SDLK_o: controller1->set_button(NES::Controller::BTN_SELECT, pressed); break;
+                case SDLK_k: controller1->set_button(NES::Controller::BTN_A, pressed); break;
+                case SDLK_l: controller1->set_button(NES::Controller::BTN_B, pressed); break;
+                default: break;
+                }
+            }
+        }
 
         return quit;
     }

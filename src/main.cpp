@@ -95,17 +95,20 @@ int main(int argc, char *argv[]) {
     NES::Palette pal("DigitalPrimeFBX.pal");
     NES::PPU ppu(gui, pal);
     NES::APU apu;
+    NES::Controller controller1, controller2;
     NES::MemoryBusIntf *bus;
     NES::Test::MemoryBus *mock_bus = nullptr;
     if (opts.run_cpu_tests) {
         mock_bus = new NES::Test::MemoryBus();
         bus = mock_bus;
     } else {
-        bus = new NES::MemoryBus(ppu, apu);
+        bus = new NES::MemoryBus(ppu, apu, controller1, controller2);
     }
     NES::CPU cpu(bus);
-    if (!mock_bus)
+    if (!mock_bus) {
         ((NES::MemoryBus*)bus)->cpu = &cpu;
+        gui.controller1 = &controller1;
+    }
     NES::SystemLogGenerator logger(cpu, ppu, bus);
     NES::ExecutionEnvironment ee(gui, bus, cpu, ppu, logger);
 
@@ -123,6 +126,8 @@ int main(int argc, char *argv[]) {
     }
     if (opts.log_bus) NES::Log::instance().enable("Bus");
     if (opts.log_nrom) NES::Log::instance().enable("NROM");
+
+    NES::Log::instance().enable("GUI");
 
     // SystemLogGenerator state logging (for nestest)
     if (opts.log_cpu_state) logger.instr_ostream = std::cerr;

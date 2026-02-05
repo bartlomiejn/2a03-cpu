@@ -2,6 +2,7 @@
 #define INC_2A03_BUS_H
 
 #include <apu.h>
+#include <controller.h>
 #include <mapper.h>
 #include <ppu.h>
 
@@ -39,10 +40,13 @@ class MemoryBus : public MemoryBusIntf {
     NES::PPU &ppu;
     NES::APU &apu;
     NES::CPU *cpu;
+    NES::Controller &controller1;
+    NES::Controller &controller2;
     std::array<uint8_t, ram_size> ram;  ///< Internal RAM
 
     /// Initializes the memory bus.
-    explicit MemoryBus(NES::PPU &_ppu, NES::APU &_apu);
+    MemoryBus(NES::PPU &_ppu, NES::APU &_apu,
+              NES::Controller &_ctrl1, NES::Controller &_ctrl2);
 
     /// Reads 8 bits of memory at the provided address.
     /// \param addr Address to read from.
