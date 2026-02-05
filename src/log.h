@@ -2,12 +2,12 @@
 #define INC_2A03_LOG_H
 
 #include <iostream>
-#include <sstream>
 #include <string>
-#include <unordered_map>
 #include <unordered_set>
 
 namespace NES {
+
+#ifdef NES_ENABLE_LOGGING
 
 /// Debug logging facility with named handles that can be individually enabled/disabled
 class Log {
@@ -35,18 +35,15 @@ class Log {
     /// Get the output stream
     std::ostream *get_output() const { return output; }
 
-    /// Log a message with a handle prefix
-    template <typename... Args>
-    void log(const std::string &handle, Args &&...args) {
-        if (!is_enabled(handle) || !output) return;
+    /// Returns a stream for logging with handle prefix
+    std::ostream &stream(const std::string &handle) {
         *output << handle << ": ";
-        ((*output << std::forward<Args>(args)), ...);
+        return *output;
     }
 
-    /// Returns a stream for logging (for use with manipulators like std::hex)
-    /// Returns a null stream if handle is disabled
-    std::ostream &stream(const std::string &handle) {
-        if (!is_enabled(handle) || !output) {
+    /// Returns a stream (null if disabled) - for use as expression/function argument
+    std::ostream &stream_expr(const std::string &handle) {
+        if (!is_enabled(handle)) {
             return null_stream;
         }
         *output << handle << ": ";
@@ -70,9 +67,44 @@ class Log {
     std::ostream null_stream{&null_buffer};
 };
 
-#define NES_LOG(handle) NES::Log::instance().stream(handle)
+/// Short-circuit macro: if handle is disabled, the entire expression after
+/// NES_LOG() is never evaluated (including std::format calls, etc.)
+/// Use for statement-style logging: NES_LOG("X") << "message" << std::endl;
+#define NES_LOG(handle) \
+    if (!NES::Log::instance().is_enabled(handle)) {} \
+    else NES::Log::instance().stream(handle)
+
+/// Expression macro: returns a stream reference (null stream if disabled).
+/// Use when passing to functions: print_data(NES_LOG_STREAM("X"));
+/// Note: Arguments are still evaluated even when disabled.
+#define NES_LOG_STREAM(handle) NES::Log::instance().stream_expr(handle)
 
 #define NES_LOG_ENABLED(handle) NES::Log::instance().is_enabled(handle)
+
+#else  // NES_ENABLE_LOGGING not defined - compile out all logging
+
+/// Stub Log class when logging is disabled
+class Log {
+   public:
+    static Log &instance() {
+        static Log log;
+        return log;
+    }
+    void enable(const std::string &) {}
+    void disable(const std::string &) {}
+    bool is_enabled(const std::string &) const { return false; }
+    void set_output(std::ostream *) {}
+    std::ostream *get_output() const { return nullptr; }
+};
+
+/// if constexpr (false) guarantees the discarded statement is never compiled.
+/// The entire expression after NES_LOG(), including std::format calls, is removed.
+#define NES_LOG(handle) if constexpr (false) std::cerr
+
+#define NES_LOG_STREAM(handle) std::cerr
+#define NES_LOG_ENABLED(handle) false
+
+#endif  // NES_ENABLE_LOGGING
 
 }  // namespace NES
 

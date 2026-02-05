@@ -145,13 +145,13 @@ bool assert_equal(const T& a, const U& b, const std::string& a_str,
     return true;
 }
 
-#define ASSERT_EQUAL(a, b)                                   \
-    if (!assert_equal(a, b, #a, #b)) {                       \
-        print_test_case(tc, std::cout);                      \
-        print_test_case(tc, NES_LOG("cputest"));             \
-        print_actual_state(ee, bus, tc, std::cout);          \
-        print_actual_state(ee, bus, tc, NES_LOG("cputest")); \
-        return false;                                        \
+#define ASSERT_EQUAL(a, b)                                          \
+    if (!assert_equal(a, b, #a, #b)) {                              \
+        print_test_case(tc, std::cout);                             \
+        print_test_case(tc, NES_LOG_STREAM("cputest"));             \
+        print_actual_state(ee, bus, tc, std::cout);                 \
+        print_actual_state(ee, bus, tc, NES_LOG_STREAM("cputest")); \
+        return false;                                               \
     }
 
 bool assert_final_state(NES::ExecutionEnvironment &ee,

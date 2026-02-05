@@ -180,14 +180,14 @@ class GUI {
     GUI(int fb_x, int fb_y) : fb_x(fb_x), fb_y(fb_y) {};
 
     ~GUI() {
-        ImGui_ImplSDLRenderer2_Shutdown();
-        ImGui_ImplSDL2_Shutdown();
-        ImGui::DestroyContext();
-
         if (debug) delete debug;
-        if (main) delete main;
-
-        SDL_Quit();
+        if (main) {
+            ImGui_ImplSDLRenderer2_Shutdown();
+            ImGui_ImplSDL2_Shutdown();
+            ImGui::DestroyContext();
+            delete main;
+            SDL_Quit();
+        }
     };
 
     void setup() {

@@ -165,6 +165,9 @@ class PPU {
     uint16_t scan_y_end;  ///< Scanline count
     bool scan_short;      ///< Short scanline (340 ticks instead of 341)
 
+    bool headless = false;      ///< Skip GUI rendering for profiling
+    uint64_t frame_count = 0;   ///< Completed frame counter
+
     PPU(GFX::GUI &_gui, NES::Palette _pal);
 
     /// Powers up the PPU

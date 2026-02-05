@@ -408,11 +408,14 @@ void PPU::execute(uint16_t cycles) {
         }
 
         if (scan_y == 239 && scan_x == 320) {
-            if (fb_prim)
-                gui.draw_frame(fb.data());
-            else
-                gui.draw_frame(fb_sec.data());
+            if (!headless) {
+                if (fb_prim)
+                    gui.draw_frame(fb.data());
+                else
+                    gui.draw_frame(fb_sec.data());
+            }
             fb_prim = !fb_prim;
+            frame_count++;
         }
 
         if (scan_x == ntsc_x - 2 && scan_y == ntsc_y - 1 && scan_short &&
@@ -497,10 +500,11 @@ void PPU::cpu_write(uint16_t addr, uint8_t value) {
 }
 
 uint8_t PPU::cpu_read(uint16_t addr, bool passive) {
-    if (!passive)
+    if (!passive) {
         NES_LOG("PPU") << std::format(
             "cpu_read@{:04x} passive={} value={:02X}?\n", addr, passive,
             cpu_read(addr, true));
+    }
     switch (addr) {
     case 0x2000:  // Write-only
         return cpu_bus;

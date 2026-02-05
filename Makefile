@@ -4,6 +4,7 @@ OUT_DIR ?= $(SRC_DIR)/output
 CXX_DEBUG ?= gdb
 BIN ?= nestest
 BLD_TYPE ?= Debug
+GPROF2DOT_ARGS := -n 0.25 -e 0.05 -f callgrind --color-nodes-by-selftime
 
 ifeq ($(BIN), nestest)
 	ARGS ?= -cebmtl nestest_neslog
@@ -21,8 +22,15 @@ else ifeq ($(BIN), dk)
 	ARGS ?= -r DonkeyKong.nes
 else ifeq ($(BIN), dk_debug)
 	ARGS ?= -cebmr DonkeyKong.nes -l dk_neslog
+else ifeq ($(BIN), dk_cg)
+	EN_LOGGING := -DENABLE_LOGGING=OFF
+	ARGS ?= -r DonkeyKong.nes -h 20
 else
 	ARGS ?= -r $(BIN)
+endif
+
+ifeq ($(BLD_TYPE), Debug)
+	EN_CALLGRIND := -DENABLE_CALLGRIND=ON
 endif
 
 .PHONY: binary run debug vg check lint loc clean
@@ -33,6 +41,8 @@ $(OUT_DIR):
 binary: $(OUT_DIR)
 	cd $(OUT_DIR) && cmake \
 		-DCMAKE_BUILD_TYPE=$(BLD_TYPE) \
+		$(EN_LOGGING) \
+		$(EN_CALLGRIND) \
 		-Wall -Werror \
 		$(SRC_DIR)
 	$(MAKE) 2a03 -C $(OUT_DIR)
@@ -48,8 +58,12 @@ vg: binary
 		--track-origins=yes --log-file=vg.$(BIN).log \
 		--suppressions=../vgsuppress ./2a03 $(ARGS)
 
-gprof: binary
-	cd $(OUT_DIR) && 
+cg: binary
+	cd $(OUT_DIR) && valgrind --tool=callgrind --instr-atstart=no \
+		--callgrind-out-file=cg.$(BIN) ./2a03 $(ARGS)
+	cd $(OUT_DIR) && gprof2dot $(GPROF2DOT_ARGS) -o cg.$(BIN).dot cg.$(BIN)
+	cd $(OUT_DIR) && dot -Tpng -o cg.$(BIN).graph.png cg.$(BIN).dot
+	cd $(OUT_DIR) &&  eog cg.$(BIN).graph.png
 
 check:
 	$(MAKE) cppcheck -C $(OUT_DIR)

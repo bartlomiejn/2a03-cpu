@@ -6,6 +6,13 @@
 #include <atomic>
 #include <condition_variable>
 #include <bus.h>
+
+#ifdef ENABLE_CALLGRIND
+#include <valgrind/callgrind.h>
+#else
+#define CALLGRIND_START_INSTRUMENTATION do {} while (0)
+#define CALLGRIND_STOP_INSTRUMENTATION do {} while (0)
+#endif
 #include <cpu.h>
 #include <load.h>
 #include <logger.h>
@@ -97,12 +104,43 @@ class ExecutionEnvironment {
         execThread.join();
     }
 
+    /// Run emulation headless for profiling (no GUI)
+    void run_headless(uint64_t frames) {
+        ppu.headless = true;
+        ppu.frame_count = 0;
+        stop = false;
+
+        CALLGRIND_START_INSTRUMENTATION;
+
+        while (!stop) {
+            if (pre_step_hook) pre_step_hook(*this);
+
+            try {
+                uint16_t cpu_cycs = cpu.execute();
+                if (!disable_ppu)
+                    ppu.execute(ntsc_cyc_ratio * cpu_cycs);
+            } catch (NES::InvalidOpcode &e) {
+                std::cerr << "Unhandled opcode executed." << std::endl;
+                break;
+            } catch (NES::JAM &e) {
+                break;
+            }
+
+            if (post_step_hook) post_step_hook(*this);
+
+            if (frames > 0 && ppu.frame_count >= frames) {
+                stop = true;
+            }
+        }
+
+        CALLGRIND_STOP_INSTRUMENTATION;
+    }
+
 private:
     void runloop() {
         while (!stop) {
             if (pre_step_hook) pre_step_hook(*this);
 
-            // TODO: Synchronize execution
             try {
                 uint16_t cpu_cycs = cpu.execute();
                 if (!disable_ppu)

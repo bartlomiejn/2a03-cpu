@@ -37,13 +37,14 @@ struct Options {
     bool run_nestest_i = false;
     bool run_ppu_tests = false;
     bool run_cpu_tests = false;
+    uint64_t headless_frames = 0;  // Headless profiling mode (0 = disabled)
     std::string rom;
     std::string logfile;
 
     Options(int argc, char *argv[]) {
         int opt;
 
-        while ((opt = getopt(argc, argv, "cepbmsdtiuyr:l:")) != -1) {
+        while ((opt = getopt(argc, argv, "cepbmsdtiuyr:l:h:")) != -1) {
             switch (opt) {
             case 'c': log_cpu = true; break;
             case 'e': log_ppu = true; break;
@@ -58,10 +59,12 @@ struct Options {
             case 'y': run_ppu_tests = true; break;
             case 'r': rom = optarg; break;
             case 'l': logfile = optarg; break;
+            case 'h': headless_frames = std::stoull(optarg); break;
             case '?':
             default:
                 std::cerr << "Usage: " << argv[0]
-                          << " [-cepbmsdtiuy] [-r filename.nes] [-l logfile]"
+                          << " [-cepbmsdtiuy] [-r filename.nes] [-l logfile] "
+                             "[-h frames]"
                           << std::endl;
                 std::cerr << "Where:" << std::endl;
                 std::cerr << "-c - Enable CPU debug logging" << std::endl;
@@ -82,6 +85,9 @@ struct Options {
                 std::cerr << "-y - Run PPU tests" << std::endl;
                 std::cerr << "-r - Load a ROM from filename" << std::endl;
                 std::cerr << "-l - Log to file" << std::endl;
+                std::cerr << "-h - Headless profiling mode (run N frames "
+                             "without GUI)"
+                          << std::endl;
                 throw std::runtime_error("Invalid usage");
             }
         }
@@ -138,16 +144,24 @@ int main(int argc, char *argv[]) {
     if (opts.log_cpu_state) logger.instr_ostream = std::cerr;
     if (opts.log_ppu_state) logger.ppu_ostream = std::cerr;
 
-    gui.setup();
+    // Skip GUI setup in headless mode
+    if (opts.headless_frames == 0)
+        gui.setup();
 
     if (!opts.rom.empty()) {
         std::cout << "Running " << opts.rom << std::endl;
         ee.load_iNESv1(opts.rom);
         ee.power(nullptr);
         ee.pre_step_hook = [&](auto &ee) {
-            if (opts.log_cpu) NES_LOG("CPU") << ee.logger.log() << std::endl;
+            if (opts.log_cpu) {
+                NES_LOG("CPU") << ee.logger.log() << std::endl;
+            }
         };
-        ee.run();
+        if (opts.headless_frames > 0) {
+            ee.run_headless(opts.headless_frames);
+        } else {
+            ee.run();
+        }
     } else if (opts.run_nestest) {
         NES::Test::nestest(ee, opts.run_nestest_i);
     } else if (opts.run_ppu_tests) {
