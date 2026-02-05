@@ -20,13 +20,6 @@ else()
     message(FATAL_ERROR "SDL2 not found")
 endif()
 
-#find_package(SDL2_ttf REQUIRED)
-#if (SDL2_ttf_FOUND)
-#    message(STATUS "Found SDL2_ttf, imported target SDL2_ttf::SDL2_ttf")
-#else()
-#    message(FATAL_ERROR "SDL2TTF not found")
-#endif()
-
 find_program(CPPCHECK_EXECUTABLE NAMES cppcheck)
 if(CPPCHECK_EXECUTABLE)
     message(STATUS "Found cppcheck")
@@ -34,8 +27,10 @@ endif()
 
 # Disable optimizations for GCC debug builds
 if(CMAKE_COMPILER_IS_GNUCC)
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -Werror -Wall")
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -Werror -Wall")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Og -Werror -Wall")
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Og -Werror -Wall")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -Werror -Wall")
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -Werror -Wall")
 endif(CMAKE_COMPILER_IS_GNUCC)
 
 set(IMGUI_DIR ${EXTERNAL_DIR}/imgui)

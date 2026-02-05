@@ -18,9 +18,9 @@ const std::string vbl_clear_time = "vbl_clear_time.nes";
 void ppu(ExecutionEnvironment &ee) {
     using namespace NES::iNESv1;
 
-    NES_LOG("pputest") << "Running " << vbl_clear_time << std::endl;
+    NES_LOG("pputest") << "Running " << color_test << std::endl;
 
-    ee.load_iNESv1(vbl_clear_time);
+    ee.load_iNESv1(color_test);
     ee.power(nullptr);
     ee.pre_step_hook = [](auto &ee) {
         NES_LOG("CPU") << ee.logger.log() << std::endl;

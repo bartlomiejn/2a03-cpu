@@ -142,6 +142,9 @@ void nestest(ExecutionEnvironment &ee, bool interactive) {
 
     ee.pre_step_hook = [&](auto &ee) {
         using namespace NES::Test;
+        if (interactive) {
+            return;
+        }
         line_ours = ee.logger.log();
         NES_LOG("CPU") << line_ours << std::endl;
         if (!comp_check) {

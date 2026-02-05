@@ -3,16 +3,23 @@ SRC_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 OUT_DIR ?= $(SRC_DIR)/output
 CXX_DEBUG ?= gdb
 BIN ?= nestest
+BLD_TYPE ?= Debug
 
 ifeq ($(BIN), nestest)
 	ARGS ?= -cebmtl nestest_neslog
 else ifeq ($(BIN), nestesti)
+	BLD_TYPE := Release
+	ARGS ?= -ti
+else ifeq ($(BIN), nestesti_debug)
 	ARGS ?= -cebmtil nestesti_neslog
 else ifeq ($(BIN), pputest)
 	ARGS ?= -cebmyl pputest_neslog
 else ifeq ($(BIN), cputest)
 	ARGS ?= -cebmul cputest_neslog
 else ifeq ($(BIN), dk)
+	BLD_TYPE := Release
+	ARGS ?= -r DonkeyKong.nes
+else ifeq ($(BIN), dk_debug)
 	ARGS ?= -cebmr DonkeyKong.nes -l dk_neslog
 else
 	ARGS ?= -r $(BIN)
@@ -25,7 +32,7 @@ $(OUT_DIR):
 
 binary: $(OUT_DIR)
 	cd $(OUT_DIR) && cmake \
-		-DCMAKE_BUILD_TYPE=Debug \
+		-DCMAKE_BUILD_TYPE=$(BLD_TYPE) \
 		-Wall -Werror \
 		$(SRC_DIR)
 	$(MAKE) 2a03 -C $(OUT_DIR)
@@ -40,6 +47,9 @@ vg: binary
 	cd $(OUT_DIR) && valgrind --tool=memcheck --leak-check=full -s \
 		--track-origins=yes --log-file=vg.$(BIN).log \
 		--suppressions=../vgsuppress ./2a03 $(ARGS)
+
+gprof: binary
+	cd $(OUT_DIR) && 
 
 check:
 	$(MAKE) cppcheck -C $(OUT_DIR)
