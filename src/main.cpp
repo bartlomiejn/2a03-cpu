@@ -91,6 +91,26 @@ struct Options {
 int main(int argc, char *argv[]) {
     Options opts(argc, argv);
 
+    std::ofstream *logfile;
+    if (opts.log_cpu) {
+        NES::Log::instance().enable("CPU");
+        NES::Log::instance().enable("cputest");
+    }
+    if (opts.log_ppu) {
+        NES::Log::instance().enable("PPU");
+        NES::Log::instance().enable("pputest");
+    }
+    if (opts.log_bus) NES::Log::instance().enable("Bus");
+    if (opts.log_nrom) NES::Log::instance().enable("NROM");
+
+    if (!opts.logfile.empty()) {
+        logfile = new std::ofstream(opts.logfile);
+        if (!logfile) {
+            throw std::runtime_error("Could not open file for logging");
+        }
+        NES::Log::instance().set_output(logfile);
+    }
+
     GFX::GUI gui(NES::ntsc_fb_x, NES::ntsc_fb_y);
     NES::Palette pal("DigitalPrimeFBX.pal");
     NES::PPU ppu(gui, pal);
@@ -112,34 +132,11 @@ int main(int argc, char *argv[]) {
     NES::SystemLogGenerator logger(cpu, ppu, bus);
     NES::ExecutionEnvironment ee(gui, bus, cpu, ppu, logger);
 
-    std::ofstream *logfile;
     ee.debug = opts.step_debug;
-
-    // Enable debug logging handles
-    if (opts.log_cpu) {
-        NES::Log::instance().enable("CPU");
-        NES::Log::instance().enable("cputest");
-    }
-    if (opts.log_ppu) {
-        NES::Log::instance().enable("PPU");
-        NES::Log::instance().enable("pputest");
-    }
-    if (opts.log_bus) NES::Log::instance().enable("Bus");
-    if (opts.log_nrom) NES::Log::instance().enable("NROM");
-
-    NES::Log::instance().enable("GUI");
 
     // SystemLogGenerator state logging (for nestest)
     if (opts.log_cpu_state) logger.instr_ostream = std::cerr;
     if (opts.log_ppu_state) logger.ppu_ostream = std::cerr;
-
-    if (!opts.logfile.empty()) {
-        logfile = new std::ofstream(opts.logfile);
-        if (!logfile) {
-            throw std::runtime_error("Could not open file for logging");
-        }
-        NES::Log::instance().set_output(logfile);
-    }
 
     gui.setup();
 

@@ -90,14 +90,6 @@ struct OA {
     uint8_t x;        ///< Scanline X (left-side) coordinate
 };
 
-/// CHR tile addressing struct
-bitfield_union(CHRTile, uint8_t value,
-               bool T : 1;     ///< Table selector 0 or 1
-               uint8_t N : 8;  ///< Tile ID [0x0-0xFF]
-               bool P : 1;     ///< Plane 0 or 1
-               uint8_t y : 3;  ///< Row # or Y
-);
-
 static const size_t vram_sz = 0x800;    ///< PPU VRAM size
 static const size_t oam_sz = 0x100;     ///< PPU OAM size
 static const size_t oam_sec_sz = 0x20;  ///< Secondary OAM memory size
@@ -152,8 +144,12 @@ class PPU {
     // $2006 PPUADDR
     // $2007 PPUDATA
 
-    uint8_t oamaddr;      ///< 8-bit (?) OAM address register
+    uint8_t oamaddr;      ///< 8-bit OAM address register
     uint8_t oamdata;      ///< 8-bit OAM data buffer
+    uint8_t oam_sec_addr;
+    bool oam_overflow;
+    bool oam_sec_overflow;
+
     uint8_t ppudata_buf;  ///< 8-bit PPUADDR read buffer
 
     // Output
@@ -196,9 +192,10 @@ class PPU {
     /// Draws a pixel for the current cycle
     void draw();
 
+    // Sprite-related logic
     void oam_sec_clear();
-
     void sprite_eval();
+    void sprite_fetch();
 };
 
 }  // namespace NES

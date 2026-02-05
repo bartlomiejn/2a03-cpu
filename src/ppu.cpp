@@ -69,6 +69,8 @@ void PPU::power() {
     ppustatus.value = 0x0;
     oamaddr = 0x0;
     oamdata = 0x0;
+    oam_overflow = false;
+    oam_sec_overflow = false;
     ppudata_buf = 0x0;
     scan_x = 0;
     scan_y = 0;
@@ -83,27 +85,52 @@ void PPU::power() {
     std::fill(fb_sec.begin(), fb_sec.end(), 0x000000FF);
 }
 
-void PPU::oam_sec_clear() { oam_sec[(scan_x - 1) % oam_sec_sz] = 0xFF; }
+void PPU::oam_sec_clear() {
+    uint8_t addr = (scan_x - 1) % oam_sec_sz;
+    NES_LOG("PPU") << std::format("Clear secondary OAM, oam_sec@{:02X}=FF\n",
+                                  addr);
+    oam_sec[addr] = 0xFF;
+}
 
 void PPU::sprite_eval() {
     if (!ppumask.bg_show && !ppumask.spr_show) {
         return;
     }
 
+    // Odd frames
     if (scan_x & 0x1) {
         oamdata = oam[oamaddr];
+        NES_LOG("PPU") << std::format(
+            "Sprite eval, set OAMDATA to OAM@{:02X}={:02X}\n", oamaddr,
+            oamdata);
         return;
     }
 
-    // TODO: Not sure if this makes any sense, rewrite this
+    // Even frames
+
+    NES_LOG("PPU") << std::format("Sprite eval\n");
+
     const OA *obj = nullptr;
     size_t stride = sizeof(OA);
     uint8_t tile_y = ppuctrl.spr_size ? 16 : 8;
     uint8_t spr_num = 0;
+    uint16_t curr_scan_y = scan_y + 1;
+
+    // uint8_t curr_oamdata = oamdata;
+
+    if (!oam_overflow && !oam_sec_overflow) {
+        // TODO: continue
+    } else {
+        // TODO: continue
+    }
+
     for (size_t i = 0; i < (oam_sz / stride); i++) {
         obj = std::bit_cast<OA *>(oam.data() + i * stride);
-        if (obj->y <= scan_y && (obj->y <= scan_y + tile_y)) {
-            uint8_t *oam_target = (oam_sec.data() + spr_num * stride);
+
+        uint8_t *oam_target = oam_sec.data() + spr_num * stride;
+        std::memcpy(oam_target, obj, 1);
+
+        if (obj->y <= curr_scan_y && (obj->y <= curr_scan_y + tile_y)) {
             std::memcpy(oam_target, obj, stride);
             spr_num++;
             if (spr_num >= 8) break;
@@ -111,24 +138,36 @@ void PPU::sprite_eval() {
     }
 }
 
+void PPU::sprite_fetch() { NES_LOG("PPU") << "Unimplemented sprite fetch\n"; }
+
 void PPU::draw() {
-    uint8_t out[8] = {0};
+    uint32_t bg_out[8] = {0};
+    uint8_t at_x, at_y = 0;
+    uint8_t at_pal = 0;
 
     // Background
+    at_x = (((scan_x - 1) % 16) / 8) * 2;
+    at_y = ((scan_y % 16) / 8) * 4;
+    at_pal = (at >> (at_y + at_x)) && 0x3;
+
+    NES_LOG("PPU") << std::format("Draw BG: at_x: {:d} at_y {:d} at_pal {:d}\n",
+                                  at_x, at_y, at_pal);
+
     if (ppumask.bg_show) {
-        uint8_t bg[8] = {0};
+        uint8_t bg = 0;
         uint16_t pix_mask = 0x8000;
 
-        NES_LOG("PPU") << "Draw BG: BGL: 0x" << setfill('0') << setw(4)
-                       << bg_l_shift << " BGH: 0x" << setfill('0') << setw(4)
-                       << bg_h_shift << " x.fine: 0x" << setw(2)
-                       << (uint16_t)x.fine << endl;
+        NES_LOG("PPU") << std::format(
+            "BGL: 0x{:04X} BGH: {:04X} x.fine: 0x {:02X}\n", bg_l_shift,
+            bg_h_shift, (uint16_t)x.fine);
 
         for (int i = 0; i < 8; i++) {
-            bg[i] = ((bg_l_shift << x.fine) & pix_mask) >> (15 - i) |
-                    ((bg_h_shift << x.fine) & pix_mask) >> (14 - i);
-
-            out[i] = bg[i];
+            bg = ((bg_l_shift << x.fine) & pix_mask) >> (15 - i) |
+                 ((bg_h_shift << x.fine) & pix_mask) >> (14 - i);
+            NES_LOG("PPU") << std::format("bg: {:d}, pram@{:02X}={:02X}\n", bg,
+                                          (bg | at_pal << 2),
+                                          pram[bg | (at_pal << 2)]);
+            bg_out[i] = pal.get_rgba(pram[bg | (at_pal << 2)]);
             pix_mask >>= 1;
         }
     }
@@ -144,17 +183,6 @@ void PPU::draw() {
         // non-zero pixel
     }
 
-    // TODO: No palette temporarily, just plane0 and 1
-    uint32_t c[8];
-    for (int i = 0; i < 8; i++) {
-        switch (out[i]) {
-        case 0: c[i] = 0x000000FF; break;
-        case 1: c[i] = 0x555555FF; break;
-        case 2: c[i] = 0xAAAAAAFF; break;
-        case 3: c[i] = 0xFFFFFFFF; break;
-        }
-    }
-
     for (int i = 0; i < 8; i++) {
         int y_offset, x_offset;
 
@@ -162,15 +190,15 @@ void PPU::draw() {
         x_offset = scan_x + 7 - (8 - i);
 
         NES_LOG("PPU") << std::format(
-            "Draw: {:08X} at x_offset: {:d} y_offset {:d}\n", c[i], x_offset,
-            y_offset / ntsc_fb_x);
+            "Draw: {:08X} at x_offset: {:d} y_offset {:d}\n", bg_out[i],
+            x_offset, y_offset / ntsc_fb_x);
 
         // Write to framebuffer
         int fb_i = y_offset + x_offset;
         if (fb_prim) {
-            fb[fb_i] = c[i];
+            fb[fb_i] = bg_out[i];
         } else {
-            fb_sec[fb_i] = c[i];
+            fb_sec[fb_i] = bg_out[i];
         }
     }
 }
@@ -205,19 +233,28 @@ void PPU::execute(uint16_t cycles) {
         if (scan_y <= 239 || scan_y == 261) {
             // Clear flags
             if (scan_y == 261 && scan_x == 1) {
-                NES_LOG("PPU") << "clear flags" << endl;
+                NES_LOG("PPU") << "Clear flags" << endl;
                 ppustatus.vblank = false;
                 ppustatus.spr_overflow = false;
                 ppustatus.spr0_hit = false;
             }
 
-            // Sprite operations
-            if (scan_x >= 1 && scan_x <= 64) oam_sec_clear();
-            if (scan_x >= 65 && scan_x <= 256) sprite_eval();
+            // Sprite logic
+            if (scan_y <= 239) {
+                if (scan_x >= 1 && scan_x <= 64) oam_sec_clear();
+                if (scan_x == 65) {
+                    oam_overflow = false;
+                    oam_sec_overflow = false;
+                    oam_sec_addr = 0x0;
+                }
+                if (scan_x >= 65 && scan_x <= 256) sprite_eval();
+                if (scan_x >= 257 && scan_x <= 320) sprite_fetch();
+            }
 
-            // Clear oamaddr (I don't remember anymore why)
+            // Clear oamaddr
             if (scan_x >= 257 && scan_x <= 320) oamaddr = 0x0;
 
+            // BG logic
             switch (scan_x) {
                 // clang-format off
                 // NT
@@ -343,7 +380,7 @@ void PPU::execute(uint16_t cycles) {
                 // clang-format on
                 if (!ppumask.bg_show && !ppumask.spr_show) break;
 
-                bg_h_shift |= read(bus.addr);
+                bg_h_shift |= (uint16_t)read(bus.addr) << 2;
 
                 NES_LOG("PPU") << "Read BGH@0x" << hex << setfill('0') << setw(4)
                      << bus.addr << ", BGH SR = 0x" << setw(4)
