@@ -192,13 +192,17 @@ void PPU::execute(uint16_t cycles) {
                        v.sc_fine_y;
         }
 
-        if (scan_y <= 239 || scan_y == 261) {
-            // Draw 8 pixels
-            if (scan_y <= 239) {
-                if (scan_x >= 1 && scan_x <= 249) {
-                    if (!((scan_x - 1) % 8)) draw();
-                }
+        // Draw 8 pixels
+        if (scan_y <= 239) {
+            if (scan_x >= 1 && scan_x <= 241) {
+                if (!((scan_x - 1) % 8)) draw();
             }
+        }
+
+        bg_l_shift <<= 1;
+        bg_h_shift <<= 1;
+
+        if (scan_y <= 239 || scan_y == 261) {
             // Clear flags
             if (scan_y == 261 && scan_x == 1) {
                 NES_LOG("PPU") << "clear flags" << endl;
@@ -213,9 +217,6 @@ void PPU::execute(uint16_t cycles) {
 
             // Clear oamaddr (I don't remember anymore why)
             if (scan_x >= 257 && scan_x <= 320) oamaddr = 0x0;
-
-            bg_l_shift <<= 1;
-            bg_h_shift <<= 1;
 
             switch (scan_x) {
                 // clang-format off
