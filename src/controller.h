@@ -49,19 +49,19 @@ public:
             // While strobing, always return A button state
             result = (buttons.load() & BTN_A) ? 0x41 : 0x40;
             NES_LOG("Controller") << std::format(
-                "Read passive={:}, strobe active, return {:d} \n", passive,
+                "Read passive={:}, strobe active, return {:02X} \n", passive,
                 result);
             return result;
         }
         // Return current bit and shift
         result = (shift_reg & 0x01) ? 0x41 : 0x40;
         if (passive) {
-            NES_LOG("Controller")
-                << std::format("Read passive, return {:d}\n", passive, result);
+            NES_LOG("Controller") << std::format(
+                "Read passive, return {:02X}\n", passive, result);
             return result;
         }
-        NES_LOG("Controller")
-            << std::format("Read return {:d}, shift right\n", passive, result);
+        NES_LOG("Controller") << std::format(
+            "Read return {:02X}, shift right\n", passive, result);
         shift_reg >>= 1;
         // After 8 reads, shift register returns 1s (open bus behavior)
         shift_reg |= 0x80;

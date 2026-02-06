@@ -567,11 +567,8 @@ void PPU::cpu_write(uint16_t addr, uint8_t value) {
 }
 
 uint8_t PPU::cpu_read(uint16_t addr, bool passive) {
-    if (!passive) {
-        NES_LOG("PPU") << std::format(
-            "cpu_read@{:04x} passive={} value={:02X}?\n", addr, passive,
-            cpu_read(addr, true));
-    }
+    NES_LOG("PPU") << std::format("cpu_read@{:04x} passive={}\n", addr,
+                                  passive);
     switch (addr) {
     case 0x2000:  // Write-only
         return cpu_bus;

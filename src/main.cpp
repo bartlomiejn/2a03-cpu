@@ -156,7 +156,8 @@ int main(int argc, char *argv[]) {
         ee.power(nullptr);
         ee.pre_step_hook = [&](auto &ee) {
             if (opts.log_cpu) {
-                NES_LOG("CPU") << ee.logger.log() << std::endl;
+                std::string log = ee.logger.log();
+                NES_LOG("CPU") << log << std::endl;
             }
         };
         if (opts.headless_frames > 0) {
@@ -169,7 +170,6 @@ int main(int argc, char *argv[]) {
     } else if (opts.run_ppu_tests) {
         NES::Test::ppu(ee);
     } else if (opts.run_cpu_tests) {
-        cpu.test_mode = true;
         NES::Test::cpu(ee, mock_bus);
     }
 

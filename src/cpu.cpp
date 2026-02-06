@@ -538,7 +538,7 @@ uint16_t CPU::operand_addr(AddressingMode mode) {
     // trigger undesired side effects
     switch (mode) {
     case abs:
-        addr = read16(PC, !test_mode);
+        addr = read16(PC);
         PC += 2;
         break;
     case abs_x:
@@ -547,8 +547,9 @@ uint16_t CPU::operand_addr(AddressingMode mode) {
         addr = ((addr_h << 8) | addr_l) + X;
         if (!is_same_page(addr-X, addr))
             read((addr_h << 8) | (uint8_t)(addr_l + X), !test_mode);
-        else
+        else {
             read(addr, !test_mode);
+        }
         PC += 2;
         if (idx_abs_crossing_cycle(opcode) && !is_same_page(addr - X, addr))
             cycles++;
@@ -598,10 +599,10 @@ uint16_t CPU::operand_addr(AddressingMode mode) {
         addr_l = read(i);
         addr_h = read((uint16_t)(uint8_t)(i+1));
         addr = ((addr_h << 8) | addr_l) + Y;
-        if (!is_same_page(addr - Y, addr)) 
-            read((addr_h << 8) | (uint8_t)(addr_l + Y));
-        else 
-            read(addr);
+        if (!is_same_page(addr - Y, addr))
+            read((addr_h << 8) | (uint8_t)(addr_l + Y), !test_mode);
+        else
+            read(addr, !test_mode);
         PC++;
         if (idx_abs_crossing_cycle(opcode) && !is_same_page(addr - Y, addr))
             cycles++;

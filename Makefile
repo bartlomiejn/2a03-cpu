@@ -22,7 +22,7 @@ else ifeq ($(BIN), dk)
 	ARGS ?= -r DonkeyKong.nes
 else ifeq ($(BIN), dk_debug)
 	EN_LOGGING := -DENABLE_LOGGING=ON
-	ARGS ?= -cr DonkeyKong.nes -l dk_neslog
+	ARGS ?= -cbmr DonkeyKong.nes -l dk_neslog
 else ifeq ($(BIN), dk_cg)
 	EN_LOGGING := -DENABLE_LOGGING=OFF
 	ARGS ?= -r DonkeyKong.nes -h 50
