@@ -21,6 +21,7 @@ else ifeq ($(BIN), dk)
 	BLD_TYPE := Release
 	ARGS ?= -r DonkeyKong.nes
 else ifeq ($(BIN), dk_debug)
+	BLD_TYPE := Release
 	EN_LOGGING := -DENABLE_LOGGING=ON
 	ARGS ?= -cbmr DonkeyKong.nes -l dk_neslog
 else ifeq ($(BIN), dk_cg)

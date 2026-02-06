@@ -4,6 +4,7 @@
 #include <thread>
 #include <mutex>
 #include <atomic>
+#include <chrono>
 #include <condition_variable>
 #include <bus.h>
 
@@ -138,6 +139,12 @@ class ExecutionEnvironment {
 
 private:
     void runloop() {
+        using clock = std::chrono::steady_clock;
+        constexpr auto target_frame_duration = std::chrono::microseconds(16667);
+
+        uint64_t last_frame = ppu.frame_count;
+        auto next_frame_target = clock::now() + target_frame_duration;
+
         while (!stop) {
             if (pre_step_hook) pre_step_hook(*this);
 
@@ -152,6 +159,19 @@ private:
             }
 
             if (post_step_hook) post_step_hook(*this);
+
+            if (ppu.frame_count != last_frame) {
+                last_frame = ppu.frame_count;
+                auto now = clock::now();
+                if (now < next_frame_target)
+                    std::this_thread::sleep_for(
+                        next_frame_target - now);
+                next_frame_target += target_frame_duration;
+                // If we fell behind by more than a frame, reset to
+                // avoid a burst of catch-up frames
+                if (clock::now() > next_frame_target + target_frame_duration)
+                    next_frame_target = clock::now() + target_frame_duration;
+            }
 
             if (run_single_step) {
                 stop = true;

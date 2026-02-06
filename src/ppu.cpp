@@ -200,7 +200,7 @@ void PPU::draw() {
 
     // Background
     at_x = (((scan_x - 1) % 16) / 8) * 2;
-    at_y = ((scan_y % 16) / 8) * 4;
+    at_y = (((scan_y) % 16) / 8) * 4;
     at_pal = (at >> (at_y + at_x)) & 0x3;
 
     NES_LOG("PPU") << std::format("Draw BG: at_x: {:d} at_y {:d} at_pal {:d}\n",
@@ -294,7 +294,7 @@ void PPU::execute(uint16_t cycles) {
             }
         }
 
-        if (scan_x >= 2 && scan_x <= 337) {
+        if (scan_x >= 1 && scan_x <= 337) {
             bg_l_shift <<= 1;
             bg_h_shift <<= 1;
         }
