@@ -32,6 +32,7 @@ else ifeq ($(BIN), dk_perf_rel)
 	EN_LOGGING := -DENABLE_LOGGING=OFF
 	PERFARGS ?= -r DonkeyKong.nes -h 10000
 else
+	BLD_TYPE := Release
 	ARGS ?= -r $(BIN)
 endif
 

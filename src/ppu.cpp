@@ -219,7 +219,11 @@ void PPU::draw() {
                                           (bg | at_pal << 2),
                                           pram[bg | (at_pal << 2)]);
             bg_color[i] = bg;
-            out[i] = pal.get_rgba(pram[bg | (at_pal << 2)]);
+            if (bg == 0) {
+                out[i] = pal.get_rgba(pram[0]);
+            } else {
+                out[i] = pal.get_rgba(pram[bg | (at_pal << 2)]);
+            }
             pix_mask >>= 1;
         }
     }
@@ -645,6 +649,13 @@ uint8_t PPU::cpu_read(uint16_t addr, bool passive) {
 // $3F00-$3F1F - Palette RAM indices (PPU VRAM)
 // $3F20-$3FFF - Palette RAM mirrors
 
+uint8_t PPU::pram_addr(uint16_t addr) {
+    uint8_t idx;
+    idx = (addr >= 0x3F00 ? (addr - 0x3F00) : addr) % 0x20;
+    if ((idx & 0x13) == 0x10) idx &= 0x0C;
+    return idx;
+}
+
 void PPU::write(uint16_t addr, uint8_t value) {
     using namespace iNESv1::Mapper;
     NTMirror mirror = mapper->mirroring();
@@ -679,7 +690,7 @@ void PPU::write(uint16_t addr, uint8_t value) {
         break;
     case 0x3000 ... 0x3EFF: 
         write(addr-0x1000, value); break;
-    case 0x3F00 ... 0x3FFF: pram[((addr - 0x3F00) % 0x20)] = value; break;
+    case 0x3F00 ... 0x3FFF: pram[pram_addr(addr)] = value; break;
     default: throw std::runtime_error("Invalid/unimplemented PPU write");
     }
 }
@@ -718,7 +729,7 @@ uint8_t PPU::read(uint16_t addr) {
         break;
     case 0x3000 ... 0x3EFF:
         return read(addr-0x1000); break;
-    case 0x3F00 ... 0x3FFF: return pram[((addr - 0x3F00) % 0x20)]; break;
+    case 0x3F00 ... 0x3FFF: return pram[pram_addr(addr)]; break;
     default: break;
     }
     throw std::runtime_error("Invalid or unimplemented PPU read");

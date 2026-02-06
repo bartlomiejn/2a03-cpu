@@ -216,6 +216,9 @@ class PPU {
     void oam_sec_clear();
     void sprite_eval();
     void sprite_fetch();
+
+    // Pram address mapping
+    uint8_t pram_addr(uint16_t addr);
 };
 
 }  // namespace NES
