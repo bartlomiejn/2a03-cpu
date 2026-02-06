@@ -182,8 +182,9 @@ void cpu(ExecutionEnvironment &ee, NES::Test::MemoryBus *bus) {
     ee.disable_ppu = true;
     ee.run_single_step = true;
     ee.gui.mapper = nullptr;
+    ee.cpu.test_mode = true;
 
-    for (uint16_t i = 0x0; i <= 0xff; i++) {
+    for (uint16_t i = 0x00; i <= 0xff; i++) {
         if (i == 0x93 || i == 0x9b || i == 0x9c || i == 0x9e || i == 0x9f
             || i == 0xbb || i == 0xcb) {
             std::cerr << "Disabled tests for 0x" << std::hex 
@@ -191,6 +192,7 @@ void cpu(ExecutionEnvironment &ee, NES::Test::MemoryBus *bus) {
                       << ". Unstable ops with weird behaviour" << std::endl;
             continue;
         }
+
         std::string filename = get_testspec_name(i);
         std::cout << "Executing " << filename << ". "; 
 

@@ -31,7 +31,7 @@ uint8_t MemoryBus::read(uint16_t addr, bool passive) {
         return ram[addr % 0x800];
 
     // PPU registers
-    case 0x2000 ... 0x3FFF: return ppu.cpu_read(addr, passive);
+    case 0x2000 ... 0x3FFF: return ppu.cpu_read(0x2000 + ((addr - 0x2000) % 8), passive);
 
     // APU registers
     case 0x4000 ... 0x4015:
@@ -42,8 +42,8 @@ uint8_t MemoryBus::read(uint16_t addr, bool passive) {
         return apu.read(addr);
 
     // Controller registers
-    case 0x4016: return controller1.read();
-    case 0x4017: return controller2.read();
+    case 0x4016: return controller1.read(passive);
+    case 0x4017: return controller2.read(passive);
 
     // CPU test mode APU/IO functionality (disabled)
     case 0x4018 ... 0x401F:

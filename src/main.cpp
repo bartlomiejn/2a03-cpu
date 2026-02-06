@@ -102,6 +102,7 @@ int main(int argc, char *argv[]) {
         NES::Log::instance().enable("CPU");
         NES::Log::instance().enable("cputest");
         NES::Log::instance().enable("APU");
+        NES::Log::instance().enable("Controller");
     }
     if (opts.log_ppu) {
         NES::Log::instance().enable("PPU");
@@ -168,6 +169,7 @@ int main(int argc, char *argv[]) {
     } else if (opts.run_ppu_tests) {
         NES::Test::ppu(ee);
     } else if (opts.run_cpu_tests) {
+        cpu.test_mode = true;
         NES::Test::cpu(ee, mock_bus);
     }
 

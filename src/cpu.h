@@ -62,6 +62,8 @@ class CPU {
     uint32_t cycles;  ///< Cycle counter.
     uint8_t opcode; ///< Current opcode.
 
+    bool test_mode = false;  ///< Makes internal operand address reads active
+
     CPU(NES::MemoryBusIntf *bus);
 
     /// Does crossing the page boundary result in an additional cycle for
@@ -102,14 +104,15 @@ class CPU {
     void handle_dma();
 
     /// Attempt to read byte from bus at addr
-    uint8_t read(uint16_t addr);
+    uint8_t read(uint16_t addr, bool passive = false);
 
     /// Attempt to read 2 bytes from bus
     /// \param addr Address to read from
     /// \param zp If it's a zero-page addr, wrap the most significant byte
     /// around zero-page
+    /// \param passive Makes the read passive
     /// \return Read bytes
-    uint16_t read16(uint16_t addr, bool zp = false);
+    uint16_t read16(uint16_t addr, bool zp = false, bool passive = false);
 
     /// Attempt to write byte to bus at addr
     void write(uint16_t addr, uint8_t value);

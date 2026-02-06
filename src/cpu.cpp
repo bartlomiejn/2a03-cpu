@@ -100,9 +100,9 @@ void CPU::power() {
     cycles = 0;
     IRQ = NMI = false;
 
-    // for (uint16_t i = 0x4000; i <= 0x4013; i++) write(i, 0x0);
-    // write(0x4015, 0x0);  // All channels disabled
-    // write(0x4017, 0x0);  // Frame IRQ enabled
+    for (uint16_t i = 0x4000; i <= 0x4013; i++) write(i, 0x0);
+    write(0x4015, 0x0);  // All channels disabled
+    write(0x4017, 0x0);  // Frame IRQ enabled
 
     // TODO: Rest of power up logic
     // All 15 bits of noise channel LFSR = $0000[4]. The first time the LFSR
@@ -421,7 +421,7 @@ void CPU::interrupt(NES::Interrupt type) {
     } else {
         NES_LOG("CPU") << "P |= 0x04" << endl;
         P.status |= 0x04;
-        // write(0x4015, 0x0);  // All channels disabled
+        write(0x4015, 0x0);  // All channels disabled
     }
 
     P.I = true;
@@ -455,20 +455,20 @@ void CPU::interrupt(NES::Interrupt type) {
     NES_LOG("CPU") << "Interrupt handler finish" << endl;
 }
 
-uint8_t CPU::read(uint16_t addr) {
+uint8_t CPU::read(uint16_t addr, bool passive) {
     switch (dma) {
     case DMA_OAM:
     case DMA_PCM: handle_dma();
-    default: return bus->read(addr);
+    default: return bus->read(addr, passive);
     }
 }
 
-uint16_t CPU::read16(uint16_t addr, bool zp) {
+uint16_t CPU::read16(uint16_t addr, bool zp, bool passive) {
     // If we know this is a zero-page addr, wrap the most-significant bit
     // around zero-page bounds
     uint16_t h_addr = zp ? ((addr + 1) % 0x100) : (addr + 1);
-    uint8_t l_data = read(addr);
-    uint8_t h_data = read(h_addr);
+    uint8_t l_data = read(addr, passive);
+    uint8_t h_data = read(h_addr, passive);
     return (h_data << 8) | l_data;
 }
 
@@ -533,9 +533,12 @@ uint16_t CPU::operand_addr(AddressingMode mode) {
     uint16_t addr = 0x0; 
     uint8_t addr_h, addr_l = 0x0;
     uint8_t i = 0x0;
+    // Some of the reads are strictly to model bus accesses to satisfy nes6502
+    // single-instruction CPU tests, but when executing actual software can
+    // trigger undesired side effects
     switch (mode) {
     case abs:
-        addr = read16(PC);
+        addr = read16(PC, !test_mode);
         PC += 2;
         break;
     case abs_x:
@@ -543,9 +546,9 @@ uint16_t CPU::operand_addr(AddressingMode mode) {
         addr_h = read(PC+1);
         addr = ((addr_h << 8) | addr_l) + X;
         if (!is_same_page(addr-X, addr))
-            read((addr_h << 8) | (uint8_t)(addr_l+X));
+            read((addr_h << 8) | (uint8_t)(addr_l + X), !test_mode);
         else
-            read(addr);
+            read(addr, !test_mode);
         PC += 2;
         if (idx_abs_crossing_cycle(opcode) && !is_same_page(addr - X, addr))
             cycles++;
@@ -555,9 +558,9 @@ uint16_t CPU::operand_addr(AddressingMode mode) {
         addr_h = read(PC+1);
         addr = ((addr_h << 8) | addr_l) + Y;
         if (!is_same_page(addr-Y, addr))
-            read((addr_h << 8) | (uint8_t)(addr_l+Y));
+            read((addr_h << 8) | (uint8_t)(addr_l + Y), !test_mode);
         else
-            read(addr);
+            read(addr, !test_mode);
         PC += 2;
         if (idx_abs_crossing_cycle(opcode) && !is_same_page(addr - Y, addr))
             cycles++;

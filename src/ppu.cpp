@@ -99,15 +99,6 @@ void PPU::sprite_eval() {
         return;
     }
 
-    // Odd cycles: read from OAM into OAMDATA register
-    if (scan_x & 0x1) {
-        oamdata = oam[oamaddr];
-        NES_LOG("PPU") << std::format(
-            "Sprite eval, set OAMDATA to OAM@{:02X}={:02X}\n", oamaddr,
-            oamdata);
-        return;
-    }
-
     uint8_t spr_height = ppuctrl.spr_size ? 16 : 8;
     uint8_t spr_count = 0;
     spr0_in_range = false;
@@ -587,9 +578,6 @@ uint8_t PPU::cpu_read(uint16_t addr, bool passive) {
     case 0x2001:  // Write-only
         return cpu_bus;
     case 0x2002:
-        if (ppustatus.value == 0x80) {
-            NES_LOG("PPU") << "hehe\n";
-        }
         uint8_t out_status;
         out_status = ppustatus.value;
         if (!passive) {

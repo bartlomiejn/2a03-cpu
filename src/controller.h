@@ -5,6 +5,7 @@
 
 #include <atomic>
 #include <cstdint>
+#include <format>
 
 namespace NES {
 
@@ -42,13 +43,25 @@ public:
     }
 
     // Called when CPU reads from $4016
-    uint8_t read() {
+    uint8_t read(bool passive) {
+        uint8_t result;
         if (strobe) {
             // While strobing, always return A button state
-            return (buttons.load() & BTN_A) ? 0x41 : 0x40;
+            result = (buttons.load() & BTN_A) ? 0x41 : 0x40;
+            NES_LOG("Controller") << std::format(
+                "Read passive={:}, strobe active, return {:d} \n", passive,
+                result);
+            return result;
         }
         // Return current bit and shift
-        uint8_t result = (shift_reg & 0x01) ? 0x41 : 0x40;
+        result = (shift_reg & 0x01) ? 0x41 : 0x40;
+        if (passive) {
+            NES_LOG("Controller")
+                << std::format("Read passive, return {:d}\n", passive, result);
+            return result;
+        }
+        NES_LOG("Controller")
+            << std::format("Read return {:d}, shift right\n", passive, result);
         shift_reg >>= 1;
         // After 8 reads, shift register returns 1s (open bus behavior)
         shift_reg |= 0x80;

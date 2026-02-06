@@ -102,7 +102,7 @@ std::string SystemLogGenerator::log() {
             op_templ.replace(op_templ.find(im_pat), im_pat.length(), ss.str());
             ss.str(string());
         } else if (addr_mode.value() == ind_idx_y) {
-            uint16_t zpaddr = bus_read16(bus->read(cpu.PC + 1), true);
+            uint16_t zpaddr = bus_read16(bus->read(cpu.PC + 1, true), true);
             ss << setfill('0') << setw(4) << hex << (int)zpaddr;
             op_templ.replace(op_templ.find(sum_pat), sum_pat.length(),
                              ss.str());
