@@ -294,8 +294,10 @@ void PPU::execute(uint16_t cycles) {
             }
         }
 
-        bg_l_shift <<= 1;
-        bg_h_shift <<= 1;
+        if (scan_x >= 2 && scan_x <= 337) {
+            bg_l_shift <<= 1;
+            bg_h_shift <<= 1;
+        }
 
         if (scan_y <= 239 || scan_y == 261) {
             // Clear flags
