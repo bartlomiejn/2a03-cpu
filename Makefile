@@ -26,6 +26,9 @@ else ifeq ($(BIN), dk_cg)
 	EN_LOGGING := -DENABLE_LOGGING=OFF
 	ARGS ?= -r DonkeyKong.nes -h 50
 	PERFARGS ?= -r DonkeyKong.nes -h 10000
+else ifeq ($(BIN), dk_perf_rel)
+	EN_LOGGING := -DENABLE_LOGGING=OFF
+	PERFARGS ?= -r DonkeyKong.nes -h 10000
 else
 	ARGS ?= -r $(BIN)
 endif
@@ -66,9 +69,10 @@ cg: binary
 		--callgrind-out-file=cg.$(BIN) --cache-sim=yes --branch-sim=yes \
 		--dump-instr=yes ./2a03 $(ARGS)
 	cd $(OUT_DIR) && perf stat ./2a03 $(PERFARGS) > perf.$(BIN)
-	cd $(OUT_DIR) && gprof2dot $(GPROF2DOT_ARGS) -o cg.$(BIN).dot cg.$(BIN)
-	cd $(OUT_DIR) && dot -Tpng -o cg.$(BIN).graph.png cg.$(BIN).dot
 	cd $(OUT_DIR) && kcachegrind cg.$(BIN)
+
+perf: binary
+	cd $(OUT_DIR) && perf stat ./2a03 $(PERFARGS) > perf.$(BIN)
 
 check:
 	$(MAKE) cppcheck -C $(OUT_DIR)
