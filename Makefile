@@ -21,6 +21,7 @@ else ifeq ($(BIN), dk)
 	BLD_TYPE := Release
 	ARGS ?= -r DonkeyKong.nes
 else ifeq ($(BIN), dk_debug)
+	EN_LOGGING := -DENABLE_LOGGING=ON
 	ARGS ?= -cebmr DonkeyKong.nes -l dk_neslog
 else ifeq ($(BIN), dk_cg)
 	EN_LOGGING := -DENABLE_LOGGING=OFF
@@ -37,6 +38,7 @@ ifeq ($(BLD_TYPE), Debug)
 	EN_CALLGRIND := -DENABLE_CALLGRIND=ON
 else ifeq ($(BIN), Release)
 	EN_LOGGING := -DENABLE_LOGGING=OFF
+	EN_CALLGRIND := -DENABLE_CALLGRIND=OFF
 endif
 
 .PHONY: binary run debug vg check lint loc clean

@@ -101,6 +101,7 @@ int main(int argc, char *argv[]) {
     if (opts.log_cpu) {
         NES::Log::instance().enable("CPU");
         NES::Log::instance().enable("cputest");
+        NES::Log::instance().enable("APU");
     }
     if (opts.log_ppu) {
         NES::Log::instance().enable("PPU");

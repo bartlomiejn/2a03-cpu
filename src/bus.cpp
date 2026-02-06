@@ -34,7 +34,12 @@ uint8_t MemoryBus::read(uint16_t addr, bool passive) {
     case 0x2000 ... 0x3FFF: return ppu.cpu_read(addr, passive);
 
     // APU registers
-    case 0x4000 ... 0x4015: return apu.read(addr);
+    case 0x4000 ... 0x4015:
+        if (addr == 0x4014) {  // OAMDMA
+            NES_LOG("Bus") << "Read open bus, dummy value 0xff\n";
+            return 0xff;  // TODO: Implement open bus behavior
+        }
+        return apu.read(addr);
 
     // Controller registers
     case 0x4016: return controller1.read();
@@ -80,7 +85,7 @@ void MemoryBus::write(uint16_t addr, uint8_t val) {
             controller2.write(val);
             return;
         } else
-            return apu.write(val);
+            return apu.write(addr, val);
     case 0x4020 ... 0xFFFF:
         if (mapper)
             mapper->write_prg(addr, val);

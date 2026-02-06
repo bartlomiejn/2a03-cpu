@@ -71,6 +71,7 @@ void PPU::power() {
     oamdata = 0x0;
     oam_overflow = false;
     oam_sec_overflow = false;
+    spr0_in_range = false;
     ppudata_buf = 0x0;
     scan_x = 0;
     scan_y = 0;
@@ -81,6 +82,7 @@ void PPU::power() {
     std::fill(oam.begin(), oam.end(), 0x3F);
     std::fill(oam_sec.begin(), oam_sec.end(), 0x3F);
     std::fill(pram.begin(), pram.end(), 0xFF);
+    spr_out.fill({0, 0, 0, 0});
     std::fill(fb.begin(), fb.end(), 0x000000FF);
     std::fill(fb_sec.begin(), fb_sec.end(), 0x000000FF);
 }
@@ -93,12 +95,11 @@ void PPU::oam_sec_clear() {
 }
 
 void PPU::sprite_eval() {
-    return;
     if (!ppumask.bg_show && !ppumask.spr_show) {
         return;
     }
 
-    // Odd frames
+    // Odd cycles: read from OAM into OAMDATA register
     if (scan_x & 0x1) {
         oamdata = oam[oamaddr];
         NES_LOG("PPU") << std::format(
@@ -107,55 +108,114 @@ void PPU::sprite_eval() {
         return;
     }
 
-    // Even frames
+    uint8_t spr_height = ppuctrl.spr_size ? 16 : 8;
+    uint8_t spr_count = 0;
+    spr0_in_range = false;
 
-    NES_LOG("PPU") << std::format("Sprite eval\n");
+    for (uint8_t n = 0; n < 64; n++) {
+        uint8_t sprite_y = oam[n * 4];
 
-    const OA *obj = nullptr;
-    size_t stride = sizeof(OA);
-    uint8_t tile_y = ppuctrl.spr_size ? 16 : 8;
-    uint8_t spr_num = 0;
-    uint16_t curr_scan_y = scan_y + 1;
-
-    // uint8_t curr_oamdata = oamdata;
-
-    if (!oam_overflow && !oam_sec_overflow) {
-        // TODO: continue
-    } else {
-        // TODO: continue
-    }
-
-    for (size_t i = 0; i < (oam_sz / stride); i++) {
-        obj = std::bit_cast<OA *>(oam.data() + i * stride);
-
-        uint8_t *oam_target = oam_sec.data() + spr_num * stride;
-        std::memcpy(oam_target, obj, 1);
-
-        if (obj->y <= curr_scan_y && (obj->y <= curr_scan_y + tile_y)) {
-            std::memcpy(oam_target, obj, stride);
-            spr_num++;
-            if (spr_num >= 8) break;
+        if (scan_y >= sprite_y && scan_y < sprite_y + spr_height) {
+            if (spr_count < 8) {
+                if (n == 0) spr0_in_range = true;
+                NES_LOG("PPU") << std::format(
+                    "Sprite eval: Sprite #{:d} is on next scanline\n", n);
+                std::memcpy(
+                    oam_sec.data() + spr_count * 4,
+                    oam.data() + n * 4,
+                    4
+                );
+                spr_count++;
+            } else {
+                NES_LOG("PPU") << "Sprite eval: Overflow\n";
+                // TODO: Hardware bug - after finding 8 sprites, the PPU
+                // increments the byte offset within OAM entries incorrectly,
+                // causing false negatives. Few games rely on this.
+                ppustatus.spr_overflow = true;
+                break;
+            }
         }
     }
 }
 
-void PPU::sprite_fetch() { NES_LOG("PPU") << "Unimplemented sprite fetch\n"; }
+void PPU::sprite_fetch() {
+    if (!ppumask.bg_show && !ppumask.spr_show) return;
+
+    uint8_t spr_height = ppuctrl.spr_size ? 16 : 8;
+
+    for (int i = 0; i < 8; i++) {
+        uint8_t sprite_y  = oam_sec[i * 4 + 0];
+        uint8_t tile_idx  = oam_sec[i * 4 + 1];
+        uint8_t attr      = oam_sec[i * 4 + 2];
+        uint8_t sprite_x  = oam_sec[i * 4 + 3];
+
+        spr_out[i].attr = attr;
+        spr_out[i].x = sprite_x;
+
+        // Empty slot (secondary OAM cleared to 0xFF)
+        if (sprite_y == 0xFF) {
+            spr_out[i].pat_l = 0;
+            spr_out[i].pat_h = 0;
+            continue;
+        }
+
+        uint8_t row = scan_y - sprite_y;
+
+        // Vertical flip
+        if (attr & 0x80) {
+            row = (spr_height - 1) - row;
+        }
+
+        uint16_t tile_addr;
+        if (!ppuctrl.spr_size) {
+            // 8x8: pattern table from PPUCTRL bit 3
+            tile_addr = (ppuctrl.spr_pt_addr ? 0x1000 : 0x0000)
+                      | (tile_idx << 4)
+                      | row;
+        } else {
+            // 8x16: pattern table from tile index bit 0
+            uint16_t pt = (tile_idx & 1) ? 0x1000 : 0x0000;
+            uint8_t tile_num = tile_idx & 0xFE;
+            if (row >= 8) {
+                tile_num++;
+                row -= 8;
+            }
+            tile_addr = pt | (tile_num << 4) | row;
+        }
+
+        uint8_t pat_l = read(tile_addr);
+        uint8_t pat_h = read(tile_addr + 8);
+
+        // Horizontal flip: reverse bit order
+        if (attr & 0x40) {
+            pat_l = (pat_l & 0xF0) >> 4 | (pat_l & 0x0F) << 4;
+            pat_l = (pat_l & 0xCC) >> 2 | (pat_l & 0x33) << 2;
+            pat_l = (pat_l & 0xAA) >> 1 | (pat_l & 0x55) << 1;
+            pat_h = (pat_h & 0xF0) >> 4 | (pat_h & 0x0F) << 4;
+            pat_h = (pat_h & 0xCC) >> 2 | (pat_h & 0x33) << 2;
+            pat_h = (pat_h & 0xAA) >> 1 | (pat_h & 0x55) << 1;
+        }
+
+        spr_out[i].pat_l = pat_l;
+        spr_out[i].pat_h = pat_h;
+    }
+}
 
 void PPU::draw() {
-    uint32_t bg_out[8] = {0};
+    uint32_t out[8] = {0};
+    uint8_t bg_color[8] = {0};
     uint8_t at_x, at_y = 0;
     uint8_t at_pal = 0;
 
     // Background
     at_x = (((scan_x - 1) % 16) / 8) * 2;
     at_y = ((scan_y % 16) / 8) * 4;
-    at_pal = (at >> (at_y + at_x)) && 0x3;
+    at_pal = (at >> (at_y + at_x)) & 0x3;
 
     NES_LOG("PPU") << std::format("Draw BG: at_x: {:d} at_y {:d} at_pal {:d}\n",
                                   at_x, at_y, at_pal);
 
     if (ppumask.bg_show) {
-        uint8_t bg = 0;
         uint16_t pix_mask = 0x8000;
 
         NES_LOG("PPU") << std::format(
@@ -163,33 +223,60 @@ void PPU::draw() {
             bg_h_shift, (uint16_t)x.fine);
 
         for (int i = 0; i < 8; i++) {
-            bg = ((bg_l_shift << x.fine) & pix_mask) >> (15 - i) |
-                 ((bg_h_shift << x.fine) & pix_mask) >> (14 - i);
+            uint8_t bg = ((bg_l_shift << x.fine) & pix_mask) >> (15 - i) |
+                         ((bg_h_shift << x.fine) & pix_mask) >> (14 - i);
             NES_LOG("PPU") << std::format("bg: {:d}, pram@{:02X}={:02X}\n", bg,
                                           (bg | at_pal << 2),
                                           pram[bg | (at_pal << 2)]);
-            bg_out[i] = pal.get_rgba(pram[bg | (at_pal << 2)]);
+            bg_color[i] = bg;
+            out[i] = pal.get_rgba(pram[bg | (at_pal << 2)]);
             pix_mask >>= 1;
         }
     }
 
     // Sprites
     if (ppumask.spr_show) {
-        // TODO General
-        //
-        // TODO: Sprite 0 hit condition
-        // Sprite 0 is in range
-        // AND the first sprite output unit is outputting a non-zero
-        // pixel AND the background drawing unit is outputting a
-        // non-zero pixel
+        uint16_t px_base = scan_x - 1;
+
+        for (int i = 0; i < 8; i++) {
+            uint16_t px = px_base + i;
+
+            for (int s = 0; s < 8; s++) {
+                uint8_t spr_x = spr_out[s].x;
+
+                if (px < spr_x || px >= spr_x + 8) continue;
+
+                uint8_t bit = 7 - (px - spr_x);
+                uint8_t color = ((spr_out[s].pat_h >> bit) & 1) << 1
+                              | ((spr_out[s].pat_l >> bit) & 1);
+
+                if (color == 0) continue;
+
+                // Sprite 0 hit: spr0 in range, first secondary OAM entry,
+                // both BG and sprite pixels non-transparent, x != 255,
+                // both rendering flags enabled
+                if (s == 0 && spr0_in_range && bg_color[i] != 0
+                    && px != 255 && ppumask.bg_show) {
+                    ppustatus.spr0_hit = true;
+                }
+
+                bool behind_bg = spr_out[s].attr & 0x20;
+                uint8_t spr_pal = spr_out[s].attr & 0x03;
+
+                if (!behind_bg || bg_color[i] == 0) {
+                    out[i] = pal.get_rgba(pram[0x10 | (spr_pal << 2) | color]);
+                }
+
+                break;  // First non-transparent sprite wins
+            }
+        }
     }
 
-    int y_offset, x_offset;
-    y_offset = scan_y * ntsc_fb_x;
-    x_offset = scan_x - 1;
+    int y_offset = scan_y * ntsc_fb_x;
+    int x_offset = scan_x - 1;
     int offset = y_offset + x_offset;
     uint32_t *fb_ptr = fb_prim ? fb.data() : fb_sec.data();
-    std::memcpy(fb_ptr + offset, bg_out, sizeof(uint32_t) * 8);
+    std::memcpy(fb_ptr + offset, out, sizeof(uint32_t) * 8);
 }
 
 void PPU::execute(uint16_t cycles) {
@@ -236,8 +323,10 @@ void PPU::execute(uint16_t cycles) {
                     oam_sec_overflow = false;
                     oam_sec_addr = 0x0;
                 }
-                if (scan_x >= 65 && scan_x <= 256) sprite_eval();
-                if (scan_x >= 257 && scan_x <= 320) sprite_fetch();
+                // Sprite evaluation happens on 65-256, same with fetch. Just
+                // batch it for now, might not be needed to be more correct
+                if (scan_x == 65) sprite_eval();
+                if (scan_x == 257) sprite_fetch();
             }
 
             // Clear oamaddr

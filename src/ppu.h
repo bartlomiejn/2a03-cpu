@@ -151,6 +151,16 @@ class PPU {
     bool oam_overflow;
     bool oam_sec_overflow;
 
+    /// Sprite output unit latches, loaded during sprite fetch (cycles 257-320)
+    struct SpriteOut {
+        uint8_t pat_l;  ///< Pattern table low byte
+        uint8_t pat_h;  ///< Pattern table high byte
+        uint8_t attr;   ///< Attribute byte (palette, priority, flips)
+        uint8_t x;      ///< X position counter
+    };
+    std::array<SpriteOut, 8> spr_out;
+    bool spr0_in_range;  ///< Sprite 0 is in secondary OAM this scanline
+
     uint8_t ppudata_buf;  ///< 8-bit PPUADDR read buffer
 
     // Output
