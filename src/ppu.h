@@ -130,12 +130,14 @@ class PPU {
 
     uint8_t nt;  // Tile idx for pattern lookup
     uint8_t at;  // Paltete info for a region of tiles (4x4 tiles = 32x32 px)
-    uint8_t at_latch_l;  // AT palette bit 0 latch
-    uint8_t at_latch_h;  // AT palette bit 1 latch
+    uint8_t at_latch_l;  // AT palette bit L latch
+    uint8_t at_latch_h;  // AT palette bit H latch
+    uint8_t bg_latch_l;  // NT L byte latch
+    uint8_t bg_latch_h;  // NT H byte latch
     uint16_t bg_l_shift;
     uint16_t bg_h_shift;
-    uint16_t at_l_shift;  // AT palette bit 0 shift register
-    uint16_t at_h_shift;  // AT palette bit 1 shift register
+    uint16_t at_l_shift;  // AT palette L bit shift register
+    uint16_t at_h_shift;  // AT palette H bit shift register
 
     uint8_t cpu_bus;
 

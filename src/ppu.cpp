@@ -64,6 +64,8 @@ void PPU::power() {
     at = 0x0;
     at_latch_l = 0x0;
     at_latch_h = 0x0;
+    bg_latch_l = 0x0;
+    bg_latch_h = 0x0;
     bg_l_shift = 0x0;
     bg_h_shift = 0x0;
     at_l_shift = 0x0;
@@ -356,8 +358,9 @@ void PPU::execute(uint16_t cycles) {
                 // clang-format on
                 if (!ppumask.bg_show && !ppumask.spr_show) break;
                 nt = read(bus.addr);
-                NES_LOG("PPU") << "Read NT@0x" << hex << setfill('0') << setw(4)
-                     << bus.addr << ": 0x" << setw(2) << (uint16_t)nt << endl;
+                NES_LOG("PPU")
+                    << "Latch NT@0x" << hex << setfill('0') << setw(4)
+                    << bus.addr << ": 0x" << setw(2) << (uint16_t)nt << endl;
                 break;
                 // clang-format off
 
@@ -393,8 +396,9 @@ void PPU::execute(uint16_t cycles) {
                     at_latch_l = at_val & 1;
                     at_latch_h = (at_val >> 1) & 1;
                 }
-                NES_LOG("PPU") << "Read AT@0x" << hex << setfill('0') << setw(4)
-                     << bus.addr << ": 0x" << setw(2) << (uint16_t)at << endl;
+                NES_LOG("PPU")
+                    << "Latch AT@0x" << hex << setfill('0') << setw(4)
+                    << bus.addr << ": 0x" << setw(2) << (uint16_t)at << endl;
                 break;
                 // clang-format off
                 // BG L
@@ -422,13 +426,11 @@ void PPU::execute(uint16_t cycles) {
             case 246:   case 254:   case 326:   case 334:
                 // clang-format on
                 if (!ppumask.bg_show && !ppumask.spr_show) break;
-                bg_l_shift |= read(bus.addr);
-                at_l_shift |= at_latch_l ? 0xFF : 0x00;
-                at_h_shift |= at_latch_h ? 0xFF : 0x00;
+                bg_latch_l = read(bus.addr);
 
-                NES_LOG("PPU") << "Read BGL@0x" << hex << setfill('0') << setw(4)
-                     << bus.addr << ", BGL SR = 0x" << setw(4)
-                     << (uint16_t)bg_l_shift << endl;
+                NES_LOG("PPU") << "Latch BGL@0x" << hex << setfill('0')
+                               << setw(4) << bus.addr << ", BGL SR = 0x"
+                               << setw(4) << (uint16_t)bg_l_shift << endl;
                 break;
                 // clang-format off
                 // BG H
@@ -458,16 +460,16 @@ void PPU::execute(uint16_t cycles) {
                 // clang-format on
                 if (!ppumask.bg_show && !ppumask.spr_show) break;
 
-                bg_h_shift |= (uint16_t)read(bus.addr) << 2;
+                bg_latch_h = (uint16_t)read(bus.addr);
 
-                NES_LOG("PPU") << "Read BGH@0x" << hex << setfill('0') << setw(4)
-                     << bus.addr << ", BGH SR = 0x" << setw(4)
-                     << (uint16_t)bg_h_shift << endl;
+                NES_LOG("PPU") << "Latch BGH@0x" << hex << setfill('0')
+                               << setw(4) << bus.addr << ", BGH SR = 0x"
+                               << setw(4) << (uint16_t)bg_h_shift << endl;
 
-
-                NES_LOG("PPU")
-                    << std::format("shifted BGL: {:04X} BGH: {:04X}\n",
-                                   bg_l_shift, bg_h_shift);
+                bg_l_shift |= bg_latch_l;
+                bg_h_shift |= bg_latch_h;
+                at_l_shift |= at_latch_l ? 0xFF : 0x00;
+                at_h_shift |= at_latch_h ? 0xFF : 0x00;
 
                 if (scan_x == 256) {
                     inc_vert(v);
